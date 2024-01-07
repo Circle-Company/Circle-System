@@ -5,6 +5,7 @@ const db_config = require('../config/database.js')
 const User = require('../models/user/user-model.js')
 const ProfilePicture = require('../models/user/profilepicture-model.js')
 const Statistic = require('../models/user/statistic-model.js')
+const Contact = require('../models/user/contact-model.js')
 
 
 //mysql database connection
@@ -21,9 +22,11 @@ try{
 User.init(connection)
 ProfilePicture.init(connection)
 Statistic.init(connection)
+Contact.init(connection)
 
 //models associations
 User.associate(connection.models)
 ProfilePicture.associate(connection.models)
 Statistic.associate(connection.models)
+Contact.associate(connection.models)
 
