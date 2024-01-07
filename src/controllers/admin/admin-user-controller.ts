@@ -1,9 +1,10 @@
+import { Request, Response } from 'express'
 import { ValidationError } from "../../errors"
-import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
+
 
 const User = require('../../models/user/user-model.js')
 
-export async function block_user (req: any, res: any) {
+export async function block_user (req: Request, res: Response) {
     const { user_id }  = req.body
 
     const user = await User.findOne({
@@ -12,9 +13,9 @@ export async function block_user (req: any, res: any) {
     })
 
     if(user.blocked == true){
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'This user has been blocked previously',
-            statusCode: 200
+            action: 'Make sure the user you want to block is unlocked',
         }))
     }else {
         await User.update({ blocked: true }, {
@@ -25,7 +26,7 @@ export async function block_user (req: any, res: any) {
         })
     }
 }
-export async function unlock_user (req: any, res: any) {
+export async function unlock_user (req: Request, res: Response) {
     const { user_id }  = req.body
 
     const user = await User.findOne({
@@ -34,9 +35,9 @@ export async function unlock_user (req: any, res: any) {
     })
 
     if(user.blocked == false){
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'This user has not been blocked previusly',
-            statusCode: 200
+            action: 'Make sure the user you want to unlock has been blocked previously',
         }))
     }else {
         await User.update({ blocked: false }, {
@@ -48,7 +49,7 @@ export async function unlock_user (req: any, res: any) {
     }
 }
 
-export async function verify_user (req: any, res: any) {
+export async function verify_user (req: Request, res: Response) {
     const { user_id }  = req.body
 
     const user = await User.findOne({
@@ -57,9 +58,9 @@ export async function verify_user (req: any, res: any) {
     })
 
     if(user.verifyed == true){
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'This user has been verifyed previously',
-            statusCode: 200
+            action: 'Make sure the user you want to verify if you have this seal',
         }))
     }else {
         await User.update({ verifyed: true }, {
@@ -70,7 +71,7 @@ export async function verify_user (req: any, res: any) {
         })
     }
 }
-export async function unverify_user (req: any, res: any) {
+export async function unverify_user (req: Request, res: Response) {
     const { user_id }  = req.body
 
     const user = await User.findOne({
@@ -79,9 +80,9 @@ export async function unverify_user (req: any, res: any) {
     })
 
     if(user.verifyed == false){
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'This user has not been verifyed previusly',
-            statusCode: 200
+            action: 'Check that the user you want to remove the verification has this seal',
         }))
     }else {
         await User.update({ verifyed: false }, {
@@ -93,7 +94,7 @@ export async function unverify_user (req: any, res: any) {
     }
 }
 
-export async function mute_user (req: any, res: any) {
+export async function mute_user (req: Request, res: Response) {
     const { user_id }  = req.body
 
     const user = await User.findOne({
@@ -102,9 +103,9 @@ export async function mute_user (req: any, res: any) {
     })
 
     if(user.muted == true){
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'This user has been muted previously',
-            statusCode: 200
+            action: 'Make sure the user you want to mute is unmuted',
         }))
     }else {
         await User.update({ muted: true }, {
@@ -115,7 +116,7 @@ export async function mute_user (req: any, res: any) {
         })
     }
 }
-export async function unmute_user (req: any, res: any) {
+export async function unmute_user (req: Request, res: Response) {
     const { user_id }  = req.body
 
     const user = await User.findOne({
@@ -124,9 +125,9 @@ export async function unmute_user (req: any, res: any) {
     })
 
     if(user.muted == false){
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'This user has not been muted previusly',
-            statusCode: 200
+            action: 'Make sure the user you want to unmute has been muted previously',
         }))
     }else {
         await User.update({ muted: false }, {
@@ -138,7 +139,7 @@ export async function unmute_user (req: any, res: any) {
     }
 }
 
-export async function delete_user (req: any, res: any) {
+export async function delete_user (req: Request, res: Response) {
     const { user_id }  = req.body
 
     const user = await User.findOne({
@@ -147,9 +148,9 @@ export async function delete_user (req: any, res: any) {
     })
 
     if(user.deleted == true){
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'This user has been deleted previously',
-            statusCode: 200
+            action: 'Make sure the user you want to delete is undeleted',
         }))
     }else {
         await User.update({ deleted: true }, {
@@ -160,7 +161,7 @@ export async function delete_user (req: any, res: any) {
         })
     }
 }
-export async function undelete_user (req: any, res: any) {
+export async function undelete_user (req: Request, res: Response) {
     const { user_id }  = req.body
 
     const user = await User.findOne({
@@ -169,9 +170,9 @@ export async function undelete_user (req: any, res: any) {
     })
 
     if(user.deleted == false){
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'This user has not been deleted previusly',
-            statusCode: 200
+            action: 'Make sure the user you want to undelete has been deleted previously',
         }))
     }else {
         await User.update({ deleted: false }, {
