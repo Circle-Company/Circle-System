@@ -6,8 +6,9 @@ class User extends Model {
             username: DataTypes.STRING(30),
             name: DataTypes.STRING(50),
             encrypted_password: DataTypes.STRING(100),
+            old_encrypted_password: DataTypes.STRING(100),
             description: DataTypes.STRING(300),
-            access_level: DataTypes.STRING(10),
+            access_level: DataTypes.INTEGER(1),
             verifyed: DataTypes.BOOLEAN(),
             deleted: DataTypes.BOOLEAN(),
             blocked: DataTypes.BOOLEAN(),
@@ -15,6 +16,9 @@ class User extends Model {
             terms_and_conditions_agreed_version: DataTypes.STRING(10),
             terms_and_conditions_agreed_at: DataTypes.DATE(),
             last_active_at: DataTypes.DATE(),
+            last_login_at: DataTypes.DATE(),
+            last_failed_login_at: DataTypes.DATE(),
+            last_password_updated_at: DataTypes.DATE(),
             send_notification_emails: DataTypes.BOOLEAN()
         }, { sequelize })
     }
@@ -22,6 +26,7 @@ class User extends Model {
     static associate(models){
         this.hasOne(models.ProfilePicture, { foreignKey: 'user_id', as: 'profile_pictures' })
         this.hasOne(models.Statistic, { foreignKey: 'user_id', as: 'statistics' })
+        this.hasOne(models.Contact, { foreignKey: 'user_id', as: 'contacts' })
     }
 }
 module.exports = User

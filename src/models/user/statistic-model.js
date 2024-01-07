@@ -6,6 +6,7 @@ class Statistic extends Model {
             total_followers_num: DataTypes.NUMBER(),
             total_likes_num: DataTypes.NUMBER(),
             total_views_num: DataTypes.NUMBER(),
+            total_profile_views_num: DataTypes.NUMBER()
         }, {
             sequelize
         })

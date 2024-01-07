@@ -20,6 +20,7 @@ module.exports = {
       total_followers_num: Sequelize.BIGINT(),
       total_likes_num: Sequelize.BIGINT(),
       total_views_num: Sequelize.BIGINT(),
+      total_profile_views_num: Sequelize.BIGINT(),
       created_at: {
         type: Sequelize.DATE(),
         allowNull: false

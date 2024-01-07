@@ -20,7 +20,10 @@ module.exports = {
       encrypted_password: {
         type: Sequelize.STRING(100),
         allowNull: false
-      },      
+      },
+      old_encrypted_password: {
+        type: Sequelize.STRING(100),
+      },     
       description: {
         type: Sequelize.STRING(300)
       },
@@ -55,6 +58,16 @@ module.exports = {
       last_active_at: {
         type: Sequelize.DATE(),
         allowNull: false
+      },
+      last_login_at: {
+        type: Sequelize.DATE(),
+        allowNull: false
+      },  
+      last_failed_login_at: {
+        type: Sequelize.DATE(),
+      },
+      last_password_updated_at: {
+        type: Sequelize.DATE(),
       },
       send_notification_emails: {
         type: Sequelize.BOOLEAN(),
