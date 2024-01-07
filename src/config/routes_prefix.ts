@@ -2,8 +2,10 @@ import config from "./index"
 
 const prefix = "/" + "v" + config.API_VERSION
 
-export const RoutesPrefix = {
-    AUTH: prefix + "/auth",
-    USER: prefix + '/user',
-    ACCOUNT: prefix + '/account',
+export const RP = {
+    PREFIX: prefix,
+    AUTH: "/auth",
+    USER: '/user',
+    ADMIN: '/admin',
+    ACCOUNT: '/account',
 }
