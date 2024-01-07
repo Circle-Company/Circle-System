@@ -133,7 +133,10 @@ export async function send_verification_code (req: Request, res: Response) {
                 })
                 res.status(200).json({ message: 'Verification code sent successfully' });
             } else{
-                res.status(200).json({ message: `Verification code sent successfully (your code is: ${verificationCode})` });
+                res.status(200).json({
+                    message: `Verification code sent successfully (development version)`,
+                    verification_code: verificationCode
+                });
             }
 
             OTP = Number(verificationCode)
