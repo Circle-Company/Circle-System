@@ -5,12 +5,12 @@ import metadata from './metadata'
 // Load env file
 if (require.resolve) {
     try {
-      dotenv.config({ path: require.resolve('../../.env') })
+        dotenv.config({ path: require.resolve('../../.env') })
     } catch (error: any) {
-      // This error is thrown when the .env is not found
-      if (error.code !== 'MODULE_NOT_FOUND') {
-        throw error
-      }
+        // This error is thrown when the .env is not found
+        if (error.code !== 'MODULE_NOT_FOUND') {
+            throw error
+        }
     }
 }
 
@@ -58,6 +58,13 @@ const s3 = {
         env.AWS_REGION &&
         env.AWS_BUCKET,
 }
+
+const sms = {
+    TWILIO_ACCOUNT_SID: env.TWILIO_ACCOUNT_SID,
+    TWILIO_AUTH_TOKEN: env.TWILIO_AUTH_TOKEN,
+    TWILIO_MESSAGE_SERVICE_SID: env.TWILIO_MESSAGE_SERVICE_SID,
+    TWILIO_PHONE_NUMBER: env.TWILIO_PHONE_NUMBER
+}
 const options = {
     EMAIL_DEFAULT_SENDER: env.EMAIL_DEFAULT_SENDER,
     SUPPORT_URL: emails.SUPPORT_LINK,
@@ -80,6 +87,7 @@ export default {
     ...server,
     ...required,
     ...s3,
+    ...sms,
     ...options,
     ...mysql
   }
