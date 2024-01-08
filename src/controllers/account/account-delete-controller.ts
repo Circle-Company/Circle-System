@@ -24,7 +24,7 @@ export async function delete_user_name (req: Request, res: Response) {
     const { user_id } = req.body
 
     try{
-        await User.update({ name: false }, {
+        await User.update({ name: null }, {
             where: {id: user_id}
         })     
         res.status(200).json({
