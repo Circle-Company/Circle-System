@@ -5,26 +5,32 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     return queryInterface.createTable('profile_pictures', {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER(),
         primaryKey: true,
         autoIncrement: true,
         allowNull: false
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER(),
         allowNull: false,
         references: {model: 'users', key: 'id'},
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'  
       },
-      fullhd_resolution: Sequelize.STRING(),
-      tiny_resolution: Sequelize.STRING(),
+      fullhd_resolution: {
+        type: Sequelize.STRING(),
+        defaultValue: null
+      },
+      tiny_resolution: {
+        type: Sequelize.STRING(),
+        defaultValue: null
+      },
       created_at: {
-        type: Sequelize.DATE,
+        type: Sequelize.DATE(),
         allowNull: false
       },
       updated_at: {
-        type: Sequelize.DATE,
+        type: Sequelize.DATE(),
         allowNull: false
       }
     })

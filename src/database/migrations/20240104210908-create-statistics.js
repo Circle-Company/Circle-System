@@ -5,22 +5,34 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     return queryInterface.createTable('statistics', {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER(),
         primaryKey: true,
         autoIncrement: true,
         allowNull: false
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER(),
         allowNull: false,
         references: {model: 'users', key: 'id'},
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'  
       },
-      total_followers_num: Sequelize.BIGINT(),
-      total_likes_num: Sequelize.BIGINT(),
-      total_views_num: Sequelize.BIGINT(),
-      total_profile_views_num: Sequelize.BIGINT(),
+      total_followers_num: {
+        type: Sequelize.BIGINT(),
+        defaultValue: 0
+      },
+      total_likes_num: {
+        type: Sequelize.BIGINT(),
+        defaultValue: 0
+      },
+      total_views_num: {
+        type: Sequelize.BIGINT(),
+        defaultValue: 0
+      },
+      total_profile_views_num: {
+        type: Sequelize.BIGINT(),
+        defaultValue: 0
+      },
       created_at: {
         type: Sequelize.DATE(),
         allowNull: false
