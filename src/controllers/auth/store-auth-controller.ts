@@ -15,25 +15,22 @@ const Contact = require('../../models/user/contact-model.js')
 let OTP : number | null
 
 export async function store_new_user (req: Request, res: Response) {
-    const {
-        username,
-        password,
-    } = req.body
+    const { username, password } = req.body
 
     if (username.length < 4 && username.length > 20){
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'Your username must contain 4 to 20 characters',
         }))
     }else if (await ContainSpecialCharacters({text: username})) {
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: "your username can only contain '_' and '.' as special characters",
         }))
     }else if (await FindUserAlreadyExists({username: username}) === true){
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'this username already exists',
         }))
     }else if (password.length < 4){
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'your password must contain at least 4 characters'
         }))
     } else {
@@ -97,7 +94,7 @@ export async function store_new_user (req: Request, res: Response) {
             })
 
         } catch(err: any) {
-            res.send(
+            res.status(500).send(
                 new InternalServerError({message: err.message})
             )
         }

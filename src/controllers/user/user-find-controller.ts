@@ -9,9 +9,8 @@ export async function find_user_by_username (req: any, res: any) {
     const { username }  = req.params
 
     if(await FindUserAlreadyExists({ username: username }) === false) {
-        res.send( new ValidationError({
+        res.status(400).send( new ValidationError({
             message: 'this username cannot exists',
-            statusCode: 200
         }))
     } else {
         const user = await User.findOne({
