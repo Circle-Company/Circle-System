@@ -4,19 +4,20 @@ import { RP } from '../config/routes_prefix'
 
 const adminRouter = Router()
 
-const UserPrefix = RP.PREFIX + RP.ADMIN + RP.USER
+const ADMIN_PREFIX = RP.API_VERISON + RP.ADMIN
+const ADMIN_USER_PREFIX = ADMIN_PREFIX + RP.USER
 
-adminRouter.post( UserPrefix + '/block', AdminController.BlockUser)
-adminRouter.post( UserPrefix + '/unlock', AdminController.UnlockUser)
+adminRouter.post( ADMIN_USER_PREFIX + '/block', AdminController.BlockUser)
+adminRouter.post( ADMIN_USER_PREFIX + '/unlock', AdminController.UnlockUser)
 
-adminRouter.post( UserPrefix + '/verify', AdminController.VerifyUser)
-adminRouter.post( UserPrefix + '/unverify', AdminController.UnverifyUser)
+adminRouter.post( ADMIN_USER_PREFIX + '/verify', AdminController.VerifyUser)
+adminRouter.post( ADMIN_USER_PREFIX + '/unverify', AdminController.UnverifyUser)
 
-adminRouter.post( UserPrefix + '/mute', AdminController.MuteUser)
-adminRouter.post( UserPrefix + '/unmute', AdminController.UnmuteUser)
+adminRouter.post( ADMIN_USER_PREFIX + '/mute', AdminController.MuteUser)
+adminRouter.post( ADMIN_USER_PREFIX + '/unmute', AdminController.UnmuteUser)
 
-adminRouter.post( UserPrefix + '/delete', AdminController.DeleteUser)
-adminRouter.post( UserPrefix + '/undelete', AdminController.UndeleteUser)
+adminRouter.post( ADMIN_USER_PREFIX + '/delete', AdminController.DeleteUser)
+adminRouter.post( ADMIN_USER_PREFIX + '/undelete', AdminController.UndeleteUser)
 
 
 module.exports = adminRouter
