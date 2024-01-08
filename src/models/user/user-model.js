@@ -27,7 +27,10 @@ class User extends Model {
         this.hasOne(models.ProfilePicture, { foreignKey: 'user_id', as: 'profile_pictures' })
         this.hasOne(models.Statistic, { foreignKey: 'user_id', as: 'statistics' })
         this.hasOne(models.Contact, { foreignKey: 'user_id', as: 'contacts' })
-        this.hasOne(models.Block, { foreignKey: 'user_id', foreignKey: 'blocked_user_id', as: 'blocks'})
+        this.hasOne(models.Coordinate, { foreignKey: 'user_id', as: 'coordinates' })
+
+        this.hasMany(models.Block, { foreignKey: 'user_id', foreignKey: 'blocked_user_id', as: 'blocks'})
+        this.hasMany(models.Fans, { foreignKey: 'user_id', foreignKey: 'follow_user_id', as: 'follows'})
     }
 }
 module.exports = User

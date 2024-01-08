@@ -7,6 +7,8 @@ const ProfilePicture = require('../models/user/profilepicture-model.js')
 const Statistic = require('../models/user/statistic-model.js')
 const Contact = require('../models/user/contact-model.js')
 const Block = require('../models/user/block-model.js')
+const Coordinate = require('../models/user/coordinate-model.js')
+const Follow = require('../models/user/follow-model.js')
 
 
 //mysql database connection
@@ -25,6 +27,8 @@ ProfilePicture.init(connection)
 Statistic.init(connection)
 Contact.init(connection)
 Block.init(connection)
+Coordinate.init(connection)
+Follow.init(connection)
 
 //models associations
 User.associate(connection.models)
@@ -32,4 +36,6 @@ ProfilePicture.associate(connection.models)
 Statistic.associate(connection.models)
 Contact.associate(connection.models)
 Block.associate(connection.models)
+Coordinate.associate(connection.models)
+Follow.associate(connection.models)
 
