@@ -4,10 +4,13 @@ import { UserAuthenticationValidator } from '../middlewares/UserAuthenticationVa
 import { RP } from '../config/routes_prefix'
 
 const userRouter = Router()
+const USER_PREFIX = RP.API_VERISON + RP.USER
+const USER_PROFILE_PREFIX = USER_PREFIX + RP.PROFILE
 // userRouter.use(UserAuthenticationValidator)
-userRouter.get(RP.PREFIX + RP.USER + '/profile/:username', UserController.FindUserByUsername)
-userRouter.get(RP.PREFIX + RP.USER + '/profile/data/:username', UserController.FindUserData)
-userRouter.get(RP.PREFIX + RP.USER + '/account/edit/description', UserController.EdituserDescription)
-userRouter.get(RP.PREFIX + RP.USER + '/account/delete/description', UserController.FindUserData)
+userRouter.get(USER_PROFILE_PREFIX + '/:username', UserController.FindUserByUsername)
+userRouter.get(USER_PROFILE_PREFIX + '/data/:username', UserController.FindUserData)
+
+userRouter.post(USER_PREFIX + '/block', UserController.BlockUser)
+userRouter.post(USER_PREFIX + '/unlock', UserController.UnlockUser)
 
 module.exports = userRouter
