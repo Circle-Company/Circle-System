@@ -4,10 +4,10 @@ import { RP } from '../config/routes_prefix'
 
 const authRouter = Router()
 
-const authPrefix = RP.PREFIX + RP.AUTH
+const AUTH_PREFIX = RP.API_VERISON + RP.AUTH
 
-authRouter.post( authPrefix + '/signup', AuthController.StoreNewUser)
-authRouter.post( authPrefix + '/signin', AuthController.AuthenticateUser)
-authRouter.post( authPrefix + '/send-verification-code', AuthController.SendVerificationCode)
-authRouter.post( authPrefix + '/verify-code', AuthController.VerifyCode)
+authRouter.post( AUTH_PREFIX + '/signup', AuthController.StoreNewUser)
+authRouter.post( AUTH_PREFIX + '/signin', AuthController.AuthenticateUser)
+authRouter.post( AUTH_PREFIX + '/send-verification-code', AuthController.SendVerificationCode)
+authRouter.post( AUTH_PREFIX + '/verify-code', AuthController.VerifyCode)
 module.exports = authRouter
