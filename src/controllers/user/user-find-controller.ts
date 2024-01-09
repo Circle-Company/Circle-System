@@ -1,11 +1,17 @@
+import {Request, Response } from 'express'
+import { Op } from 'sequelize'
 import { ValidationError } from "../../errors"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
+import { Coordinates, haversineDistance } from '../../helpers/coordinates_distance'
+import { SearchEngine } from '../../search_engine'
 
 const User = require('../../models/user/user-model.js')
 const ProfilePicture = require('../../models/user/profilepicture-model.js')
 const Statistic = require('../../models/user/statistic-model.js')
+const Coordinate = require('../../models/user/coordinate-model.js')
+const Follow = require('../../models/user/follow-model.js')
 
-export async function find_user_by_username (req: any, res: any) {
+export async function find_user_by_username (req: Request, res: Response) {
     const { username }  = req.params
 
     if(await FindUserAlreadyExists({ username: username }) === false) {
@@ -50,7 +56,7 @@ export async function find_user_by_username (req: any, res: any) {
     }
 }
 
-export async function find_user_data (req: any, res: any) {
+export async function find_user_data (req: Request, res: Response) {
     const { username }  = req.params
 
     if(await FindUserAlreadyExists({ username: username }) === false) {
@@ -89,4 +95,17 @@ export async function find_user_data (req: any, res: any) {
             }
         })
     }
+}
+
+export async function search_user (req: Request, res: Response) {
+    const { username_to_search, user_id } = req.body
+
+    const search_result  = await SearchEngine({
+        username_to_search: username_to_search,
+        user_id: user_id
+    })
+
+    res.status(200).json({
+        result: search_result
+    })
 }

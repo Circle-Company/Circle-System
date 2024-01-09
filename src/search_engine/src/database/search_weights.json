@@ -1,0 +1,9 @@
+{
+    "distance": { "sentiment": "positive", "weight": 5 },
+    "verifyed": { "sentiment": "positive", "weight": 1 },
+    "total_followers_num": { "sentiment": "positive", "weight": 2 },
+    "follow_you": { "sentiment": "positive", "weight": 3 },
+    "you_follow": { "sentiment": "positive", "weight": 7 },
+    "block_you": { "sentiment": "negative", "weight": 30 },
+    "muted": { "sentiment": "negative", "weight": 50 }
+}
