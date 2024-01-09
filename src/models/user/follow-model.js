@@ -4,7 +4,7 @@ class Follow extends Model {
     static init(sequelize) {
         super.init({
             user_id: DataTypes.INTEGER(),
-            blocked_user_id: DataTypes.INTEGER(),
+            followed_user_id: DataTypes.INTEGER(),
         }, {
             sequelize
         })
