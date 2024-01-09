@@ -5,6 +5,7 @@ import { FindUserAlreadyExists } from '../../helpers/find-user-already-exists'
 
 const User = require('../../models/user/user-model.js')
 const ProfilePicture = require('../../models/user/profilepicture-model.js')
+const Coordinate = require('../../models/user/coordinate-model.js')
 
 export async function edit_user_description (req: Request, res: Response) {
     const { user_id, description }  = req.body
@@ -76,7 +77,7 @@ export async function edit_user_username (req: Request, res: Response) {
         }))
     }else {
         try{
-            await User.update({ name: username }, {
+            await User.update({ username: username }, {
                 where: {id: user_id}
             })     
             res.status(200).json({
@@ -102,7 +103,7 @@ export async function edit_profile_picture (req: Request, res: Response) {
         }, { where: {id: user_id}})
 
         res.status(200).json({
-            message: 'This user profile picture has been deleted successfully'
+            message: 'This user profile picture has been edited successfully'
         })  
     } catch {
         res.status(400).send( new ValidationError({
@@ -112,4 +113,26 @@ export async function edit_profile_picture (req: Request, res: Response) {
     }
 
   
+}
+export async function edit_coordinates(req: Request, res: Response) {
+    const {
+        user_id,
+        latitude,
+        longitude
+    } = req.body
+    try{
+        Coordinate.update({
+            latitude: latitude,
+            longitude: longitude
+        }, { where: {id: user_id}})
+
+        res.status(200).json({
+            message: 'This user coordinates has been edited successfully'
+        })  
+    } catch {
+        res.status(400).send( new ValidationError({
+            message: 'It was not possible to edit the coordinates of this user',
+            action: 'Make sure the user has a coordinates to be edited'
+        }))
+    }
 }
