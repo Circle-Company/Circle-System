@@ -30,7 +30,7 @@ class User extends Model {
         this.hasOne(models.Coordinate, { foreignKey: 'user_id', as: 'coordinates' })
 
         this.hasMany(models.Block, { foreignKey: 'user_id', foreignKey: 'blocked_user_id', as: 'blocks'})
-        this.hasMany(models.Fans, { foreignKey: 'user_id', foreignKey: 'follow_user_id', as: 'follows'})
+        this.hasMany(models.Follow, { foreignKey: 'user_id', foreignKey: 'followed_user_id', as: 'follows'})
     }
 }
 module.exports = User

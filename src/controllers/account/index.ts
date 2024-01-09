@@ -2,7 +2,8 @@ import {
     edit_user_description,
     edit_profile_picture,
     edit_user_name,
-    edit_user_username
+    edit_user_username,
+    edit_coordinates
 } from "./account-edit-controller"
 
 import {
@@ -16,6 +17,7 @@ export const AccountController = {
     EditProfilePicture: edit_profile_picture,
     EditUserName: edit_user_name,    
     EditUserUsername: edit_user_username,
+    EditCoordinates: edit_coordinates,
 
     DeleteUserDescription: delete_user_description,
     DeleteProfilePicture: delete_profile_picture,
