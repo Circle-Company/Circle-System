@@ -12,6 +12,7 @@ const User = require('../../models/user/user-model.js')
 const ProfilePicture = require('../../models/user/profilepicture-model.js')
 const Statistic = require('../../models/user/statistic-model.js')
 const Contact = require('../../models/user/contact-model.js')
+const Coordinate = require('../../models/user/coordinate-model.js')
 let OTP : number | null
 
 export async function store_new_user (req: Request, res: Response) {
@@ -54,7 +55,9 @@ export async function store_new_user (req: Request, res: Response) {
             })
 
             await ProfilePicture.create({ user_id: newUser.id })
+            await Coordinate.create({ user_id: newUser.id })
             await Contact.create({ user_id: newUser.id })
+
             const newStatistic = await Statistic.create({
                 user_id: newUser.id,
                 total_followers_num: 0,
