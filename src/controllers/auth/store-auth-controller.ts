@@ -22,6 +22,10 @@ export async function store_new_user (req: Request, res: Response) {
         res.status(400).send( new ValidationError({
             message: 'Your username must contain 4 to 20 characters',
         }))
+    }else if (username == password) {
+        res.status(400).send( new ValidationError({
+            message: "ythe username and password cannot be the same",
+        }))
     }else if (await ContainSpecialCharacters({text: username})) {
         res.status(400).send( new ValidationError({
             message: "your username can only contain '_' and '.' as special characters",
