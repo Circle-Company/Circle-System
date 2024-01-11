@@ -32,7 +32,7 @@ const environment = {
 const server = {
     PORT: env.PORT || 3000,
     CLIENT_URI: (env.HOST || 'http://localhost:') && (env.PORT || 3000) ,
-    JWT_EXPIRES: env.JWT_EXPIRES || '2y',
+    JWT_EXPIRES: env.JWT_EXPIRES || 31557600 // one year,
 }
 
 const mysql = {
