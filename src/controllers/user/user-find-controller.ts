@@ -105,7 +105,5 @@ export async function search_user (req: Request, res: Response) {
         user_id: user_id
     })
 
-    res.status(200).json({
-        result: search_result
-    })
+    res.status(200).json(search_result)
 }
