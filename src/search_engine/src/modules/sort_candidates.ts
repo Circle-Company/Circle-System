@@ -20,6 +20,8 @@ export async function sort_candidates({
                 username: candidate.username,
                 verifyed: candidate.verifyed,
                 name: candidate.name,
+                you_follow: candidate.you_follow,
+                total_followers_num: candidate.total_followers_num,
                 profile_picture: candidate.profilePicture,
             }
         })
