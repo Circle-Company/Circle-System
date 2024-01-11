@@ -7,7 +7,8 @@ import {
     block_user,
     unlock_user,
     follow_user,
-    unfollow_user
+    unfollow_user,
+    report
 } from "./user-actions-controller"
 
 export const UserController = {
@@ -17,5 +18,6 @@ export const UserController = {
     BlockUser: block_user,
     UnlockUser: unlock_user,
     FollowUser: follow_user,
-    UnfollowUser: unfollow_user
+    UnfollowUser: unfollow_user,
+    Report: report
 }

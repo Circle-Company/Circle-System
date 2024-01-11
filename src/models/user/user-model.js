@@ -31,6 +31,7 @@ class User extends Model {
 
         this.hasMany(models.Block, { foreignKey: 'user_id', foreignKey: 'blocked_user_id', as: 'blocks'})
         this.hasMany(models.Follow, { foreignKey: 'user_id', foreignKey: 'followed_user_id', as: 'follows'})
+        this.hasMany(models.Report, { foreignKey: 'user_id', as: 'reports'})
     }
 }
 module.exports = User
