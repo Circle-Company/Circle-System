@@ -30,6 +30,12 @@ export async function block_user (req: any, res: any) {
     } else {
 
         try{
+            await Follow.destroy({
+                where: {
+                    user_id: user_id,
+                    followed_user_id: blocked_user_id                
+                }
+            })
             await Block.create({
                 user_id: user_id,
                 blocked_user_id: blocked_user_id
