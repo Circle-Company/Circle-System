@@ -1,13 +1,15 @@
+import { Request, Response } from 'express'
 import { ValidationError, InternalServerError} from '../../errors/index.js'
 import { DecriptPassword } from '../../helpers/encrypt-decrypt-password.js'
 import { jwtEncoder } from '../../jwt/encode.js'
 import { FindUserAlreadyExists } from '../../helpers/find-user-already-exists.js'
+import { json } from 'body-parser'
 
 const User = require('../../models/user/user-model.js')
 const ProfilePicture = require('../../models/user/profilepicture-model.js')
 const Statistic = require('../../models/user/statistic-model.js')
 
-export async function authenticate_user(req: any, res: any) {
+export async function authenticate_user(req: Request, res: Response) {
     const {username, password} = req.body
 
     console.log(username, password)
@@ -66,4 +68,17 @@ export async function authenticate_user(req: any, res: any) {
 
 
     }
+}
+
+export async function refresh_token(req: Request, res: Response) {
+    const {username, id} = req.body
+    try{
+        const newAccessToken = await jwtEncoder({ username: username, user_id: id})
+        res.status(200).json({ access_token: newAccessToken })
+    } catch(err) {
+        res.status(400).send( new ValidationError({
+            message: 'the username or id is missing',
+        }))
+    }
+
 }
