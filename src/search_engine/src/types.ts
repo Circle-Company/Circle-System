@@ -1,5 +1,5 @@
 export type ApplyCandidatesWeights = {
-    candidates: Array<CandidateProps>
+    candidates: Array<CandidateProps | null>
 }
 
 export type SortCandidatesProps = {
