@@ -12,4 +12,5 @@ export const RP = {
     ACCOUNT: '/account',
     EDIT: '/edit',
     DELETE: '/delete',
+    LIST: "/list",
 }
