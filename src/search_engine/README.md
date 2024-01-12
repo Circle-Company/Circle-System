@@ -71,7 +71,7 @@ Implementei desse jeito:
 ```
 
 O retorno da lista deve parecer com isso: 
-```json
+```typescript
 [
   {
     id: 1,
@@ -189,7 +189,7 @@ Agora que definimos os parâmetros você deve pesquisa-los no seu banco de dados
 
 ```
 A sua lista deve retornar com os candidatos e suas interações, deve se parecer com isso: 
-```json
+```typescript
 [
   {
     id: 1,
@@ -270,7 +270,7 @@ Escolhi fazer dessa maneira ao invés de fazer um `candidates.map()` e multiplic
 
 Ao retornar os candidatos, cada um com seu respectivo `total_score` a lista deve se parecer com isto:
 
-```json
+```typescript
 [
   {
     id: 1,
