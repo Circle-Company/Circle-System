@@ -13,6 +13,6 @@ const app = express()
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-app.use(authRouter, userRouter, adminRouter, accountRouter)
+app.use(authRouter, adminRouter, userRouter, accountRouter)
 
 app.listen(config.PORT, () => console.log("🚀 Server running on port: " + config.PORT))
