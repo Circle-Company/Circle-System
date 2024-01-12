@@ -14,14 +14,6 @@ export async function add_candidates_interactions({
     const result = await Promise.all(
         users.map(async( user: UserProps ) => {
 
-        const user_cords = new Coordinates(
-            user_coordinates.latitude,
-            user_coordinates.longitude
-        )
-        const compared_user_cords = new Coordinates(
-            user.coordinates.latitude,
-            user.coordinates.longitude
-        )
         // check if the user follows me
         const user_followed = await Follow.findOne({
             attributes: ['followed_user_id', 'user_id'],
@@ -42,8 +34,19 @@ export async function add_candidates_interactions({
             attributes: ['blocked_user_id', 'user_id'],
             where: { blocked_user_id: user.id, user_id: user_id }
         })
+        // if the user blocked the candidate it must return as null
         if(Boolean(user_block)) return null
-
+        
+        const user_cords = new Coordinates(
+            user_coordinates.latitude,
+            user_coordinates.longitude
+        )
+        const compared_user_cords = new Coordinates(
+            user.coordinates.latitude,
+            user.coordinates.longitude
+        )
+        
+        //calculates the distance between the user coordinates and the candidate
         const distance = haversineDistance(user_cords, compared_user_cords)
 
         return new Candidate(
@@ -64,6 +67,7 @@ export async function add_candidates_interactions({
         )
     }))
 
+    // clean possible null objects from the array
     const candidates = result.filter((candidate) => candidate !== null && candidate !== undefined)
 
     return { candidates }
