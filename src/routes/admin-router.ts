@@ -21,8 +21,6 @@ adminRouter.post( ADMIN_USER_PREFIX + '/verify', AdminController.VerifyUser)
 adminRouter.post( ADMIN_USER_PREFIX + '/unverify', AdminController.UnverifyUser)
 adminRouter.post( ADMIN_USER_PREFIX + '/mute', AdminController.MuteUser)
 adminRouter.post( ADMIN_USER_PREFIX + '/unmute', AdminController.UnmuteUser)
-adminRouter.post( ADMIN_USER_PREFIX + '/delete', AdminController.DeleteUser)
-adminRouter.post( ADMIN_USER_PREFIX + '/undelete', AdminController.UndeleteUser)
 
 
 module.exports = adminRouter

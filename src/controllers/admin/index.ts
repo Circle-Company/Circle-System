@@ -5,8 +5,6 @@ import {
     unverify_user,
     mute_user,
     unmute_user,
-    delete_user,
-    undelete_user
 } from "./admin-user-controller"
 
 import {
@@ -25,8 +23,6 @@ export const AdminController = {
     UnverifyUser: unverify_user,
     MuteUser: mute_user,
     UnmuteUser: unmute_user,
-    DeleteUser: delete_user,
-    UndeleteUser: undelete_user,
     ListBlockedUsers: list_blocked_users,
     ListDeletedUsers: list_deleted_users,
     ListVerifyedUsers: list_verifyed_users,

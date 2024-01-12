@@ -9,6 +9,7 @@ export const RP = {
     USER: '/user',
     PROFILE: '/profile',
     ADMIN: '/admin',
+    MODERATOR: '/moderator',
     ACCOUNT: '/account',
     EDIT: '/edit',
     DELETE: '/delete',
