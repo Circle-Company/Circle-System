@@ -1,6 +1,4 @@
 import { ValidationError } from "../../errors"
-import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
-
 const User = require('../../models/user/user-model.js')
 const Block = require('../../models/user/block-model.js')
 const Follow = require('../../models/user/follow-model.js')
