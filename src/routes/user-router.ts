@@ -7,7 +7,7 @@ const userRouter = Router()
 const USER_PREFIX = RP.API_VERISON + RP.USER
 const USER_PROFILE_PREFIX = USER_PREFIX + RP.PROFILE
 
-userRouter.use(UserAuthenticationValidator)
+//userRouter.use(UserAuthenticationValidator)
 userRouter.get(USER_PROFILE_PREFIX + '/:username', UserController.FindUserByUsername)
 userRouter.get(USER_PROFILE_PREFIX + '/data/:username', UserController.FindUserData)
 

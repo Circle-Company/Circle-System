@@ -10,6 +10,8 @@ export async function sort_candidates({
         return 0
     })
 
+    console.log(sorted_candidates)
+
     // filters the data so that only the data used for render component is sent to the client
     const filtered_candidates = sorted_candidates.map((candidate) => {
         return {
