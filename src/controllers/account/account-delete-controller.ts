@@ -44,7 +44,7 @@ export async function delete_profile_picture (req: Request, res: Response) {
         ProfilePicture.update({
             fullhd_resolution: null,
             tiny_resolution: null
-        }, { where: {id: user_id}})    
+        }, { where: {user_id: user_id}})    
 
         res.status(200).json({
             message: 'This user profile picture has been deleted successfully'

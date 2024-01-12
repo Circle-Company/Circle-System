@@ -100,7 +100,7 @@ export async function edit_profile_picture (req: Request, res: Response) {
         ProfilePicture.update({
             fullhd_resolution: fullhd_resolution,
             tiny_resolution: tiny_resolution
-        }, { where: {id: user_id}})
+        }, { where: {user_id: user_id}})
 
         res.status(200).json({
             message: 'This user profile picture has been edited successfully'
@@ -124,7 +124,7 @@ export async function edit_coordinates(req: Request, res: Response) {
         Coordinate.update({
             latitude: latitude,
             longitude: longitude
-        }, { where: {id: user_id}})
+        }, { where: {user_id: user_id}})
 
         res.status(200).json({
             message: 'This user coordinates has been edited successfully'
