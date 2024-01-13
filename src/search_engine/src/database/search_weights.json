@@ -1,9 +1,9 @@
 {
-    "distance": { "sentiment": "positive", "weight": 5 },
-    "verifyed": { "sentiment": "positive", "weight": 1 },
-    "total_followers_num": { "sentiment": "positive", "weight": 2 },
-    "follow_you": { "sentiment": "positive", "weight": 3 },
-    "you_follow": { "sentiment": "positive", "weight": 7 },
-    "block_you": { "sentiment": "negative", "weight": 30 },
-    "muted": { "sentiment": "negative", "weight": 50 }
+    "distance": { "weight": 5 },
+    "verifyed": { "weight": 1 },
+    "total_followers_num": { "weight": 2 },
+    "follow_you": { "weight": 3 },
+    "you_follow": { "weight": 7 },
+    "block_you": { "weight": -30 },
+    "muted": { "weight": -50 }
 }
