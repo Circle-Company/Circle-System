@@ -6,9 +6,8 @@ class ScoringUtils {
       let totalScore = 0
   
       for (const criterion in weights) {
-        if (candidate[criterion] !== undefined && weights[criterion].sentiment && weights[criterion].weight) {
-          const sentimentFactor = weights[criterion].sentiment === 'positive' ? 1 : -1
-          totalScore += candidate[criterion] ? weights[criterion].weight * sentimentFactor : 0
+        if (candidate[criterion] !== undefined && weights[criterion].weight) {
+          totalScore += candidate[criterion] ? weights[criterion].weight : 0
         }
       }
   
