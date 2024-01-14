@@ -24,6 +24,9 @@
     "express": "^4.18.2",
     "express-async-errors": "^3.1.1",
     "filereader": "^0.10.3",
+    "graphlib": "^2.1.8",
+    "graphviz": "^0.0.9",
+    "graphviz-cli": "^2.0.0",
     "handlebars": "^4.7.8",
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
@@ -41,6 +44,8 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/graphlib": "^2.1.12",
+    "@types/graphviz": "^0.0.39",
     "@types/jsonwebtoken": "^9.0.5",
     "sequelize-cli": "^6.6.2",
     "tsup": "^8.0.1",
