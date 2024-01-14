@@ -2,6 +2,7 @@ import {Request, Response } from 'express'
 import { ValidationError } from "../../errors"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 import { SearchEngine } from '../../search_engine'
+import { UserRecommenderEngine } from '../../user_recommender_engine'
 
 const User = require('../../models/user/user-model.js')
 const ProfilePicture = require('../../models/user/profilepicture-model.js')
@@ -102,4 +103,11 @@ export async function search_user (req: Request, res: Response) {
     })
 
     res.status(200).json(search_result)
+}
+
+export async function recommender_users (req: Request, res: Response) {
+    const { user_id } = req.body
+
+    const recommendations = await UserRecommenderEngine({ user_id: user_id})
+    res.status(200).json(recommendations)
 }

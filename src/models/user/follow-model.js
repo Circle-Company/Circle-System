@@ -5,16 +5,21 @@ class Follow extends Model {
         super.init({
             user_id: DataTypes.INTEGER(),
             followed_user_id: DataTypes.INTEGER(),
-        }, {
-            sequelize
-        })
+        },      {
+            sequelize,
+            modelName: 'Follow',
+            tableName: 'follows',
+          })
     }
 
     static associate(models){
         this.belongsTo(models.User, {
             foreignKey: 'user_id',
-            foreignKey: 'follow_user_id',
-            as: 'user'
+            as: 'following'
+        }),
+        this.belongsTo(models.User, {
+            foreignKey: 'followed_user_id',
+            as: 'followers' 
         })
     }
 }

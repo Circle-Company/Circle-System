@@ -1,4 +1,5 @@
 const { Model, DataTypes} = require('sequelize')
+const Follow = require('./follow-model')
 
 class User extends Model {
     static init(sequelize) {
@@ -30,7 +31,10 @@ class User extends Model {
         this.hasOne(models.Coordinate, { foreignKey: 'user_id', as: 'coordinates' })
 
         this.hasMany(models.Block, { foreignKey: 'user_id', foreignKey: 'blocked_user_id', as: 'blocks'})
-        this.hasMany(models.Follow, { foreignKey: 'user_id', foreignKey: 'followed_user_id', as: 'follows'})
+
+        this.belongsToMany(models.User, { foreignKey: 'user_id', as: 'following', through: 'Follow' })
+        this.belongsToMany(models.User, { foreignKey: 'followed_user_id' , as: 'followers', through: 'Follow'})
+
         this.hasMany(models.Report, { foreignKey: 'user_id', as: 'reports'})
     }
 }
