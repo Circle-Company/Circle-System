@@ -13,7 +13,7 @@ const Report = require('../models/user/report-model.js')
 
 
 //mysql database connection
-export const connection =  new Sequelize(db_config)
+export const connection =  new Sequelize({...db_config, logging: false})
 
 try{
     connection.authenticate()
