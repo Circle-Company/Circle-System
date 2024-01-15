@@ -11,7 +11,7 @@ export function filterSearchParams({
 }: FindSearchCandidatesProps): Object {
     // Add any additional security checks for parameters if needed
     return {
-        username: { [Op.like]: `%${username_to_search}%` },
+        username: { [Op.like]: `${username_to_search.substring(0, 3)}%` },
         id: { [Op.not]: user_id },
         blocked: { [Op.not]: true },
         deleted: { [Op.not]: true },
