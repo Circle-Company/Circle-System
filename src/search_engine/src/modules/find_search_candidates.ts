@@ -38,7 +38,7 @@ export async function find_search_candidates({
                 {
                     model: ProfilePicture,
                     as: 'profile_pictures',
-                    attributes: ['fullhd_resolution', 'tiny_resolution'],
+                    attributes: ['tiny_resolution'],
                 },
                 {
                     model: Statistic,

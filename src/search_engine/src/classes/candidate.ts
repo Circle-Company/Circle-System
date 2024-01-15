@@ -5,7 +5,6 @@ class Candidate {
     name: string | null
     muted: boolean
     profilePicture: {
-        fullhd_resolution: null | string,
         tiny_resolution: null | string
     }
     follow_you: boolean
@@ -21,7 +20,6 @@ class Candidate {
         name: string | null,
         muted: boolean,
         profilePicture: {
-            fullhd_resolution: null | string,
             tiny_resolution: null | string
         },
         follow_you: boolean,

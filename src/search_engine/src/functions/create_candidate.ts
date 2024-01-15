@@ -44,7 +44,6 @@ export function createCandidate(
         user.name,
         user.muted,
         {
-            fullhd_resolution: user.profile_pictures.fullhd_resolution,
             tiny_resolution: user.profile_pictures.tiny_resolution
         },
         user_followed,
