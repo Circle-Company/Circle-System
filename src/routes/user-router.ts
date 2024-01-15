@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import { UserController } from '../controllers/user'
-import { UserAuthenticationValidator } from '../middlewares/UserAuthenticationValidator'
 import { RP } from '../config/routes_prefix'
 
 const userRouter = Router()
@@ -12,7 +11,9 @@ userRouter.get(USER_PROFILE_PREFIX + '/:username', UserController.FindUserByUser
 userRouter.get(USER_PROFILE_PREFIX + '/data/:username', UserController.FindUserData)
 
 userRouter.post(USER_PREFIX + '/search', UserController.SearchUser)
-userRouter.post(USER_PREFIX + '/recommendations', UserController.RecommenderUsers)
+userRouter.post(USER_PREFIX + '/recommendations', UserController.RecommenderUsers) 
+userRouter.get(USER_PREFIX + '/most-famous', UserController.FindMostFollowedUsers) 
+
 
 userRouter.post(USER_PREFIX + '/block', UserController.BlockUser)
 userRouter.post(USER_PREFIX + '/unlock', UserController.UnlockUser)

@@ -3,10 +3,12 @@ import { ValidationError } from "../../errors"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 import { SearchEngine } from '../../search_engine'
 import { UserRecommenderEngine } from '../../user_recommender_engine'
+import { FindMostFamousEngine } from '../../find_most_famous_engine'
 
 const User = require('../../models/user/user-model.js')
 const ProfilePicture = require('../../models/user/profilepicture-model.js')
 const Statistic = require('../../models/user/statistic-model.js')
+const Coordinate = require('../../models/user/coordinate-model.js')
 
 export async function find_user_by_username (req: Request, res: Response) {
     const { username }  = req.params
@@ -97,12 +99,14 @@ export async function find_user_data (req: Request, res: Response) {
 export async function search_user (req: Request, res: Response) {
     const { username_to_search, user_id } = req.body
 
+    console.time(`search-engine (term: ${username_to_search})`);
     const search_result  = await SearchEngine({
         username_to_search: username_to_search,
         user_id: user_id
     })
-
+    console.timeEnd(`search-engine (term: ${username_to_search})`);
     res.status(200).json(search_result)
+    
 }
 
 export async function recommender_users (req: Request, res: Response) {
@@ -110,4 +114,17 @@ export async function recommender_users (req: Request, res: Response) {
 
     const recommendations = await UserRecommenderEngine({ user_id: user_id})
     res.status(200).json(recommendations)
+}
+
+export async function find_most_followed_users(req: Request, res: Response) {
+    try {
+        const page = parseInt(req.query.page as string, 10) || 1;
+        const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+        const ranking = await FindMostFamousEngine({page, pageSize})
+
+        res.status(200).json(ranking)
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erro ao obter os usuários mais seguidos.' });
+    }
 }
