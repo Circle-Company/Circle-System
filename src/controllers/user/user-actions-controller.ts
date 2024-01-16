@@ -1,221 +1,79 @@
 import { ValidationError } from "../../errors"
-const User = require('../../models/user/user-model.js')
-const Block = require('../../models/user/block-model.js')
-const Follow = require('../../models/user/follow-model.js')
-const Statistic = require('../../models/user/statistic-model.js')
-const Report = require('../../models/user/report-model.js')
+import {UserService} from '../../services/user-service'
 
 export async function block_user (req: any, res: any) {
-    const {
-        user_id,
-        blocked_user_id
-    } = req.body
-
-    const find_block_exists = await Block.findOne({
-        attributes: ['user_id', 'blocked_user_id'],
-        where: { user_id: user_id, blocked_user_id: blocked_user_id }
-    })
-
-    if(user_id == blocked_user_id) {
+    const { user_id, blocked_user_id } = req.body
+    try{
+        await UserService.UserActions.BlockUser({user_id, blocked_user_id})
+        res.status(200).json({
+            message: 'This user has been successfully blocked'
+        })
+    } catch{
         res.status(400).send( new ValidationError({
-            message: 'ta user cannot block themselves',
+            message: 'Failed to block this user',
+            action: 'check if this user has been previously blocked'
         }))
-    }else if(find_block_exists) {
-        res.status(400).send( new ValidationError({
-            message: 'this user has already been unlocked',
-        }))
-    } else {
-
-        try{
-            await Follow.destroy({
-                where: {
-                    user_id: user_id,
-                    followed_user_id: blocked_user_id                
-                }
-            })
-            await Block.create({
-                user_id: user_id,
-                blocked_user_id: blocked_user_id
-            })
-            res.status(200).json({
-                message: 'This user has been successfully blocked'
-            })
-        } catch{
-            res.status(400).send( new ValidationError({
-                message: 'Failed to block this user',
-                action: 'check if this user has been previously blocked'
-            }))
-        }
-
     }
-
-
-
 }
 export async function unlock_user (req: any, res: any) {
-    const {
-        user_id,
-        blocked_user_id
-    } = req.body
-
-    const find_block_exists = await Block.findOne({
-        attributes: ['user_id', 'blocked_user_id'],
-        where: { user_id: user_id, blocked_user_id: blocked_user_id }
-    })
-
-    if(!find_block_exists) {
-        res.status(400).send( new ValidationError({
-            message: 'this user has already been unlocked',
-        }))
-    }else {
+    const { user_id, blocked_user_id } = req.body
         try{
-            await Block.destroy({
-                where: {
-                    user_id: user_id,
-                    blocked_user_id: blocked_user_id                
-                }
-            })
+            await UserService.UserActions.UnlockUser({user_id, blocked_user_id})
             res.status(200).json({
-                message: 'Sthe user has been successfully unlocked'
+                message: 'the user has been successfully unlocked'
             })
-
         }catch {
             res.status(400).send( new ValidationError({
                 message: 'Failed to unlock this user',
                 action: 'check if this user has been previously unlocked'
             }))
         }
-    }
 }
 
 export async function follow_user (req: any, res: any) {
-    const {
-        user_id,
-        followed_user_id
-    } = req.body
-
-    const find_follow_exists = await Follow.findOne({
-        attributes: ['user_id', 'followed_user_id'],
-        where: { user_id: user_id, followed_user_id: followed_user_id }
-    })
-
-    if(user_id == followed_user_id) {
+    const { user_id, followed_user_id } = req.body
+    try{
+        await UserService.UserActions.FollowUser({user_id, followed_user_id})
+        res.status(200).json({
+            message: 'This user has been successfully followed'
+        })
+    } catch{
         res.status(400).send( new ValidationError({
-            message: 'The users cannot follow themselves',
+            message: 'Failed to follow this user',
+            action: 'check if this user has been previously followed'
         }))
-    }else if(find_follow_exists) {
-        res.status(400).send( new ValidationError({
-            message: 'This user has already been followed',
-        }))
-    } else {
-        try{
-            await Follow.create({
-                user_id: user_id,
-                followed_user_id: followed_user_id
-            })
-
-            await Statistic.increment('total_followers_num',{
-                by: 1,
-                where: { user_id: followed_user_id}
-            })
-            res.status(200).json({
-                message: 'This user has been successfully followed'
-            })
-        } catch{
-            res.status(400).send( new ValidationError({
-                message: 'Failed to follow this user',
-                action: 'check if this user has been previously followed'
-            }))
-        }
     }
 }
 export async function unfollow_user (req: any, res: any) {
-    const {
-        user_id,
-        followed_user_id
-    } = req.body
-
-    const find_follow_exists = await Follow.findOne({
-        attributes: ['user_id', 'followed_user_id'],
-        where: { user_id: user_id, followed_user_id: followed_user_id }
-    })
-
-    if(user_id == followed_user_id) {
+    const { user_id, followed_user_id } = req.body
+    try{
+        await UserService.UserActions.UnfollowUser({user_id, followed_user_id})
+        res.status(200).json({
+            message: 'This user has been successfully unfollowed'
+        })
+    } catch{
         res.status(400).send( new ValidationError({
-            message: 'The users cannot unfollow themselves',
+            message: 'Failed to unfollow this user',
+            action: 'check if this user has been previously unfollowed'
         }))
-    }else if(!find_follow_exists) {
-        res.status(400).send( new ValidationError({
-            message: 'This user has already been unfollowed',
-        }))
-    } else {
-        try{
-            await Follow.destroy({
-                where: {
-                    user_id: user_id,
-                    followed_user_id: followed_user_id                
-                }
-            })
-            await Statistic.increment('total_followers_num',{
-                by: -1,
-                where: { user_id: followed_user_id}
-            })
-            res.status(200).json({
-                message: 'This user has been successfully unfollowed'
-            })
-        } catch{
-            res.status(400).send( new ValidationError({
-                message: 'Failed to unfollow this user',
-                action: 'check if this user has been previously unfollowed'
-            }))
-        }
-    }
+     }
 }
 
 export async function report (req: any, res: any) {
-    const {
-        user_id,
-        reported_content_id,
-        reported_content_type,
-        report_type
-    } = req.body
-
-    const find_report_exists = await Report.findOne({
-        attributes: ['user_id', 'reported_content_id'],
-        where: {
-            user_id: user_id,
-            reported_content_id: reported_content_id,
-            reported_content_type: reported_content_type,
-            report_type: report_type
-        }
-    })
-    if(find_report_exists) {
+    const { user_id, reported_content_id, reported_content_type, report_type } = req.body
+    try{
+        await UserService.UserActions.ReportUser({
+            user_id,
+            reported_content_id,
+            reported_content_type,
+            report_type
+        })
+        res.status(200).json({
+            message: `This  ${reported_content_type} has been successfully reported`
+        })
+    } catch{
         res.status(400).send( new ValidationError({
-            message: `This ${reported_content_type} has already been reported`,
+            message: `Failed to report this ${reported_content_type}`
         }))
-    } else if(reported_content_type == 'USER' && user_id == reported_content_id){
-        res.status(400).send( new ValidationError({
-            message: 'ta user cannot report themselves',
-        }))
-    } else {
-        try{
-            await Report.create({
-                user_id: user_id,
-                reported_content_id: reported_content_id,
-                reported_content_type: reported_content_type,
-                report_type: report_type
-            })
-            res.status(200).json({
-                message: `This  ${reported_content_type} has been successfully reported`
-            })
-        } catch{
-            res.status(400).send( new ValidationError({
-                message: `Failed to report this ${reported_content_type}`
-            }))
-        }
-
     }
-
-
-
 }

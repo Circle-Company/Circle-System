@@ -8,8 +8,8 @@ const USER_PREFIX = RP.API_VERISON + RP.USER
 const USER_PROFILE_PREFIX = USER_PREFIX + RP.PROFILE
 
 //userRouter.use(UserAuthenticationValidator)
-userRouter.get(USER_PROFILE_PREFIX + '/:username', UserController.FindUserByUsername)
-userRouter.get(USER_PROFILE_PREFIX + '/data/:username', UserController.FindUserData)
+userRouter.post(USER_PROFILE_PREFIX + '/:username', UserController.FindUserByUsername)
+userRouter.post(USER_PROFILE_PREFIX + '/data/:username', UserController.FindUserData)
 
 userRouter.post(USER_PREFIX + '/search', UserController.SearchUser)
 userRouter.post(USER_PREFIX + '/recommendations', UserController.RecommenderUsers)
