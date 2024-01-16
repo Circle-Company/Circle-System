@@ -9,8 +9,7 @@ export async function IncrementUsersInformations({
     totalPages,
     currentPage,
     pageSize,
-    totalUsers
-}: IncrementUsersInformationsProps): Promise<Array<IncrementUsersInformationsReturns>>{
+}: IncrementUsersInformationsProps): Promise<IncrementUsersInformationsReturns>{
     const userPromises = topUsers.map(async (topUser) => {
         const user = await User.findOne({
             attributes: ['id', 'username', 'verifyed'],
@@ -19,34 +18,25 @@ export async function IncrementUsersInformations({
                 muted: { [Op.not]: true },
                 blocked: { [Op.not]: true },
                 deleted: { [Op.not]: true },
-                '$statistics.total_followers_num$': { [Op.gt]: 0 },
-            },
-            include: [
-                {
-                  model: ProfilePicture,
-                  as: 'profile_pictures', // Nome da associação no modelo User
-                  attributes: ['tiny_resolution'], // Atributos que você deseja incluir
-                },
-                {
-                    model: Statistic,
-                    as: 'statistics',
-                    attributes: ['total_followers_num'],
-                },
-            ],
-        });
-
-        if(user.profile_pictures.tiny_resolution == null) return null
+            }
+        })
+        const statistic = await Statistic.findOne({
+            attributes: ['total_followers_num'],
+            where: {user_id: user.id}
+        })
+        const profile_picture = await ProfilePicture.findOne({
+            attributes: ['tiny_resolution'],
+            where: {user_id: user.id}
+        })
+        
+        if (topUser.total_followers_num == 0) return null
+        if(profile_picture.tiny_resolution == null) return null
         return {
-            
                 id: user.id,
                 username: user.username,
                 verifyed: user.verifyed,
-                profile_picture: {
-                    tiny_resolution: user.profile_pictures.tiny_resolution
-                },
-                statistic: {
-                    total_followers_num: user.statistics.total_followers_num
-                }
+                profile_picture,
+                statistic
         }
     });
 
@@ -58,6 +48,5 @@ export async function IncrementUsersInformations({
         totalPages,
         currentPage,
         pageSize,
-        totalUsers
     }
 }

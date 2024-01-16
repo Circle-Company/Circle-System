@@ -1,7 +1,6 @@
 export type TopUsersProps = Array<TopUserObjectProps>
 
 export type TopUserObjectProps = {
-
     total_followers_num: number,
     user_id: number
 }
@@ -20,7 +19,6 @@ export type IncrementUsersInformationsProps = {
     totalPages: number,
     currentPage: number,
     pageSize: number,
-    totalUsers: number,
 }
 
 export type IncrementUsersInformationsReturns = {
@@ -28,20 +26,19 @@ export type IncrementUsersInformationsReturns = {
     totalPages: number,
     currentPage: number,
     pageSize: number,
-    totalUsers: number,
+
 }
 
-export type TopUsersIncrementedProps = Array<TopUserIncrementedObjectProps>
+export type TopUsersIncrementedProps = Array<TopUserIncrementedObjectProps | null>
 
 export type TopUserIncrementedObjectProps = {
     id: number,
     username: string,
-    name: null | string,
     verifyed: boolean,
-    profile_pictures: {
+    profile_picture: {
         tiny_resolution: null | string
     },
-    statistics: {
+    statistic: {
         total_followers_num: number
     }
 }

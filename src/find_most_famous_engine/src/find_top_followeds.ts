@@ -25,7 +25,6 @@ export async function FindTopFolloweds({
         totalPages,
         currentPage: page,
         pageSize,
-        totalUsers: count,
     }
 
 
