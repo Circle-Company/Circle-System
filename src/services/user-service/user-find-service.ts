@@ -108,7 +108,7 @@ export async function find_user_data ({
 export async function search_user ({
     username_to_search, user_id
 }: UserSearchProps) {
-    return await SearchEngine({username_to_search, user_id})
+    return await SearchEngine({search_term: username_to_search, user_id})
 }
 export async function recommender_users ({
     user_id

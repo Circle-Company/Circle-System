@@ -1,0 +1,9 @@
+{
+    "distance": { "weight": 5 },
+    "verifyed": { "weight": 1 },
+    "total_followers_num": { "weight": 2 },
+    "follow_you": { "weight": 3 },
+    "you_follow": { "weight": 7 },
+    "block_you": { "weight": -30 },
+    "muted": { "weight": -50 }
+}

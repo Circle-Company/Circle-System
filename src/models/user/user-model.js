@@ -21,6 +21,18 @@ class User extends Model {
             last_password_updated_at: DataTypes.DATE(),
             send_notification_emails: DataTypes.BOOLEAN()
         }, { sequelize })
+        const createFullTextIndex = async () => {
+            const [result] = await sequelize.query(`
+                SHOW INDEX FROM users WHERE Key_name = 'fulltext_index_username';
+            `);
+        
+            if (result.length === 0) {
+                await sequelize.query(`
+                    ALTER TABLE users ADD FULLTEXT INDEX fulltext_index_username (username);
+                `);
+            }
+        }
+        createFullTextIndex()
     }
 
     static associate(models){
