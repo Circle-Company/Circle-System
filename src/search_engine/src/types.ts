@@ -68,6 +68,6 @@ export type UserProps = {
 }
 
 export type FindSearchCandidatesProps = {
-    username_to_search: string,
+    search_term: string,
     user_id: number
 }

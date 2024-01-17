@@ -10,6 +10,7 @@ const Block = require('../models/user/block-model.js')
 const Coordinate = require('../models/user/coordinate-model.js')
 const Follow = require('../models/user/follow-model.js')
 const Report = require('../models/user/report-model.js')
+const Relation = require('../models/user/relation-model.js')
 
 
 //mysql database connection
@@ -31,6 +32,7 @@ Block.init(connection)
 Coordinate.init(connection)
 Follow.init(connection)
 Report.init(connection)
+Relation.init(connection)
 
 //models associations
 User.associate(connection.models)
@@ -41,4 +43,5 @@ Block.associate(connection.models)
 Coordinate.associate(connection.models)
 Follow.associate(connection.models)
 Report.associate(connection.models)
+Relation.associate(connection.models)
 
