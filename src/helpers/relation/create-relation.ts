@@ -7,7 +7,7 @@ export async function create_relation({
     user_id, related_user_id, weight
 }: CreateRelationProps) {
     const relation_exists = await find_relation_exists({user_id, related_user_id})
-    if(relation_exists === true){
+    if(relation_exists){
         return new ValidationError({
             message: 'this user relation already exists',
         })
