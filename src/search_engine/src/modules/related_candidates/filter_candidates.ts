@@ -8,10 +8,10 @@ interface UserObject {
 
 type SortCandidatesProps = {
     search_term: string,
-    finded_candidates: UserObject[]
+    candidates_without_duplication: UserObject[]
 }
 export async function filter_candidates({
-    search_term, finded_candidates
+    search_term, candidates_without_duplication
 }: SortCandidatesProps) {
-    return finded_candidates.filter((item) => item.user.username.includes(search_term))
+    return candidates_without_duplication.filter((item) => item.user.username.includes(search_term))
 }

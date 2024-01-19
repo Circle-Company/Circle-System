@@ -12,6 +12,7 @@ import {
 
 const User = require('../../models/user/user-model.js')
 const Statistic = require('../../models/user/statistic-model.js')
+const Follow = require('../../models/user/follow-model.js')
 const ProfilePicture = require('../../models/user/profilepicture-model.js')
 
 export async function find_user_by_username ({
@@ -24,6 +25,15 @@ export async function find_user_by_username ({
         })
     } else {
         const user = await User.findOne({ where: { username }})
+        await Relation.AutoAdd({
+            user_id: user_id,
+            related_user_id: user.id,
+            weight: 1
+        })    
+        const user_followed = await Follow.findOne({
+            attributes: ['followed_user_id', 'user_id'],
+            where: { followed_user_id: user.id, user_id}
+        })
         const statistic = await Statistic.findOne({
             attributes: ['total_followers_num', 'total_likes_num', 'total_views_num'],
             where: {user_id: user.id}
@@ -32,11 +42,8 @@ export async function find_user_by_username ({
             attributes: ['fullhd_resolution', 'tiny_resolution'],
             where: {user_id: user.id}
         })
-        await Relation.AutoAdd({
-            user_id: user_id,
-            related_user_id: user.id,
-            weight: 1
-        })        
+           
+     
         return {
             id: user.id,
             username: user.username,
@@ -57,7 +64,8 @@ export async function find_user_by_username ({
                 total_followers_num:statistic.total_followers_num,
                 total_likes_num: statistic.total_likes_num,
                 total_views_num:statistic.total_views_num
-            }
+            },
+            you_follow:  Boolean(user_followed)
         }
     }
 }

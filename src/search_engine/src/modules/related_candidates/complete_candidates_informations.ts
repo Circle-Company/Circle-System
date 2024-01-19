@@ -2,7 +2,7 @@ import { findUserFollow } from "../../functions/set_interactions/find_user_follo
 
 const User = require('../../../../models/user/user-model.js')
 const ProfilePicture = require('../../../../models/user/profilepicture-model.js')
-
+const Statistic = require('../../../../models/user/statistic-model.js')
 interface UserObject {
     user: {
       username: string;
@@ -30,6 +30,11 @@ export async function complete_candidates_informations({
                         as: 'profile_pictures',
                         attributes: ['tiny_resolution'],
                     },
+                    {
+                        model: Statistic,
+                        as: 'statistics',
+                        attributes: ['total_followers_num'],
+                    }
                 ],
             })
 
@@ -44,6 +49,7 @@ export async function complete_candidates_informations({
                 profile_picture: {
                     tiny_resolution: user.profile_pictures.tiny_resolution
                 },
+                statistic: user.statistics,
                 weight: candidate.weight
             }
         })
