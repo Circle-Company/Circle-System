@@ -7,6 +7,5 @@ export async function find_relation_exists({
     const finded = await Relation.findOne({
         where: { user_id, related_user_id }
     })
-    if(finded) return true
-    else return false
+    return Boolean(finded)
 }
