@@ -80,12 +80,8 @@ export async function add_candidates_interactions({
                 name:candidate.name,
                 muted: candidate.muted,
                 blocked: candidate.blocked,
-                profile_picture: {
-                    tiny_resolution: candidate.profile_pictures.tiny_resolution
-                },
-                statistic: {
-                    total_followers_num: candidate.statistics.total_followers_num
-                },
+                profile_picture: candidate.profile_pictures,
+                statistic: candidate.statistics,
                 follow_you: Boolean(follow_you),
                 you_block:Boolean(you_block),
                 block_you:Boolean(block_you),
