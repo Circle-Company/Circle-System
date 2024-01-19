@@ -9,7 +9,10 @@ interface UserObject {
 	profile_picture: {
 		tiny_resolution: null | string
 	},
-    weight: number,
+  statistic: {
+    total_followers_num: number
+  },
+  weight: number,
 }
 
 type SortCandidatesProps = {
@@ -38,6 +41,9 @@ export function calcule_score({
           blocked: candidate.blocked,
           you_follow: candidate.you_follow,
           profile_picture: candidate.profile_picture,
+          statistic: {
+            total_followers_num: candidate.statistic.total_followers_num
+          },
           score: totalScore,
         };
       });
