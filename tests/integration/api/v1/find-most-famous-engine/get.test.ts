@@ -1,13 +1,13 @@
-import { FindMostFamousEngine } from '..';
-import { FindTopFolloweds } from '../src/find_top_followeds';
-import { IncrementUsersInformations } from '../src/increment_users_informations';
-import { FindMostFamousEngineProps, TopUserIncrementedObjectProps} from '../types';
+import { FindMostFamousEngine } from '../../../../../src/find_most_famous_engine';
+import { FindTopFolloweds } from '../../../../../src/find_most_famous_engine/src/find_top_followeds';
+import { IncrementUsersInformations } from '../../../../../src/find_most_famous_engine/src/increment_users_informations';
+import { FindMostFamousEngineProps, TopUserIncrementedObjectProps} from '../../../../../src/find_most_famous_engine/types';
 
-jest.mock('../src/find_top_followeds', () => ({
+jest.mock('../../../../../src/find_most_famous_engine/src/find_top_followeds', () => ({
   FindTopFolloweds: jest.fn(),
 }));
 
-jest.mock('../src/increment_users_informations', () => ({
+jest.mock('../../../../../src/find_most_famous_engine/src/increment_users_informations', () => ({
   IncrementUsersInformations: jest.fn(),
 }));
 
