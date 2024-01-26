@@ -30,6 +30,7 @@ const environment = {
 }
 
 const server = {
+    SOCKET_PORT: env.SOCKET_PORT || 3001,
     PORT: env.PORT || 3000,
     CLIENT_URI: (env.HOST || 'http://localhost:') && (env.PORT || 3000) ,
     JWT_EXPIRES: env.JWT_EXPIRES || 31557600 // one year,

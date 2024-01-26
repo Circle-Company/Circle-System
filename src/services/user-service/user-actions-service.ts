@@ -5,6 +5,7 @@ const Block = require('../../models/user/block-model.js')
 const Follow = require('../../models/user/follow-model.js')
 const Statistic = require('../../models/user/statistic-model.js')
 const Report = require('../../models/user/report-model.js')
+import { Notification } from "../../helpers/notification"
 
 export async function follow_user({
     user_id, followed_user_id
@@ -22,7 +23,7 @@ export async function follow_user({
         throw new ValidationError({
             message: 'This user has already been followed',
         })
-    } else {
+    }else {
         await Follow.create({
             user_id: user_id,
             followed_user_id: followed_user_id
@@ -35,7 +36,12 @@ export async function follow_user({
             user_id: user_id,
             related_user_id: followed_user_id,
             weight: 1
-        })     
+        })  
+        await Notification.AutoSend({
+            sender_user_id: user_id,
+            receiver_user_id: followed_user_id,
+            type: 'FOLLOW-USER'
+        })
 
     }
 }

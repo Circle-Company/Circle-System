@@ -8,6 +8,7 @@ export const RP = {
     AUTH: "/auth",
     USER: '/user',
     PROFILE: '/profile',
+    NOTIFICATION: '/notification',
     ADMIN: '/admin',
     MODERATOR: '/moderator',
     ACCOUNT: '/account',
