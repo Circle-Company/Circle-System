@@ -1,114 +1,40 @@
 import { Request, Response } from 'express'
-import { FindUserAlreadyExists } from '../../helpers/find-user-already-exists'
-import { ContainSpecialCharacters } from '../../helpers/contain-special-characters'
 import { ValidationError, InternalServerError} from '../../errors'
-import { EncriptedPassword } from '../../helpers/encrypt-decrypt-password'
-import { jwtEncoder } from '../../jwt/encode'
 import { Twilio } from 'twilio'
 import CONFIG from '../../config'
 import { isValidPhoneNumber } from '../../helpers/is_valid_phone_number'
+import { AuthService } from '../../services/auth-service'
 
-const User = require('../../models/user/user-model.js')
-const ProfilePicture = require('../../models/user/profilepicture-model.js')
-const Statistic = require('../../models/user/statistic-model.js')
-const Contact = require('../../models/user/contact-model.js')
-const Coordinate = require('../../models/user/coordinate-model.js')
+const Socket = require('../../models/user/socket-model.js')
 let OTP : number | null
 
 export async function store_new_user (req: Request, res: Response) {
     const { username, password } = req.body
 
-    if (username.length < 4 && username.length > 20){
-        res.status(400).send( new ValidationError({
-            message: 'Your username must contain 4 to 20 characters',
-        }))
-    }else if (username == password) {
-        res.status(400).send( new ValidationError({
-            message: "ythe username and password cannot be the same",
-        }))
-    }else if (await ContainSpecialCharacters({text: username})) {
-        res.status(400).send( new ValidationError({
-            message: "your username can only contain '_' and '.' as special characters",
-        }))
-    }else if (await FindUserAlreadyExists({username: username}) === true){
-        res.status(400).send( new ValidationError({
-            message: 'this username already exists',
-        }))
-    }else if (password.length < 4){
-        res.status(400).send( new ValidationError({
-            message: 'your password must contain at least 4 characters'
-        }))
-    } else {
-        const encryptedPassword = await EncriptedPassword({ password })
-
-        try {
-            const newUser = await User.create({
-                username: username,
-                encrypted_password: encryptedPassword,
-                access_level: 0,
-                verifyed: false,
-                deleted: false,
-                blocked: false,
-                muted: false,
-                terms_and_conditions_agreed_version: '1.0.0',
-                terms_and_conditions_agreed_at: Date.now(),
-                last_active_at: Date.now(),
-                last_login_at: Date.now(),
-                last_password_updated_at: Date.now(),
-                send_notification_emails: false
-            })
-
-            await ProfilePicture.create({ user_id: newUser.id })
-            await Coordinate.create({ user_id: newUser.id })
-            await Contact.create({ user_id: newUser.id })
-
-            const newStatistic = await Statistic.create({
-                user_id: newUser.id,
-                total_followers_num: 0,
-                total_likes_num: 0,
-                total_views_num: 0
-            })
-            const newAccessToken = await jwtEncoder({
-                username: newUser.username,
-                user_id: newUser.id
-            })
-
-            return res.status(200).json({
-                id: newUser.id,
-                username: newUser.username,
-                name: null,
-                description: null,
-                access_level: newUser.access_level,
-                verifyed: newUser.verifyed,
-                deleted: newUser.deleted,
-                blocked: newUser.blocked,
-                muted: newUser.muted,
-                last_active_at: newUser.last_active_at,
-                last_login_at: newUser.last_login_at,
-                last_failed_login_at: newUser.last_failed_login_at,
-                last_password_updated_at: newUser.last_password_updated_at,
-                send_notification_emails: newUser.send_notification_emails,
-                profile_picture: {
-                    fullhd_resolution: null,
-                    tiny_resolution: null
-                },
-                statistics: {
-                    total_followers_num: newStatistic.total_followers_num,
-                    total_likes_num: newStatistic.total_likes_num,
-                    total_views_num: newStatistic.total_views_num
-                },
-                access_token: newAccessToken
-            })
-
-        } catch(err: any) {
-            res.status(500).send(
-                new InternalServerError({message: err.message})
-            )
-        }
-
-        
-        
+    try{
+        const user = await AuthService.StoreActions.CreateUser({username, password})
+        return res.status(200).json(user)
+    } catch (err: any) {
+        throw new InternalServerError({message: err.message })
     }
+}
+
+export async function send_socket(req: Request, res: Response) {
+    const { user_id, socket_id } = req.body
+
+    const socket_exists = await Socket.findOne({where: {user_id}})
+    if(socket_exists){
+        await Socket.update({ socket_id }, {where: {user_id}})
+        res.status(200).json({
+            message: `socket was updated successfully`,
+        });   
+    }else {
+        await Socket.create({ user_id, socket_id })   
+        res.status(200).json({  
+            message: `socket was created successfully`,
+        });   
+    }
+
 }
 
 export async function send_verification_code (req: Request, res: Response) {
