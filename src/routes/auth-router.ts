@@ -11,5 +11,6 @@ authRouter.post( AUTH_PREFIX + '/signin', AuthController.AuthenticateUser)
 authRouter.post( AUTH_PREFIX + '/send-verification-code', AuthController.SendVerificationCode)
 authRouter.post( AUTH_PREFIX + '/verify-code', AuthController.VerifyCode)
 authRouter.post( AUTH_PREFIX + '/refresh-token', AuthController.RefreshToken)
+authRouter.post( AUTH_PREFIX + '/send-socket', AuthController.SendSocket)
 
 module.exports = authRouter
