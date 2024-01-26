@@ -7,13 +7,16 @@ interface UserObject {
 	profile_picture: {
 		tiny_resolution: null | string
 	},
+	statistic: {
+		total_followers_num: number
+	}
     score: number
 }
 
 type SortCandidatesProps = {
     candidates_with_score: UserObject[]
 }
-export async function sort_candidates({
+export function sort_candidates({
     candidates_with_score
 }: any) {
     return candidates_with_score.sort((a:any, b:any) => b.score - a.score)

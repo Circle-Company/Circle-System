@@ -7,6 +7,9 @@ interface UserObject {
 	profile_picture: {
 		tiny_resolution: null | string
 	},
+	statistic: {
+		total_followers_num: number
+	},
     score: number
 }
 

@@ -36,6 +36,7 @@ export function security_filter({
             name: candidate.name,
             verifyed: candidate.verifyed,
             you_follow: candidate.you_follow,
+            statistic: candidate.statistic,
             profile_picture: candidate.profile_picture,
         }
     })
