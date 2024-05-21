@@ -1,5 +1,3 @@
-import { findInitCandidates } from "./modules/generate_user_follows_graph/find_init_candidates";
-import { generateUserFollowsGraph } from "./modules/generate_user_follows_graph";
 type WTFProps = {
     user_id: number;
 };
@@ -13,7 +11,7 @@ export async function WTF({
     user_id, 
 }: WTFProps): Promise<any> {
 
-    const init_candidates = await generateUserFollowsGraph({ user_id})
+    const init_candidates = user_id
 
     return init_candidates
     
