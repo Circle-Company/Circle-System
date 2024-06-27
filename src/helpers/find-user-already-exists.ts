@@ -1,4 +1,4 @@
-const User = require('../models/user/user-model.js')
+import User from '../models/user/user-model.js'
 
 type FindUserAlreadyExistsProps = {
     username: string
