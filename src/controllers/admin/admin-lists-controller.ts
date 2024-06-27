@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
 import { NotFoundError } from "../../errors"
+import User from '../../models/user/user-model.js';
+import ProfilePicture from '../../models/user/profilepicture-model.js';
 
-const User = require('../../models/user/user-model.js')
-const ProfilePicture = require('../../models/user/profilepicture-model.js')
 
 export async function list_blocked_users (req: Request, res: Response) {
     const { page, pageSize } = req.query
