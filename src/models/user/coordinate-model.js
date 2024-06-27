@@ -1,4 +1,4 @@
-const { Model, DataTypes} = require('sequelize')
+import { Model, DataTypes} from 'sequelize'
 
 class Coordinate extends Model {
     static init(sequelize) {
@@ -6,7 +6,8 @@ class Coordinate extends Model {
             latitude: DataTypes.DECIMAL(20, 15),
             longitude: DataTypes.DECIMAL(20, 15),
         }, {
-            sequelize
+            sequelize,
+            tableName: 'coordinates'
         })
     }
 
@@ -14,4 +15,4 @@ class Coordinate extends Model {
         this.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' })
     }
 }
-module.exports = Coordinate
+export default Coordinate

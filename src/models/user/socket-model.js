@@ -1,4 +1,4 @@
-const { Model, DataTypes, Sequelize} = require('sequelize')
+import { Model, DataTypes} from 'sequelize'
 
 class Socket extends Model {
     static init(sequelize) {
@@ -6,7 +6,8 @@ class Socket extends Model {
             user_id: DataTypes.INTEGER(),
             socket_id: DataTypes.INTEGER(),
         }, {
-            sequelize
+            sequelize,
+            tableName: 'sockets'
         })
     }
 
@@ -17,4 +18,4 @@ class Socket extends Model {
         })
     }
 }
-module.exports = Socket
+export default Socket

@@ -3,39 +3,32 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    return queryInterface.createTable('moments', {
+    return queryInterface.createTable('moment_midias', {
       id: {
         type: Sequelize.INTEGER(),
         primaryKey: true,
         autoIncrement: true,
         allowNull: false
       },
-      user_id: {
+      moment_id: {
         type: Sequelize.INTEGER(),
         allowNull: false,
-        references: {model: 'users', key: 'id'},
+        references: {model: 'moments', key: 'id'},
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'  
-      }, 
-      description: {
-        type: Sequelize.STRING(300),
+      },
+      content_type: {
+        type: Sequelize.STRING(),
         defaultValue: null
       },
-      visible: {
-        type: Sequelize.BOOLEAN(),
-        defaultValue: true,
-        allowNull: false
+      nhd_resolution: {
+        type: Sequelize.STRING(),
+        defaultValue: null
       },
-      deleted: {
-        type: Sequelize.BOOLEAN(),
-        defaultValue: false,
-        allowNull: false
+      fullhd_resolution: {
+        type: Sequelize.STRING(),
+        defaultValue: null
       },
-      blocked: {
-        type: Sequelize.BOOLEAN(),
-        defaultValue: false,
-        allowNull: false
-      },    
       created_at: {
         type: Sequelize.DATE(),
         allowNull: false
@@ -48,6 +41,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    return queryInterface.dropTable('moments')
+    return queryInterface.dropTable('moment_midias')
   }
 };

@@ -1,4 +1,4 @@
-const { Model, DataTypes, Sequelize} = require('sequelize')
+import { Model, DataTypes} from 'sequelize'
 
 class Follow extends Model {
     static init(sequelize) {
@@ -23,4 +23,4 @@ class Follow extends Model {
         })
     }
 }
-module.exports = Follow
+export default Follow

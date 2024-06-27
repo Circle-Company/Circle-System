@@ -1,10 +1,11 @@
-const { Model, DataTypes } = require('sequelize')
+import { Model, DataTypes} from 'sequelize'
 
 class Notification extends Model {
     static init(sequelize) {
         super.init({
             sender_user_id: DataTypes.INTEGER(),
             receiver_user_id: DataTypes.INTEGER(),
+            content_id: DataTypes.INTEGER(),
             viewed: DataTypes.BOOLEAN(),
             type: DataTypes.STRING()
         },{
@@ -22,4 +23,4 @@ class Notification extends Model {
         })
     }
 }
-module.exports = Notification
+export default Notification
