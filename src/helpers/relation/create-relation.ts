@@ -1,7 +1,7 @@
 import { find_relation_exists } from "./find-relation-exists"
 import { ValidationError } from "../../errors"
 import { CreateRelationProps } from "./types"
-const Relation = require('../../models/user/relation-model.js')
+import Relation from '../../models/user/relation-model.js'
 
 export async function create_relation({
     user_id, related_user_id, weight
