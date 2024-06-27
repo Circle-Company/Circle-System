@@ -1,7 +1,7 @@
-import { FindMostFamousEngine } from '../../../../../src/find_most_famous_engine';
-import { FindTopFolloweds } from '../../../../../src/find_most_famous_engine/src/find_top_followeds';
-import { IncrementUsersInformations } from '../../../../../src/find_most_famous_engine/src/increment_users_informations';
-import { FindMostFamousEngineProps, TopUserIncrementedObjectProps} from '../../../../../src/find_most_famous_engine/types';
+import { FindMostFamousEngine } from '../../../../../src/MFU';
+import { FindTopFolloweds } from '../../../../../src/MFU/src/find_top_followeds';
+import { IncrementUsersInformations } from '../../../../../src/MFU/src/increment_users_informations';
+import { FindMostFamousEngineProps, TopUserIncrementedObjectProps} from '../../../../../src/MFU/types';
 
 jest.mock('../../../../../src/find_most_famous_engine/src/find_top_followeds', () => ({
   FindTopFolloweds: jest.fn(),
