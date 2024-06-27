@@ -1,5 +1,5 @@
 import { UserProps } from "../../types";
-const Block = require('../../../../models/user/block-model.js');
+import Block from '../../../../models/user/block-model.js'
 
 type FindUserBlock = {
     user_id: number,

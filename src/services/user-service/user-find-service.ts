@@ -1,29 +1,24 @@
 import { ValidationError } from "../../errors"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 import { SearchEngine } from "../../search_engine"
-import { UserRecommenderEngine } from "../../user_recommender_engine"
+import { WTF } from "../../WTF"
 import { Relation } from "../../helpers/relation"
+import { Notification } from "../../helpers/notification"
 import {
     FindUserByUsernameProps,
     FindUserDataProps,
     UserSearchProps,
     RecommenderUsersProps
 } from "./types"
-
-const User = require('../../models/user/user-model.js')
-const Statistic = require('../../models/user/statistic-model.js')
-const Follow = require('../../models/user/follow-model.js')
-const ProfilePicture = require('../../models/user/profilepicture-model.js')
+import User from '../../models/user/user-model.js'
+import Statistic from '../../models/user/statistic-model.js'
+import Follow from '../../models/user/follow-model.js'
+import ProfilePicture from '../../models/user/profilepicture-model.js'
 
 export async function find_user_by_username ({
     user_id,
     username
 }: FindUserByUsernameProps) {
-    if(await FindUserAlreadyExists({ username }) === false) {
-        throw new ValidationError({
-            message: 'this username cannot exists',
-        })
-    } else {
         const user = await User.findOne({ where: { username }})
         await Relation.AutoAdd({
             user_id: user_id,
@@ -42,8 +37,12 @@ export async function find_user_by_username ({
             attributes: ['fullhd_resolution', 'tiny_resolution'],
             where: {user_id: user.id}
         })
-           
-     
+        await Notification.AutoSend({
+            sender_user_id: user_id,
+            receiver_user_id: user.id,
+            type: 'VIEW-USER',
+            content_id: null
+        })
         return {
             id: user.id,
             username: user.username,
@@ -67,7 +66,47 @@ export async function find_user_by_username ({
             },
             you_follow:  Boolean(user_followed)
         }
+}
+
+export async function find_user_by_pk ({user_id, user_pk}: {user_id: number, user_pk: string}) {
+    const user = await User.findOne({ where: { id: user_pk }})
+
+    const user_followed = await Follow.findOne({
+        attributes: ['followed_user_id', 'user_id'],
+        where: { followed_user_id: user.id, user_id}
+    })
+    const statistic = await Statistic.findOne({
+        attributes: ['total_followers_num', 'total_likes_num', 'total_views_num'],
+        where: {user_id: user.id}
+    })
+    const profile_picture = await ProfilePicture.findOne({
+        attributes: ['fullhd_resolution', 'tiny_resolution'],
+        where: {user_id: user.id}
+    })
+    await Notification.AutoSend({
+        sender_user_id: user_id,
+        receiver_user_id: user.id,
+        type: 'VIEW-USER',
+        content_id: null
+    })
+    return {
+        id: user.id,
+        username: user.username,
+        verifyed: user.verifyed,
+        name: user.name,
+        description: user.description,
+        profile_picture: {
+            small_resolution: profile_picture.fullhd_resolution,
+            tiny_resolution: profile_picture.tiny_resolution
+        },     
+        statistics: {
+            total_followers_num:statistic.total_followers_num,
+            total_likes_num: statistic.total_likes_num,
+            total_views_num:statistic.total_views_num
+        },
+        you_follow:  Boolean(user_followed)
     }
+
 }
 export async function find_user_data ({
     username,
@@ -79,16 +118,19 @@ export async function find_user_data ({
             statusCode: 200
         })
     } else {
-        const user = await User.findOne({ where: { username }})
+        const user = await User.findOne({
+            where: { username }
+        })
         const profile_picture = await ProfilePicture.findOne({
             where: {user_id: user.id}
         })
-        await Relation.AutoAdd({
-            user_id: user_id,
-            related_user_id: user.id,
-            weight: 1
-        })     
-        
+        if(user_id !== user.id){
+            await Relation.AutoAdd({
+                user_id: user_id,
+                related_user_id: user.id,
+                weight: 1
+            })                
+        }
         return {
             id: user.id,
             username: user.username,
@@ -121,5 +163,38 @@ export async function search_user ({
 export async function recommender_users ({
     user_id
 }: RecommenderUsersProps) {
-    return await UserRecommenderEngine({user_id})
+    return await WTF({user_id})
+}
+
+export async function find_session_user_by_pk ({user_pk}: {user_pk: string}) {
+    const user = await User.findOne({ where: { id: user_pk }})
+
+    const profile_picture = await ProfilePicture.findOne({
+        attributes: ['fullhd_resolution', 'tiny_resolution'],
+        where: {user_id: user.id}
+    })
+
+    return {
+        id: user.id,
+        username: user.username,
+        verifyed: user.verifyed,
+        name: user.name,
+        description: user.description,
+        profile_picture: {
+            small_resolution: profile_picture.fullhd_resolution,
+            tiny_resolution: profile_picture.tiny_resolution
+        },
+    }
+}
+
+export async function find_session_user_statistics_by_pk ({user_pk}: {user_pk: string}) {
+    const statistic = await Statistic.findOne({
+        where: { user_id: user_pk },
+    })
+    return {
+        total_followers_num: statistic.total_followers_num,
+        total_likes_num: statistic.total_likes_num,
+        total_views_num: statistic.total_views_num
+    }
+
 }

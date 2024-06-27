@@ -1,8 +1,7 @@
 import { findUserFollow } from "../../functions/set_interactions/find_user_follow";
-
-const User = require('../../../../models/user/user-model.js')
-const ProfilePicture = require('../../../../models/user/profilepicture-model.js')
-const Statistic = require('../../../../models/user/statistic-model.js')
+import User from '../../../../models/user/user-model.js';
+import ProfilePicture from '../../../../models/user/profilepicture-model.js';
+import Statistic from '../../../../models/user/statistic-model.js';
 interface UserObject {
     user: {
       username: string;

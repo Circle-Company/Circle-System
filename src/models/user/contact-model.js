@@ -1,4 +1,4 @@
-const { Model, DataTypes} = require('sequelize')
+import { Model, DataTypes} from 'sequelize'
 
 class Contact extends Model {
     static init(sequelize) {
@@ -9,11 +9,14 @@ class Contact extends Model {
             phone_last_updated_at: DataTypes.DATE(),
             email: DataTypes.STRING(),
             email_last_updated_at: DataTypes.DATE(),
-        }, { sequelize })
+        }, {
+            sequelize,
+            tableName: 'contacts'
+        })
     }
 
     static associate(models){
         this.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' })
     }
 }
-module.exports = Contact
+export default Contact

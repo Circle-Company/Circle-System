@@ -1,4 +1,4 @@
-const { Model, DataTypes} = require('sequelize')
+import { Model, DataTypes} from 'sequelize'
 
 class ProfilePicture extends Model {
     static init(sequelize) {
@@ -6,7 +6,8 @@ class ProfilePicture extends Model {
             fullhd_resolution: DataTypes.STRING(),
             tiny_resolution: DataTypes.STRING()
         }, {
-            sequelize
+            sequelize,
+            tableName: 'profile_pictures'
         })
     }
 
@@ -14,4 +15,4 @@ class ProfilePicture extends Model {
         this.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' })
     }
 }
-module.exports = ProfilePicture
+export default ProfilePicture

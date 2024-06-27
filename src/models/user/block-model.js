@@ -1,4 +1,4 @@
-const { Model, DataTypes, Sequelize} = require('sequelize')
+import { Model, DataTypes} from 'sequelize'
 
 class Block extends Model {
     static init(sequelize) {
@@ -6,7 +6,8 @@ class Block extends Model {
             user_id: DataTypes.INTEGER(),
             blocked_user_id: DataTypes.INTEGER(),
         }, {
-            sequelize
+            sequelize,
+            tableName: 'blocks'
         })
     }
 
@@ -18,4 +19,4 @@ class Block extends Model {
         })
     }
 }
-module.exports = Block
+export default Block

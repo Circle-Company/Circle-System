@@ -21,6 +21,11 @@ module.exports = {
         type: Sequelize.STRING(300),
         defaultValue: null
       },
+      visible: {
+        type: Sequelize.BOOLEAN(),
+        defaultValue: true,
+        allowNull: false
+      },
       deleted: {
         type: Sequelize.BOOLEAN(),
         defaultValue: false,

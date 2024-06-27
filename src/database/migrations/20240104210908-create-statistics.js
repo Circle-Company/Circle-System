@@ -33,6 +33,14 @@ module.exports = {
         type: Sequelize.BIGINT(),
         defaultValue: 0
       },
+      total_moments_num: {
+        type: Sequelize.INTEGER(),
+        defaultValue: 0
+      },
+      total_memories_num: {
+        type: Sequelize.INTEGER(),
+        defaultValue: 0
+      },
       created_at: {
         type: Sequelize.DATE(),
         allowNull: false

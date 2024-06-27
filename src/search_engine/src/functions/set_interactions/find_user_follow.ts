@@ -1,5 +1,5 @@
 import { UserProps } from "../../types"
-const Follow = require('../../../../models/user/follow-model.js')
+import Follow from '../../../../models/user/follow-model.js'
 
 type FindUserFollow = {
     user_id: number,

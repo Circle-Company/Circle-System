@@ -1,7 +1,6 @@
 import { Request, Response } from 'express'
 import { ValidationError } from "../../errors"
-
-const User = require('../../models/user/user-model.js')
+import User from '../../models/user/user-model.js'
 
 export async function delete_user (req: Request, res: Response) {
     const { user_id }  = req.body

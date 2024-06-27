@@ -1,4 +1,4 @@
-const { Model, DataTypes, Sequelize} = require('sequelize')
+import { Model, DataTypes} from 'sequelize'
 
 class Report extends Model {
     static init(sequelize) {
@@ -8,7 +8,8 @@ class Report extends Model {
             reported_content_type: DataTypes.STRING(),
             report_type: DataTypes.STRING()
         }, {
-            sequelize
+            sequelize,
+            tableName: 'reports'
         })
     }
 
@@ -16,4 +17,4 @@ class Report extends Model {
         this.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' })
     }
 }
-module.exports = Report
+export default Report
