@@ -4,15 +4,15 @@ import { Twilio } from 'twilio'
 import CONFIG from '../../config'
 import { isValidPhoneNumber } from '../../helpers/is_valid_phone_number'
 import { AuthService } from '../../services/auth-service'
-
-const Socket = require('../../models/user/socket-model.js')
+import Socket from '../../models/user/socket-model.js'
+import { StatusCodes } from 'http-status-codes'
 let OTP : number | null
 
 export async function store_new_user (req: Request, res: Response) {
     const { username, password } = req.body
 
     try{
-        const user = await AuthService.StoreActions.CreateUser({username, password})
+        const user = await AuthService.Store.NewUser({username, password})
         return res.status(200).json(user)
     } catch (err: any) {
         throw new InternalServerError({message: err.message })
@@ -94,4 +94,10 @@ export async function verify_code (req: Request, res: Response) {
             action: "Make sure you did not enter the wrong code"
         }))
     }
+}
+
+export async function change_password(req: Request, res: Response){
+    const {password_input, user_id} = req.body
+    const result = await AuthService.Store.ChangePassword({ password_input, user_id})
+    res.status(StatusCodes.ACCEPTED).json(result)
 }
