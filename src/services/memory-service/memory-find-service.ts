@@ -84,8 +84,20 @@ export async function find_memory_moments ({memory_id, page, pageSize}: FindMemo
     }catch(err: any) {
         throw new InternalServerError({ message: err.message })
     }
-} 
+}
 
+export async function find_memory_moments_id ({ memory_id}: FindMemoryProps) {
+    try{
+        const memory_moments = await MemoryMoment.findAll({
+            where: { memory_id: memory_id },
+            attributes: ['moment_id'],
+        })
+
+        return memory_moments.map((item) => {return item.moment_id})
+    } catch(err: any) {
+        throw new InternalServerError({ message: err.message })
+    } 
+}
 
 export async function find_memory ({ memory_id}: FindMemoryProps) {
     try{
@@ -116,7 +128,7 @@ export async function find_user_memories({ user_id, page, pageSize }: FindUserMe
         const userStatistic = await UserStatistic.findOne({
             where: { user_id },
             attributes: ['total_memories_num']
-        })
+        });
 
         const transformedOutput = await Promise.all(
             memories.map(async (memory) => {
@@ -126,31 +138,39 @@ export async function find_user_memories({ user_id, page, pageSize }: FindUserMe
 
                 const moments = await Promise.all(
                     memoryMoments.map(async (memory_moment) => {
-                    return await populateMoment({
-                        moment_id: memory_moment.moment_id,
-                        statistic: true,
+                        return await populateMoment({
+                            moment_id: memory_moment.moment_id,
+                            statistic: true,
+                        });
                     })
-                }))
+                );
 
-                moments.map((moment) => console.log(moment.visible))
-                moments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                moments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 const filteredMoments = moments.filter((moment) => {
                     return moment.deleted === false && moment.visible === true && moment.blocked === false;
                 });
-                const slicedMoment = filteredMoments.slice(0, 3)
-                return {
-                    id: memory.id,
-                    title: memory.title,
-                    updated_at: slicedMoment.length > 0 ? slicedMoment[0].created_at : memory.updated_at,
-                    moments: slicedMoment,
-                };
+                const slicedMoment = filteredMoments.slice(0, 3);
+
+                if (slicedMoment.length !== 0) {
+                    return {
+                        id: memory.id,
+                        title: memory.title,
+                        updated_at: slicedMoment.length > 0 ? slicedMoment[0].created_at : memory.updated_at,
+                        moments: slicedMoment,
+                    };
+                }
+                return null; // Retornar null se a memória não tiver momentos válidos
             })
         );
 
-        transformedOutput.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+        // Filtra memórias que não são nulas
+        const filteredOutput = transformedOutput.filter((memory) => memory !== null);
+
+        // Ordena memórias filtradas
+        filteredOutput.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
         return {
-            memories: transformedOutput,
+            memories: filteredOutput,
             count: userStatistic.total_memories_num,
             totalPages,
             currentPage: page,
