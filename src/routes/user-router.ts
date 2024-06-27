@@ -8,12 +8,14 @@ const USER_PROFILE_PREFIX = USER_PREFIX + RP.PROFILE
 
 //userRouter.use(UserAuthenticationValidator)
 userRouter.post(USER_PROFILE_PREFIX + '/:username', UserController.FindUserByUsername)
-userRouter.post(USER_PROFILE_PREFIX + '/data/:username', UserController.FindUserData)
+userRouter.post(USER_PROFILE_PREFIX + '/data/username/:username', UserController.FindUserData)
+userRouter.post(USER_PROFILE_PREFIX + '/data/pk/:user_pk', UserController.FindUserByPk)
+userRouter.post(USER_PREFIX + '/session/data/pk/:user_pk', UserController.FindSessionUserByPk)
+userRouter.post(USER_PREFIX + '/session/statistics/pk/:user_pk', UserController.FindSessionUserStatisticsByPk)
 
 userRouter.post(USER_PREFIX + '/search', UserController.SearchUser)
 userRouter.post(USER_PREFIX + '/recommendations', UserController.RecommenderUsers) 
 userRouter.get(USER_PREFIX + '/most-famous', UserController.FindMostFollowedUsers) 
-
 
 userRouter.post(USER_PREFIX + '/block', UserController.BlockUser)
 userRouter.post(USER_PREFIX + '/unlock', UserController.UnlockUser)
