@@ -6,6 +6,7 @@ type ImageCompressorProps = {
     quality: number,
     img_width: number,
     img_height: number,
+    isMoment?: boolean
     resolution: 'FULL_HD' | 'NHD'
 }
 
@@ -36,12 +37,14 @@ export async function image_compressor({
     quality,
     img_width,
     img_height,
-    resolution
+    resolution,
+    isMoment = true
 }: ImageCompressorProps) {
     try {
         const imageBuffer = Buffer.from(imageBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64')
-        const targetWidth = img_width> 1080? 1080 : img_width
-        const targetHeight = Math.ceil((img_width / 9) * 16)
+        const aspectRatio = 1.566
+        const targetWidth = Math.trunc(img_width> 1080? 1080 : img_width)
+        const targetHeight = Math.trunc(isMoment? targetWidth * aspectRatio : targetWidth)
         if(resolution == 'FULL_HD'){
             const compressedImageBuffer = await sharp(imageBuffer)
                 .resize({ width: targetWidth, height: targetHeight, fit: 'cover' }) // Redimensionar para largura e altura máximas especificadas
