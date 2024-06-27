@@ -2,10 +2,13 @@ import { Request, Response } from 'express'
 import { ValidationError } from "../../errors"
 import { ContainSpecialCharacters } from '../../helpers/contain-special-characters'
 import { FindUserAlreadyExists } from '../../helpers/find-user-already-exists'
-
-const User = require('../../models/user/user-model.js')
-const ProfilePicture = require('../../models/user/profilepicture-model.js')
-const Coordinate = require('../../models/user/coordinate-model.js')
+import User from '../../models/user/user-model.js'
+import ProfilePicture from '../../models/user/profilepicture-model.js'
+import Coordinate from '../../models/user/coordinate-model.js'
+import { image_compressor } from '../../utils/image/compressor'
+import { HEICtoJPEG } from '../../utils/image/conversor'
+import { upload_image_AWS_S3 } from '../../utils/image/upload'
+import CONFIG from '../../config'
 
 export async function edit_user_description (req: Request, res: Response) {
     const { user_id, description }  = req.body
@@ -52,7 +55,7 @@ export async function edit_user_name (req: Request, res: Response) {
             res.status(200).json({
                 message: 'This user name has been updated successfully'
             })                       
-        } catch {
+        } catch (err: any) {
             res.status(400).send( new ValidationError({
                 message: 'It was not possible to edit the name of this user',
                 action: 'Make sure the user has a name to be edited'
@@ -93,18 +96,54 @@ export async function edit_user_username (req: Request, res: Response) {
 export async function edit_profile_picture (req: Request, res: Response) {
     const {
         user_id,
-        fullhd_resolution,
-        tiny_resolution
+        midia,
+        metadata
     } = req.body
     try{
-        ProfilePicture.update({
-            fullhd_resolution: fullhd_resolution,
-            tiny_resolution: tiny_resolution
+        let midia_base64, small_aws_s3_url, tiny_aws_s3_url
+
+        console.log(user_id, midia, metadata)
+
+        if(metadata.file_type == 'image/heic') midia_base64 = await HEICtoJPEG({base64: midia.base64})
+        else midia_base64 = midia.base64
+
+        const compressed_small_base64 = await image_compressor({
+            imageBase64: midia_base64,
+            quality: 18,
+            img_width: metadata.resolution_width,
+            img_height: metadata.resolution_width,
+            resolution: 'FULL_HD',
+            isMoment: false
+        })
+        const compressed_tiny_base64 = await image_compressor({
+            imageBase64: midia_base64,
+            quality: 10,
+            img_width: metadata.resolution_width,
+            img_height: metadata.resolution_width,
+            resolution: 'NHD',
+            isMoment: false
+        })
+
+        small_aws_s3_url = await upload_image_AWS_S3({
+            imageBase64: compressed_small_base64,
+            bucketName: CONFIG.AWS_PROFILE_MIDIA_BUCKET,
+            fileName: 'small_' + metadata.file_name
+        })
+        tiny_aws_s3_url = await upload_image_AWS_S3({
+            imageBase64: compressed_tiny_base64,
+            bucketName: CONFIG.AWS_PROFILE_MIDIA_BUCKET,
+            fileName: 'tiny_' + metadata.file_name
+        })
+
+        await ProfilePicture.update({
+            fullhd_resolution: small_aws_s3_url,
+            tiny_resolution: tiny_aws_s3_url
         }, { where: {user_id: user_id}})
 
         res.status(200).json({
-            message: 'This user profile picture has been edited successfully'
-        })  
+            fullhd_resolution: small_aws_s3_url,
+            tiny_resolution: tiny_aws_s3_url
+        })
     } catch {
         res.status(400).send( new ValidationError({
             message: 'It was not possible to edit the profile picture of this user',
