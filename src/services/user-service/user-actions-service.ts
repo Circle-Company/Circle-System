@@ -1,10 +1,10 @@
 import { FollowUserProps, BlockUserProps, ReportUserProps } from "./types"
 import { ValidationError } from "../../errors"
 import { Relation } from "../../helpers/relation"
-const Block = require('../../models/user/block-model.js')
-const Follow = require('../../models/user/follow-model.js')
-const Statistic = require('../../models/user/statistic-model.js')
-const Report = require('../../models/user/report-model.js')
+import Block from '../../models/user/block-model.js'
+import Follow from '../../models/user/follow-model.js'
+import Statistic from '../../models/user/statistic-model.js'
+import Report from '../../models/user/report-model.js'
 import { Notification } from "../../helpers/notification"
 
 export async function follow_user({
@@ -40,7 +40,8 @@ export async function follow_user({
         await Notification.AutoSend({
             sender_user_id: user_id,
             receiver_user_id: followed_user_id,
-            type: 'FOLLOW-USER'
+            type: 'FOLLOW-USER',
+            content_id: null
         })
 
     }
