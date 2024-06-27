@@ -1,7 +1,7 @@
 import { Coordinates, haversineDistance } from "../../../../helpers/coordinates_distance"
 import { FinduserBlock } from "../../functions/set_interactions/find_user_block"
 import { findUserFollow } from "../../functions/set_interactions/find_user_follow"
-const Coordinate = require('../../../../models/user/coordinate-model.js')
+import Coordinate from '../../../../models/user/coordinate-model.js'
 type FindCandidatesProps = {
     user_id: number,
     subtracted_candidates: candidateInput[]

@@ -1,5 +1,5 @@
-const Relation = require('../../../../models/user/relation-model.js')
-const User = require('../../../../models/user/user-model.js')
+import Relation from '../../../../models/user/relation-model.js';
+import User from '../../../../models/user/user-model.js';
 
 type RelationProps = {
     id: number,
