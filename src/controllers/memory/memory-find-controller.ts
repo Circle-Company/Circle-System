@@ -10,6 +10,12 @@ export async function find_memory_moments(req: Request, res: Response) {
     res.status(StatusCodes.ACCEPTED).json(result)
 }
 
+export async function find_memory_moments_ids (req: Request, res: Response) {
+    const { memory_id } = req.body
+    const result = await Memory.Find.MomentsIds({memory_id})
+    res.status(StatusCodes.ACCEPTED).json(result)
+}
+
 export async function find_memory (req: Request, res: Response) {
     const { memory_id } = req.body
     const result = await Memory.Find.Memory({ memory_id })
