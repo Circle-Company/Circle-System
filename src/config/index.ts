@@ -36,6 +36,10 @@ const server = {
     JWT_EXPIRES: env.JWT_EXPIRES || 31557600 // one year,
 }
 
+const circleapis = {
+    CIRCLE_SWIPE_ENGINE_API: env.CIRCLE_SWIPE_ENGINE_API
+}
+
 const mysql = {
     development: {
         DB_HOST: env.DEVELOPMENT_DB_HOST || 'localhost',
@@ -99,6 +103,7 @@ Object.entries(required).map((entry) => {
 })
 
 export default {
+    ...circleapis,
     ...environment,
     ...server,
     ...required,

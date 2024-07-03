@@ -1,5 +1,6 @@
 import axios from 'axios'
+import config from '../../config';
 
 export const swipe_engine_api = axios.create({
-    baseURL: "http://localhost:5000/",
+    baseURL: config.CIRCLE_SWIPE_ENGINE_API,
 });
