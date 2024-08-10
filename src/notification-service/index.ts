@@ -1,4 +1,5 @@
 import { ADMIN } from "../config/firebase"
+import { Module as CreateNotificationOnDb } from "./modules/create-on-db"
 import { Module as NotificationData } from "./modules/notification-data"
 import { Module as ReceiverUsersList } from "./modules/receiver-users"
 import { NotificationProps } from "./types"
@@ -32,10 +33,11 @@ export async function TriggerNotification({ notification }: TriggerNotificationT
         },
     }
 
+    await CreateNotificationOnDb({ notification })
     if (cleanedUsersList.length > 0) {
         ADMIN.messaging()
             .sendMulticast(message)
-            .then((response) => {
+            .then(async (response) => {
                 console.log("Successfully sent message:", response)
             })
             .catch((error) => {
