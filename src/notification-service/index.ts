@@ -33,15 +33,17 @@ export async function TriggerNotification({ notification }: TriggerNotificationT
         },
     }
 
-    await CreateNotificationOnDb({ notification })
     if (cleanedUsersList.length > 0) {
         ADMIN.messaging()
             .sendMulticast(message)
-            .then(async (response) => {
+            .then((response) => {
                 console.log("Successfully sent message:", response)
             })
             .catch((error) => {
                 console.log("Error sending message:", error)
+            })
+            .finally(async () => {
+                await CreateNotificationOnDb({ notification })
             })
     }
 }
