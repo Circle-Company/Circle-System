@@ -25,14 +25,6 @@ class Notification extends Model {
             foreignKey: "receiver_user_id",
             as: "user",
         })
-        this.hasOne(models.Moment, {
-            foreignKey: "moment_id",
-            as: "moment",
-        })
-        this.hasOne(models.Memory, {
-            foreignKey: "memory_id",
-            as: "memory",
-        })
     }
 }
 export default Notification
