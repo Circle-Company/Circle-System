@@ -1,13 +1,14 @@
 import { WTF } from "../../WTF"
 import { ValidationError } from "../../errors"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
-import { Notification } from "../../helpers/notification"
 import { Relation } from "../../helpers/relation"
 import Follow from "../../models/user/follow-model.js"
 import ProfilePicture from "../../models/user/profilepicture-model.js"
 import Statistic from "../../models/user/statistic-model.js"
 import User from "../../models/user/user-model.js"
+import { TriggerNotification } from "../../notification-service"
 import { SearchEngine } from "../../search_engine"
+
 import {
     FindUserByUsernameProps,
     FindUserDataProps,
@@ -34,12 +35,19 @@ export async function find_user_by_username({ user_id, username }: FindUserByUse
         attributes: ["fullhd_resolution", "tiny_resolution"],
         where: { user_id: user.id },
     })
-    await Notification.AutoSend({
-        sender_user_id: user_id,
-        receiver_user_id: user.id,
-        type: "VIEW-USER",
-        content_id: null,
-    })
+
+    if (user_id !== user.id) {
+        await TriggerNotification({
+            notification: {
+                type: "VIEW-USER",
+                data: {
+                    senderUserId: user_id,
+                    receiverUserId: user.id,
+                },
+            },
+        })
+    }
+
     return {
         id: user.id,
         username: user.username,
@@ -80,12 +88,18 @@ export async function find_user_by_pk({ user_id, user_pk }: { user_id: number; u
         attributes: ["fullhd_resolution", "tiny_resolution"],
         where: { user_id: user.id },
     })
-    await Notification.AutoSend({
-        sender_user_id: user_id,
-        receiver_user_id: user.id,
-        type: "VIEW-USER",
-        content_id: null,
-    })
+
+    if (user_id !== user.id) {
+        await TriggerNotification({
+            notification: {
+                type: "VIEW-USER",
+                data: {
+                    senderUserId: user_id,
+                    receiverUserId: user.id,
+                },
+            },
+        })
+    }
     return {
         id: user.id,
         username: user.username,
@@ -124,6 +138,19 @@ export async function find_user_data({ username, user_id }: FindUserDataProps) {
                 weight: 1,
             })
         }
+
+        if (user_id !== user.id) {
+            await TriggerNotification({
+                notification: {
+                    type: "VIEW-USER",
+                    data: {
+                        senderUserId: user_id,
+                        receiverUserId: user.id,
+                    },
+                },
+            })
+        }
+
         return {
             id: user.id,
             username: user.username,
