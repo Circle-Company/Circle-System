@@ -52,7 +52,7 @@ class Moment extends Model {
             as: "memories",
         })
         this.hasMany(models.Like, { foreignKey: "liked_moment_id", as: "likes" })
-        this.hasMany(models.Notification, { foreignKey: "moment_id" })
+        //this.hasMany(models.Notification, { foreignKey: "moment_id" })
     }
 }
 module.exports = Moment

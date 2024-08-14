@@ -24,7 +24,6 @@ class Memory extends Model {
             foreignKey: "memory_id",
             as: "moments",
         })
-        this.hasMany(models.Notification, { foreignKey: "memory_id" })
     }
 }
 
