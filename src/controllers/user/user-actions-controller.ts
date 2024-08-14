@@ -73,21 +73,35 @@ export async function updateUserCoordinates(req: Request, res: Response) {
     const { user_id, latitude, longitude } = req.body
 
     try {
-        const coordinatesAlreadyExists = Coordinate.findOne({ where: { user_id } })
-        if (latitude && longitude) {
-            if (coordinatesAlreadyExists) {
-                Coordinate.update
-            }
+        if (!latitude || !longitude) {
+            return res.status(400).json({
+                message: "Latitude and longitude are required.",
+            })
         }
-        await UserService.UserActions.UnfollowUser({ user_id, followed_user_id })
-        res.status(200).json({
-            message: "This user has been successfully unfollowed",
-        })
-    } catch {
-        res.status(400).send(
+
+        const coordinatesAlreadyExists = await Coordinate.findOne({ where: { user_id } })
+
+        if (coordinatesAlreadyExists) {
+            await Coordinate.update({ latitude, longitude }, { where: { user_id } })
+            return res.status(200).json({
+                message: "User coordinates have been successfully updated.",
+            })
+        } else {
+            await Coordinate.create({
+                user_id,
+                latitude,
+                longitude,
+            })
+            return res.status(201).json({
+                message: "User coordinates have been successfully created.",
+            })
+        }
+    } catch (error) {
+        console.error("Error updating or creating user coordinates:", error)
+        res.status(500).send(
             new ValidationError({
-                message: "Failed to unfollow this user",
-                action: "check if this user has been previously unfollowed",
+                message: "Failed to update or create user coordinates.",
+                action: "Please verify if the user exists and try again.",
             })
         )
     }
