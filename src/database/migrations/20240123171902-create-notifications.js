@@ -27,22 +27,10 @@ module.exports = {
             moment_id: {
                 type: Sequelize.INTEGER(),
                 allowNull: true,
-                references: {
-                    model: "moments", // Certifique-se de ajustar para o nome real da tabela de moments
-                    key: "id",
-                },
-                onUpdate: "CASCADE",
-                onDelete: "CASCADE",
             },
             memory_id: {
                 type: Sequelize.INTEGER(),
                 allowNull: true,
-                references: {
-                    model: "memories", // Certifique-se de ajustar para o nome real da tabela de memories
-                    key: "id",
-                },
-                onUpdate: "CASCADE",
-                onDelete: "CASCADE",
             },
             viewed: {
                 type: Sequelize.BOOLEAN(),
