@@ -57,6 +57,10 @@ class User extends Model {
             foreignKey: "user_id",
             as: "coordinates",
         })
+        this.hasOne(models.Preference, {
+            foreignKey: "user_id",
+            as: "preferences",
+        })
         this.hasMany(models.Block, {
             foreignKey: "user_id",
             foreignKey: "blocked_user_id",
