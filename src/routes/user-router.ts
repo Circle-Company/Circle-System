@@ -18,7 +18,6 @@ userRouter.post(
 
 userRouter.post(USER_PREFIX + "/search", UserController.SearchUser)
 userRouter.post(USER_PREFIX + "/recommendations", UserController.RecommenderUsers)
-userRouter.post(USER_PREFIX + "/location/update", UserController.UpdateUserCoordinates)
 userRouter.get(USER_PREFIX + "/most-famous", UserController.FindMostFollowedUsers)
 
 userRouter.post(USER_PREFIX + "/block", UserController.BlockUser)

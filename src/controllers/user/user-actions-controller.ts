@@ -1,6 +1,4 @@
-import { Request, Response } from "express"
 import { ValidationError } from "../../errors"
-import Coordinate from "../../models/user/coordinate-model.js"
 import { UserService } from "../../services/user-service"
 
 export async function block_user(req: any, res: any) {
@@ -64,44 +62,6 @@ export async function unfollow_user(req: any, res: any) {
             new ValidationError({
                 message: "Failed to unfollow this user",
                 action: "check if this user has been previously unfollowed",
-            })
-        )
-    }
-}
-
-export async function updateUserCoordinates(req: Request, res: Response) {
-    const { user_id, latitude, longitude } = req.body
-
-    try {
-        if (!latitude || !longitude) {
-            return res.status(400).json({
-                message: "Latitude and longitude are required.",
-            })
-        }
-
-        const coordinatesAlreadyExists = await Coordinate.findOne({ where: { user_id } })
-
-        if (coordinatesAlreadyExists) {
-            await Coordinate.update({ latitude, longitude }, { where: { user_id } })
-            return res.status(200).json({
-                message: "User coordinates have been successfully updated.",
-            })
-        } else {
-            await Coordinate.create({
-                user_id,
-                latitude,
-                longitude,
-            })
-            return res.status(201).json({
-                message: "User coordinates have been successfully created.",
-            })
-        }
-    } catch (error) {
-        console.error("Error updating or creating user coordinates:", error)
-        res.status(500).send(
-            new ValidationError({
-                message: "Failed to update or create user coordinates.",
-                action: "Please verify if the user exists and try again.",
             })
         )
     }

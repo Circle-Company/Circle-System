@@ -4,7 +4,6 @@ import {
     report,
     unfollow_user,
     unlock_user,
-    updateUserCoordinates,
 } from "./user-actions-controller"
 import {
     find_most_followed_users,
@@ -24,7 +23,6 @@ export const UserController = {
     FindUserByPk: find_user_by_pk,
     FindSessionUserByPk: find_session_user_by_pk,
     FindSessionUserStatisticsByPk: find_session_user_statistics_by_pk,
-    UpdateUserCoordinates: updateUserCoordinates,
     RecommenderUsers: recommender_users,
     FindMostFollowedUsers: find_most_followed_users,
     BlockUser: block_user,
