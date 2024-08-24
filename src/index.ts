@@ -14,29 +14,50 @@ const moderatorRouter = require("./routes/moderator-router")
 const NotificationRouter = require("./routes/notification-router")
 const PreferencesRouter = require("./routes/preferences-router")
 
-const app = express()
+if (config.RUN_SCRIPTS_MODE) RunScripts()
+else startServer()
 
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json({ limit: "50mb" }))
-app.use(
-    authRouter,
-    userRouter,
-    accountRouter,
-    NotificationRouter,
-    momentRouter,
-    memoryRouter,
-    PreferencesRouter
-)
-app.use(adminRouter, moderatorRouter)
+async function RunScripts() {}
 
-/**
- * 
-const server = http.createServer();
-initializeSocket({server});
-getSocketInstance().listen(config.SOCKET_PORT)
+async function startServer() {
+    try {
+        // Execute o script assíncrono
+        // await CreateUsersPreferences()
 
- */
+        const app = express()
 
-app.listen(config.PORT, () =>
-    console.log("🚀 circle-system (server) - running on port: " + config.PORT)
-)
+        // Configuração do body-parser
+        app.use(bodyParser.urlencoded({ extended: false }))
+        app.use(bodyParser.json({ limit: "50mb" }))
+
+        // Configuração das rotas
+        app.use(
+            authRouter,
+            userRouter,
+            accountRouter,
+            NotificationRouter,
+            momentRouter,
+            memoryRouter,
+            PreferencesRouter
+        )
+        app.use(adminRouter, moderatorRouter)
+
+        /**
+         * Se necessário, configure o socket.io aqui
+         * const server = http.createServer(app);
+         * initializeSocket({ server });
+         * getSocketInstance().listen(config.SOCKET_PORT)
+         */
+
+        // Inicie o servidor
+        app.listen(config.PORT, () =>
+            console.log("🚀 circle-system (server) - running on port: " + config.PORT)
+        )
+    } catch (error) {
+        console.error("❌ Failed to start the server:", error)
+        process.exit(1) // Opcional: encerra o processo com falha
+    }
+}
+
+// Inicia o servidor
+startServer()
