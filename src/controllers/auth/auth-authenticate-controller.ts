@@ -88,7 +88,7 @@ export async function authenticate_user(req: Request, res: Response) {
                             disableHaptics: userPreferences.disable_haptics,
                             disableTranslation: userPreferences.disable_translation,
                         },
-                        pushNotification: {
+                        pushNotifications: {
                             disableLikeMoment:
                                 userPreferences.disable_like_moment_push_notification,
                             disableNewMemory: userPreferences.disable_new_memory_push_notification,
