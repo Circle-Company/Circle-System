@@ -111,9 +111,9 @@ export async function find_user_by_pk({ user_id, user_pk }: { user_id: number; u
             tiny_resolution: profile_picture.tiny_resolution,
         },
         statistics: {
-            total_followers_num: statistic.total_followers_num,
-            total_likes_num: statistic.total_likes_num,
-            total_views_num: statistic.total_views_num,
+            total_followers_num: statistic?.total_followers_num,
+            total_likes_num: statistic?.total_likes_num,
+            total_views_num: statistic?.total_views_num,
         },
         you_follow: Boolean(user_followed),
     }
@@ -131,6 +131,12 @@ export async function find_user_data({ username, user_id }: FindUserDataProps) {
         const profile_picture = await ProfilePicture.findOne({
             where: { user_id: user.id },
         })
+
+        const statistic = await Statistic.findOne({
+            attributes: ["total_followers_num", "total_likes_num", "total_views_num"],
+            where: { user_id: user.id },
+        })
+
         if (user_id !== user.id) {
             await Relation.AutoAdd({
                 user_id: user_id,
@@ -171,6 +177,11 @@ export async function find_user_data({ username, user_id }: FindUserDataProps) {
                 tiny_resolution: profile_picture.tiny_resolution,
                 created_at: profile_picture.createdAt,
                 updated_at: profile_picture.updatedAt,
+            },
+            statistics: {
+                total_followers_num: statistic.total_followers_num,
+                total_likes_num: statistic.total_likes_num,
+                total_views_num: statistic.total_views_num,
             },
         }
     }
