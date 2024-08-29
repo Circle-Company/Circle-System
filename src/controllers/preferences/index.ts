@@ -10,8 +10,10 @@ import {
     set_translation_language,
     set_view_user_push_notification,
 } from "./preferences-actions-controller"
+import { get_user_preferences } from "./preferences-find-controller"
 
 export const PreferencesController = {
+    Find: get_user_preferences,
     AppLanguage: set_app_language,
     TranslationLanguage: set_translation_language,
     SetAutoplay: set_autoplay,
