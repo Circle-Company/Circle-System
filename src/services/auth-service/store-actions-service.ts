@@ -24,7 +24,7 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
         throw new ValidationError({
             message: "Your username can only contain '_' and '.' as special characters.",
         })
-    } else if ((await FindUserAlreadyExists({ username: username })) === true) {
+    } else if ((await FindUserAlreadyExists({ username: username.toLowerCase() })) === true) {
         throw new ValidationError({
             message: "This username already exists.",
         })
@@ -35,7 +35,7 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
     } else {
         const encryptedPassword = await EncriptedPassword({ password })
         const newUser = await User.create({
-            username: username,
+            username: username.toLowerCase(),
             encrypted_password: encryptedPassword,
             access_level: 0,
             verifyed: false,
