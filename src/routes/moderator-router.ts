@@ -1,15 +1,9 @@
-import { Router } from 'express'
-import { ModeratorController } from '../controllers/moderator'
-import { RP } from '../config/routes_prefix'
+import { Router } from "express"
+import { RP } from "../config/routes_prefix"
+import { ModeratorController } from "../controllers/moderator"
 
-const moderatorRouter = Router()
+export const router = Router()
+const MODERATOR_USER_PREFIX = RP.USER
 
-const MODERATOR_PREFIX = RP.API_VERISON + RP.MODERATOR
-const MODERATOR_USER_PREFIX = MODERATOR_PREFIX + RP.USER
-
-moderatorRouter.use(moderatorRouter)
-moderatorRouter.post( MODERATOR_USER_PREFIX + '/delete', ModeratorController.DeleteUser)
-moderatorRouter.post( MODERATOR_USER_PREFIX + '/undelete', ModeratorController.UndeleteUser)
-
-
-module.exports = moderatorRouter
+router.post(MODERATOR_USER_PREFIX + "/delete", ModeratorController.DeleteUser)
+router.post(MODERATOR_USER_PREFIX + "/undelete", ModeratorController.UndeleteUser)

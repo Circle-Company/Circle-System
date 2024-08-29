@@ -1,21 +1,17 @@
-import { Router } from 'express'
-import { RP } from '../config/routes_prefix'
-import { MemoryController } from '../controllers/memory'
+import { Router } from "express"
+import { MemoryController } from "../controllers/memory"
 
-const memoryRouter = Router()
-const MEMORY_PREFIX = RP.API_VERISON + RP.MEMORY
+export const router = Router()
 
-//userRouter.use(UserAuthenticationValidator)
-memoryRouter.post(MEMORY_PREFIX + '/get', MemoryController.FindMemory)
-memoryRouter.post(MEMORY_PREFIX + '/get-user-memories', MemoryController.FindUserMemories)
-memoryRouter.post(MEMORY_PREFIX + '/get-moments', MemoryController.FindMemoryMoments)
-memoryRouter.post(MEMORY_PREFIX + '/get-moments-ids', MemoryController.FindMemoryMomentsIds)
+router.post("/get", MemoryController.FindMemory)
+router.post("/get-user-memories", MemoryController.FindUserMemories)
+router.post("/get-moments", MemoryController.FindMemoryMoments)
+router.post("/get-moments-ids", MemoryController.FindMemoryMomentsIds)
 
-memoryRouter.post(MEMORY_PREFIX + '/edit/title', MemoryController.EditMemoryTitle)
+router.post("/edit/title", MemoryController.EditMemoryTitle)
 
-memoryRouter.post(MEMORY_PREFIX + '/create', MemoryController.StoreNewMemory)
-memoryRouter.post(MEMORY_PREFIX + '/add-moment', MemoryController.StoreNewMemoryMoment)
+router.post("/create", MemoryController.StoreNewMemory)
+router.post("/add-moment", MemoryController.StoreNewMemoryMoment)
 
-memoryRouter.post(MEMORY_PREFIX + '/delete', MemoryController.DeleteMemory)
-memoryRouter.post(MEMORY_PREFIX + '/remove-moment', MemoryController.DeleteMemoryMoment)
-module.exports = memoryRouter
+router.post("/delete", MemoryController.DeleteMemory)
+router.post("/remove-moment", MemoryController.DeleteMemoryMoment)

@@ -1,39 +1,34 @@
 import { Router } from "express"
 import { RP } from "../config/routes_prefix"
 import { PreferencesController } from "../controllers/preferences"
-const preferencesRouter = Router()
-const PREFERENCES_PREFIX = RP.API_VERISON + RP.PREFERENCES
-const PUSH_NOTIFICATION_PREFIX = PREFERENCES_PREFIX + RP.PUSH_NOTIFICATION
 
-//preferencesRouter.use(UserAuthenticationValidator)
-preferencesRouter.get(PREFERENCES_PREFIX + "/get/:user_id", PreferencesController.Find)
-preferencesRouter.put(PREFERENCES_PREFIX + "/app-language", PreferencesController.AppLanguage)
-preferencesRouter.put(
-    PREFERENCES_PREFIX + "/translation-language",
-    PreferencesController.TranslationLanguage
-)
-preferencesRouter.put(PREFERENCES_PREFIX + "/autoplay", PreferencesController.SetAutoplay)
-preferencesRouter.put(PREFERENCES_PREFIX + "/haptics", PreferencesController.SetHaptics)
-preferencesRouter.put(PREFERENCES_PREFIX + "/translation", PreferencesController.SetTranslation)
+export const router = Router()
+const PUSH_NOTIFICATION_PREFIX = RP.PUSH_NOTIFICATION
 
-preferencesRouter.put(
+router.get("/get/:user_id", PreferencesController.Find)
+router.put("/app-language", PreferencesController.AppLanguage)
+router.put("/translation-language", PreferencesController.TranslationLanguage)
+router.put("/autoplay", PreferencesController.SetAutoplay)
+router.put("/haptics", PreferencesController.SetHaptics)
+router.put("/translation", PreferencesController.SetTranslation)
+
+router.put(
     PUSH_NOTIFICATION_PREFIX + "/like-moment",
     PreferencesController.PushNotification.SetLikeMoment
 )
-preferencesRouter.put(
+router.put(
     PUSH_NOTIFICATION_PREFIX + "/new-memory",
     PreferencesController.PushNotification.SetNewMemory
 )
-preferencesRouter.put(
+router.put(
     PUSH_NOTIFICATION_PREFIX + "/add-to-memory",
     PreferencesController.PushNotification.SetAddToMemory
 )
-preferencesRouter.put(
+router.put(
     PUSH_NOTIFICATION_PREFIX + "/follow-user",
     PreferencesController.PushNotification.SetFollowUser
 )
-preferencesRouter.put(
+router.put(
     PUSH_NOTIFICATION_PREFIX + "/view-user",
     PreferencesController.PushNotification.SetViewUser
 )
-module.exports = preferencesRouter
