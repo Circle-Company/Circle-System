@@ -94,20 +94,21 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
                 },
                 preferences: {
                     language: {
-                        appLanguage: userPreferences.app_language,
-                        translationLanguage: userPreferences.translation_language,
+                        appLanguage: userPreferences?.app_language,
+                        translationLanguage: userPreferences?.translation_language,
                     },
                     content: {
-                        disableAutoplay: userPreferences.disable_autoplay,
-                        disableHaptics: userPreferences.disable_haptics,
-                        disableTranslation: userPreferences.disable_translation,
+                        disableAutoplay: userPreferences?.disable_autoplay,
+                        disableHaptics: userPreferences?.disable_haptics,
+                        disableTranslation: userPreferences?.disable_translation,
                     },
-                    pushNotification: {
-                        disableLikeMoment: userPreferences.disable_like_moment_push_notification,
-                        disableNewMemory: userPreferences.disable_new_memory_push_notification,
-                        disableAddToMemory: userPreferences.disable_add_to_memory_push_notification,
-                        disableFollowUser: userPreferences.disable_follow_user_push_notification,
-                        disableViewUser: userPreferences.disable_view_user_push_notification,
+                    pushNotifications: {
+                        disableLikeMoment: userPreferences?.disable_like_moment_push_notification,
+                        disableNewMemory: userPreferences?.disable_new_memory_push_notification,
+                        disableAddToMemory:
+                            userPreferences?.disable_add_to_memory_push_notification,
+                        disableFollowUser: userPreferences?.disable_follow_user_push_notification,
+                        disableViewUser: userPreferences?.disable_view_user_push_notification,
                     },
                 },
             },
