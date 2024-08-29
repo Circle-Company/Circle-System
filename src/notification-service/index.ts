@@ -2,6 +2,7 @@ import { ADMIN } from "../config/firebase"
 import { Module as CreateNotificationOnDb } from "./modules/create-on-db"
 import { Module as NotificationData } from "./modules/notification-data"
 import { Module as ReceiverUsersList } from "./modules/receiver-users"
+import { Module as VerifyUsersPermissions } from "./modules/verify-receiver-permissions"
 import { NotificationProps } from "./types"
 
 type TriggerNotificationType = {
@@ -10,10 +11,11 @@ type TriggerNotificationType = {
 export async function TriggerNotification({ notification }: TriggerNotificationType) {
     const { notificationData } = await NotificationData({ notification })
     const usersList = await ReceiverUsersList({ notification })
-    const cleanedUsersList = usersList.filter((user) => user.token !== null)
+    const usersWithPermission = await VerifyUsersPermissions({ notification, usersList })
+    const cleanedUsersList = usersWithPermission.filter((user) => user?.token !== null)
     const message = {
         tokens: cleanedUsersList.map((user) => {
-            return user.token
+            return user?.token
         }),
         notification: {
             imageUrl:
