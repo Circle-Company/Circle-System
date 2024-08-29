@@ -30,10 +30,13 @@ const environment = {
 }
 
 const server = {
-    SOCKET_PORT: env.SOCKET_PORT || 3001,
     PORT: env.PORT || 3000,
-    CLIENT_URI: (env.HOST || "http://localhost:") && (env.PORT || 3000),
-    JWT_EXPIRES: env.JWT_EXPIRES || 31557600, // one year,
+}
+
+const jwt = {
+    JWT_EXPIRES: env.JWT_EXPIRES,
+    JWT_ISSUER: env.JWT_ISSUER,
+    JWT_AUDIENCE: env.JWT_AUDIENCE,
 }
 
 const circleapis = {
@@ -62,6 +65,8 @@ const mysql = {
 }
 const required = {
     JWT_SECRET: env.JWT_SECRET,
+    JWT_ISSUER: env.JWT_ISSUER,
+    JWT_AUDIENCE: env.JWT_AUDIENCE,
     PRIVATE_KEY_PASSPHRASE: env.PRIVATE_KEY_PASSPHRASE,
 }
 const s3 = {
@@ -115,4 +120,5 @@ export default {
     ...sms,
     ...options,
     ...mysql,
+    ...jwt,
 }
