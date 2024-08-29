@@ -6,6 +6,7 @@ const PREFERENCES_PREFIX = RP.API_VERISON + RP.PREFERENCES
 const PUSH_NOTIFICATION_PREFIX = PREFERENCES_PREFIX + RP.PUSH_NOTIFICATION
 
 //preferencesRouter.use(UserAuthenticationValidator)
+preferencesRouter.get(PREFERENCES_PREFIX + "/get/:user_id", PreferencesController.Find)
 preferencesRouter.put(PREFERENCES_PREFIX + "/app-language", PreferencesController.AppLanguage)
 preferencesRouter.put(
     PREFERENCES_PREFIX + "/translation-language",
