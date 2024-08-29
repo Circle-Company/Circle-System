@@ -1,6 +1,6 @@
 import { ValidationError } from "../../errors"
 import { ContainSpecialCharacters } from "../../helpers/contain-special-characters"
-import { DecriptPassword, EncriptedPassword } from "../../helpers/encrypt-decrypt-password"
+import { DecryptPassword, EncriptedPassword } from "../../helpers/encrypt-decrypt-password"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 import { jwtEncoder } from "../../jwt/encode"
 import Preference from "../../models/preferences/preference-model.js"
@@ -63,7 +63,7 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
         })
         const newAccessToken = await jwtEncoder({
             username: newUser.username,
-            user_id: newUser.id,
+            userId: newUser.id,
         })
 
         return {
@@ -129,7 +129,7 @@ export async function change_password({
         attributes: ["encrypted_password", "old_encrypted_password"],
     })
     const new_encrypted_password = await EncriptedPassword({ password: password_input })
-    if (await DecriptPassword({ password1: password_input, password2: user.encrypted_password })) {
+    if (await DecryptPassword({ password1: password_input, password2: user.encrypted_password })) {
         throw new ValidationError({
             message: "Your new password cannot be the same as your current one",
         })
