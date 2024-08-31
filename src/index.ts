@@ -15,6 +15,13 @@ import { router as MomentRouter } from "./routes/moment-router.js"
 import { router as NotificationRouter } from "./routes/notification-router.js"
 import { router as PreferencesRouter } from "./routes/preferences-router.js"
 import { router as UserRouter } from "./routes/user-router.js"
+declare module "express-serve-static-core" {
+    interface Request {
+        user_id?: number
+        username?: string
+        user?: Object
+    }
+}
 
 const USER_PREFIX = RP.API_VERISON + RP.USER
 const ACC_PREFIX = RP.API_VERISON + RP.ACCOUNT
