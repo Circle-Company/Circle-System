@@ -11,10 +11,19 @@ import { router as AdminRouter } from "./routes/admin-router.js"
 import { router as AuthRouter } from "./routes/auth-router.js"
 import { router as MemoryRouter } from "./routes/memory-router.js"
 import { router as ModeratorRouter } from "./routes/moderator-router.js"
+import { router as MomentRouterV2 } from "./routes/moment-router-v2.js"
 import { router as MomentRouter } from "./routes/moment-router.js"
 import { router as NotificationRouter } from "./routes/notification-router.js"
 import { router as PreferencesRouter } from "./routes/preferences-router.js"
 import { router as UserRouter } from "./routes/user-router.js"
+
+declare module "express-serve-static-core" {
+    interface Request {
+        user_id?: number
+        username?: string
+        user?: Object
+    }
+}
 
 const USER_PREFIX = RP.API_VERISON + RP.USER
 const ACC_PREFIX = RP.API_VERISON + RP.ACCOUNT
@@ -23,6 +32,7 @@ const AUTH_PREFIX = RP.API_VERISON + RP.AUTH
 const MEMORY_PREFIX = RP.API_VERISON + RP.MEMORY
 const MODERATOR_PREFIX = RP.API_VERISON + RP.MODERATOR
 const MOMENT_PREFIX = RP.API_VERISON + RP.MOMENT
+const MOMENTS_PREFIX_V2 = RP.API_V2 + RP.MOMENTS
 const NOTIFICATION_PREFIX = RP.API_VERISON + RP.NOTIFICATION
 const PREFERENCES_PREFIX = RP.API_VERISON + RP.PREFERENCES
 
@@ -43,6 +53,7 @@ app.use(USER_PREFIX, UserAuthenticationValidator, UserRouter)
 app.use(ACC_PREFIX, UserAuthenticationValidator, AccountRouter)
 app.use(MEMORY_PREFIX, UserAuthenticationValidator, MemoryRouter)
 app.use(MOMENT_PREFIX, UserAuthenticationValidator, MomentRouter)
+app.use(MOMENTS_PREFIX_V2, UserAuthenticationValidator, MomentRouterV2)
 app.use(NOTIFICATION_PREFIX, UserAuthenticationValidator, NotificationRouter)
 app.use(PREFERENCES_PREFIX, UserAuthenticationValidator, PreferencesRouter)
 

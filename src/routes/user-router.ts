@@ -1,12 +1,17 @@
 import { Router } from "express"
 import { RP } from "../config/routes_prefix"
 import { UserController } from "../controllers/user"
+import { CheckUserAccountStatus } from "../middlewares/CheckUserAccountStatus"
 
 export const router = Router()
 const USER_PROFILE_PREFIX = RP.PROFILE
 
 router.post(USER_PROFILE_PREFIX + "/:username", UserController.FindUserByUsername)
-router.post(USER_PROFILE_PREFIX + "/data/username/:username", UserController.FindUserData)
+router.get(
+    USER_PROFILE_PREFIX + "/data/username/:username",
+    CheckUserAccountStatus,
+    UserController.FindUserData
+)
 router.post(USER_PROFILE_PREFIX + "/data/pk/:user_pk", UserController.FindUserByPk)
 router.post("/session/data/pk/:user_pk", UserController.FindSessionUserByPk)
 router.post("/session/statistics/pk/:user_pk", UserController.FindSessionUserStatisticsByPk)

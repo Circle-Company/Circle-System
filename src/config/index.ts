@@ -34,7 +34,7 @@ const server = {
 }
 
 const jwt = {
-    JWT_EXPIRES: env.JWT_EXPIRES,
+    JWT_EXPIRES: env.JWT_EXPIRES | 3600, // 1 hour
     JWT_ISSUER: env.JWT_ISSUER,
     JWT_AUDIENCE: env.JWT_AUDIENCE,
 }

@@ -129,10 +129,11 @@ export async function find_user_data({ username, user_id }: FindUserDataProps) {
             where: { username },
         })
         const profile_picture = await ProfilePicture.findOne({
+            attributes: ["fullhd_resolution", "tiny_resolution"],
             where: { user_id: user.id },
         })
 
-        const statistic = await Statistic.findOne({
+        const statistics = await Statistic.findOne({
             attributes: ["total_followers_num", "total_likes_num", "total_views_num"],
             where: { user_id: user.id },
         })
@@ -162,27 +163,9 @@ export async function find_user_data({ username, user_id }: FindUserDataProps) {
             username: user.username,
             name: user.name,
             description: user.description,
-            access_level: user.access_level,
             verifyed: user.verifyed,
-            deleted: user.deleted,
-            blocked: user.blocked,
-            muted: user.muted,
-            terms_and_conditions_agreed_version: user.terms_and_conditions_agreed_version,
-            terms_and_conditions_agreed_at: user.terms_and_conditions_agreed_at,
-            last_active_at: user.last_active_at,
-            send_notification_emails: user.send_notification_emails,
-            profile_picture: {
-                id: profile_picture.id,
-                fullhd_resolution: profile_picture.fullhd_resolution,
-                tiny_resolution: profile_picture.tiny_resolution,
-                created_at: profile_picture.createdAt,
-                updated_at: profile_picture.updatedAt,
-            },
-            statistics: {
-                total_followers_num: statistic.total_followers_num,
-                total_likes_num: statistic.total_likes_num,
-                total_views_num: statistic.total_views_num,
-            },
+            profile_picture,
+            statistics,
         }
     }
 }

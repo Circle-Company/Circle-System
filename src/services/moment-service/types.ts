@@ -4,9 +4,9 @@ export interface MomentProps {
     midia: MidiaProps
     metadata: MetadataProps
     tags: TagProps[]
-    statistic: StatisticProps,
-    visible?: boolean,
-    blocked?: boolean,
+    statistic: StatisticProps
+    visible?: boolean
+    blocked?: boolean
     deleted?: boolean
 }
 
@@ -14,9 +14,9 @@ export interface NewMomentProps {
     id: number
     description: string
     midia: {
-        content_type: 'IMAGE' | 'VIDEO'
+        content_type: "IMAGE" | "VIDEO"
         base64: string
-    },
+    }
     metadata: MetadataProps
     tags: TagProps[]
     statistic: StatisticProps
@@ -37,7 +37,7 @@ export interface MetadataProps {
     duration: number
     file_name: string
     file_size: number
-    file_type: 'image/png' |'image/heic' | 'image/jpg'
+    file_type: "image/png" | "image/heic" | "image/jpg"
     resolution_width: number
     resolution_height: number
 }
@@ -45,7 +45,7 @@ export interface TagProps {
     title: string
 }
 export interface MidiaProps {
-    content_type: 'IMAGE' | 'VIDEO'
+    content_type: "IMAGE" | "VIDEO"
     fullhd_resolution: string
     nhd_resolution: string
 }
@@ -98,6 +98,7 @@ export interface FindUserMomentsProps {
     page: number
     pageSize: number
     user_id: number
+    finded_user_pk: number
 }
 
 export interface FindUserMomentsTinyExcludeMemoryProps {
@@ -114,7 +115,7 @@ export interface FindMomentStatisticsViewProps {
 }
 
 export interface StoreNewMomentsProps {
-    user_id: number,
+    user_id: number
     moment: NewMomentProps
 }
 
