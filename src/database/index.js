@@ -3,6 +3,7 @@ import CONFIG from "../config"
 import db_config from "../config/database.js"
 // all models imports
 import Comment from "../models/comments/comment-model.js"
+import CommentLike from "../models/comments/comment_likes-model.js"
 import CommentStatistic from "../models/comments/comment_statistics-model.js"
 import Memory from "../models/memories/memory-model.js"
 import MemoryMoment from "../models/memories/memory_moments-model.js"
@@ -71,6 +72,7 @@ MomentMidia.init(connection)
 MomentTag.init(connection)
 MomentMetadata.init(connection)
 Comment.init(connection)
+CommentLike.init(connection)
 CommentStatistic.init(connection)
 Memory.init(connection)
 MemoryMoment.init(connection)
@@ -103,6 +105,7 @@ MomentMidia.associate(connection.models)
 MomentTag.associate(connection.models)
 MomentMetadata.associate(connection.models)
 Comment.associate(connection.models)
+CommentLike.associate(connection.models)
 CommentStatistic.associate(connection.models)
 Memory.associate(connection.models)
 MemoryMoment.associate(connection.models)
