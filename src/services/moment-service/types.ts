@@ -56,7 +56,6 @@ export interface CommentProps {
 }
 
 export interface InteractionQueueProps {
-    user_id: number
     length: number
     period: number
     data: MomentInteractionProps[]
@@ -92,6 +91,7 @@ export interface TagsProps {
 
 export interface FindUserFeedMomentsProps {
     interaction_queue: InteractionQueueProps
+    user_id: number
 }
 
 export interface FindUserMomentsProps {
@@ -112,6 +112,7 @@ export interface FindMomentTagsProps {
 
 export interface FindMomentStatisticsViewProps {
     moment_id: number
+    user_id: number
 }
 
 export interface StoreNewMomentsProps {
@@ -138,18 +139,22 @@ export interface ReplyCommentOnMomentProps {
 
 export interface LikeCommentProps {
     comment_id: number
+    user_id: number
 }
 
 export interface UnlikeCommentProps {
     comment_id: number
+    user_id: number
 }
 
 export interface HideMomentProps {
     moment_id: number
+    user_id: number
 }
 
 export interface UnhideMomentProps {
     moment_id: number
+    user_id: number
 }
 
 export interface DeleteMomentProps {
@@ -159,4 +164,5 @@ export interface DeleteMomentProps {
 
 export interface UndeleteMomentProps {
     moment_id: number
+    user_id: number
 }
