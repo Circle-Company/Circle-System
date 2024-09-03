@@ -143,7 +143,7 @@ export async function find_user_feed_moments({ interaction_queue }: FindUserFeed
                                 count,
                                 comments: returnsComments,
                             },
-                            isLiked: Boolean(moment_liked),
+                            is_liked: Boolean(moment_liked),
                         }
                     })
                 )

@@ -59,6 +59,7 @@ export async function authenticate_user(req: Request, res: Response) {
             username: user.username,
             userId: user.id,
         })
+        if (!newAccessToken) throw new Error("Authoprization token is Missing.")
 
         // Monta a resposta com todas as informações do usuário
         return res.status(200).json({
@@ -153,12 +154,11 @@ export async function refresh_token(req: Request, res: Response, next: NextFunct
     } catch (err: unknown) {
         // Verifica se o erro é uma instância de um erro conhecido
         if (err instanceof ValidationError) {
-            return res.status(err.statusCode).json({ error: err.message })
+            return res.status(err.statusCode).json(err)
         } else {
             // Em caso de erro interno, retorna um status 500
             throw new InternalServerError({
                 message: "An unexpected error occurred while refreshing the token.",
-                stack: "refresh-token",
                 statusCode: 500,
             })
         }
