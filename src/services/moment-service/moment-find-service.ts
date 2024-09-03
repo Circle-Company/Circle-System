@@ -361,7 +361,11 @@ export async function find_moment_comments({ moment_id, page, pageSize }) {
         offset,
     })
 
-    const comments_formatted = comments.map((comment, index) => {
+    const comments_formatted = await Promise.all(
+        comments.map(async (comment) => {
+            const liked = await CommentLike.findOne({
+                where: { user_id, comment_id: comment.id },
+            })
         return {
             id: comment.id,
             content: comment.content,
@@ -369,12 +373,14 @@ export async function find_moment_comments({ moment_id, page, pageSize }) {
                 id: comment.user.id,
                 username: comment.user.username,
                 verifyed: comment.user.verifyed,
-                profile_picture: comment.user.profile_pictures,
+                    profile_picture: comment.user.profile_pictures[0]?.tiny_resolution || null, // Corrigido para pegar a resolução correta
             },
+                is_liked: Boolean(liked),
             statistics: comment.comment_statistic,
             created_at: comment.createdAt,
         }
     })
+    )
 
     const totalPages = Math.ceil(count / pageSize)
 
