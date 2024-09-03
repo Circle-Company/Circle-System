@@ -126,11 +126,6 @@ export async function find_user_feed_moments({ interaction_queue }: FindUserFeed
                             })
                         )
 
-                        var snowflake = new SnowflakeId({
-                            mid: 20,
-                            offset: (2019 - 1970) * 31536000 * 1000,
-                        })
-
                         return {
                             ...moment_with_midia,
                             user: {
