@@ -1,9 +1,9 @@
 import { Op } from "sequelize"
-import SnowflakeId from "snowflake-id"
 import { swipe_engine_api } from "../../apis/swipe-engine"
-import { InternalServerError } from "../../errors"
+import { InternalServerError, UnauthorizedError } from "../../errors"
 import { populateMoment } from "../../helpers/populate-moments"
 import Comment from "../../models/comments/comment-model.js"
+import CommentLike from "../../models/comments/comment_likes-model.js"
 import CommentStatistic from "../../models/comments/comment_statistics-model.js"
 import MemoryMoment from "../../models/memories/memory_moments-model.js"
 import Like from "../../models/moments/like-model.js"
@@ -23,11 +23,13 @@ import {
     MomentProps,
 } from "./types"
 
-export async function find_user_feed_moments({ interaction_queue }: FindUserFeedMomentsProps) {
+export async function find_user_feed_moments({
+    interaction_queue,
+    user_id,
+}: FindUserFeedMomentsProps) {
     try {
-        console.log("interaction_queue: ", JSON.stringify(interaction_queue))
         return await swipe_engine_api
-            .post("/moments/get/feed", { interaction_queue })
+            .post("/moments/get/feed", { interaction_queue: { ...interaction_queue, user_id } })
             .then(async function (response) {
                 return await Promise.all(
                     response.data.map(async (moment_id) => {
@@ -46,13 +48,13 @@ export async function find_user_feed_moments({ interaction_queue }: FindUserFeed
 
                         const moment_user_followed = await Follow.findOne({
                             where: {
-                                user_id: interaction_queue.user_id,
+                                user_id,
                                 followed_user_id: moment_user_id.user_id,
                             },
                         })
                         const moment_liked = await Like.findOne({
                             where: {
-                                user_id: interaction_queue.user_id,
+                                user_id,
                                 liked_moment_id: moment_id,
                             },
                         })
@@ -157,11 +159,16 @@ export async function find_user_feed_moments({ interaction_queue }: FindUserFeed
         })
     }
 }
-export async function find_user_moments({ user_id, page, pageSize }: FindUserMomentsProps) {
+export async function find_user_moments({
+    user_id,
+    page,
+    pageSize,
+    finded_user_pk,
+}: FindUserMomentsProps) {
     try {
         const offset = (page - 1) * pageSize
         const { count, rows: moments } = await Moment.findAndCountAll({
-            where: { user_id, visible: true, blocked: false },
+            where: { user_id: finded_user_pk, visible: true, blocked: false },
             attributes: ["id", "description"],
             order: [["created_at", "DESC"]],
             limit: pageSize,
@@ -172,12 +179,13 @@ export async function find_user_moments({ user_id, page, pageSize }: FindUserMom
 
         const populated_moments = await Promise.all(
             moments.map(async (moment) => {
-                return populateMoment({
+                const momentData = await populateMoment({
                     moment_id: moment.id,
                     tags: true,
                     statistic: true,
                     metadata: true,
                 })
+
                 const liked = await Like.findOne({
                     where: { user_id, liked_moment_id: moment.id },
                 })
@@ -205,11 +213,16 @@ export async function find_user_moments({ user_id, page, pageSize }: FindUserMom
     }
 }
 
-export async function find_user_moments_tiny({ user_id, page, pageSize }: FindUserMomentsProps) {
+export async function find_user_moments_tiny({
+    user_id,
+    finded_user_pk,
+    page,
+    pageSize,
+}: FindUserMomentsProps) {
     try {
         const offset = (page - 1) * pageSize
         const { count, rows: moments } = await Moment.findAndCountAll({
-            where: { user_id, visible: true, blocked: false },
+            where: { user_id: finded_user_pk, visible: true, blocked: false },
             attributes: ["id"],
             order: [["created_at", "DESC"]],
             limit: pageSize,
@@ -327,12 +340,13 @@ export async function find_user_moments_tiny_exclude_memory({
     }
 }
 
-export async function find_moment_comments({ moment_id, page, pageSize }) {
+export async function find_moment_comments({ moment_id, user_id, page, pageSize }) {
     const offset = (page - 1) * pageSize
+
     const { count, rows: comments } = await Comment.findAndCountAll({
         where: { moment_id },
         attributes: ["id", "content", "createdAt"],
-        order: [["created_at", "DESC"]],
+        order: [["createdAt", "DESC"]], // Corrigido o nome do campo para "createdAt"
         include: [
             {
                 model: User,
@@ -361,20 +375,20 @@ export async function find_moment_comments({ moment_id, page, pageSize }) {
             const liked = await CommentLike.findOne({
                 where: { user_id, comment_id: comment.id },
             })
-        return {
-            id: comment.id,
-            content: comment.content,
-            user: {
-                id: comment.user.id,
-                username: comment.user.username,
-                verifyed: comment.user.verifyed,
+            return {
+                id: comment.id,
+                content: comment.content,
+                user: {
+                    id: comment.user.id,
+                    username: comment.user.username,
+                    verifyed: comment.user.verifyed,
                     profile_picture: comment.user.profile_pictures[0]?.tiny_resolution || null, // Corrigido para pegar a resolução correta
-            },
+                },
                 is_liked: Boolean(liked),
-            statistics: comment.comment_statistic,
-            created_at: comment.createdAt,
-        }
-    })
+                statistics: comment.comment_statistic,
+                created_at: comment.createdAt,
+            }
+        })
     )
 
     const totalPages = Math.ceil(count / pageSize)
@@ -388,16 +402,31 @@ export async function find_moment_comments({ moment_id, page, pageSize }) {
     }
 }
 
-export async function find_moment_statistics_view({ moment_id }: FindMomentStatisticsViewProps) {
-    return await Statistic.findOne({
+export async function find_moment_statistics_view({
+    moment_id,
+    user_id,
+}: FindMomentStatisticsViewProps) {
+    const statistic = await Statistic.findOne({
         where: { moment_id },
         attributes: [
             "total_likes_num",
             "total_views_num",
             "total_shares_num",
             "total_comments_num",
+            "moment_id",
         ],
     })
+
+    const moment_from_statistic = await Moment.findOne({
+        where: { id: statistic.moment_id },
+        attributes: ["user_id", "id"],
+    })
+
+    if (moment_from_statistic.user_id !== user_id)
+        throw new UnauthorizedError({
+            message: "Only the user who owns that moment can view their statistics.",
+            action: "Check if this user is the creator of the moment.",
+        })
 }
 export async function find_moment_tags({ moment_id }: FindMomentTagsProps) {
     const tags_arr = await MomentTags.findAll({

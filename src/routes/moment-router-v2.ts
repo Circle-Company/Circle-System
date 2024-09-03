@@ -12,10 +12,10 @@ router.post("/feed", MomentController.FindUserFeedMoments)
 router.get("/:user_pk", MomentController.FindUserMoments)
 
 // Retrieves a minimized version of the user's moments
-router.get("/tiny/user_pk", MomentController.FindUserMomentsTiny)
+router.get("/tiny/:user_pk", MomentController.FindUserMomentsTiny)
 
 // Retrieves a minimized version of the user's moments, excluding memories
-router.post("/tiny/exclude-memory", MomentController.FindUserMomentsTinyExcludeMemory)
+router.post("/tiny/exclude-memory/:id", MomentController.FindUserMomentsTinyExcludeMemory)
 
 // Routes for handling comments and tags
 // Retrieves comments for a specific moment
@@ -33,7 +33,7 @@ router.get("/:id/statistics/preview", MomentController.FindMomentStatisticsView)
 router.post("/create", MomentController.StoreNewMoment)
 
 // Records an interaction with a specific moment
-router.get("/:id/interactions", MomentController.StoreMomentInteraction)
+router.post("/:id/interactions/create", MomentController.StoreMomentInteraction)
 
 // Likes a specific comment
 router.post("/comments/:id/like", MomentController.LikeComment)
