@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken"
+import { ValidationError } from "../errors/index.js"
 import UserModel from "../models/user/user-model.js"
 import CONFIG from "./../config"
 
@@ -14,6 +15,11 @@ export async function jwtEncoder({ username, userId }: JwtEncoderProps): Promise
     if (!user) {
         throw new Error("User not found")
     }
+    if (user.username !== username)
+        throw new ValidationError({
+            message: "Username or ID is not matching.",
+            action: "Check if Username and ID belongs the same user.",
+        })
 
     // Definindo o payload de forma segura, incluindo apenas o necessário
     const payload = {
