@@ -1,6 +1,6 @@
-import axios from 'axios'
-import config from '../../config';
+import axios from "axios"
+import config from "../../config"
 
 export const swipe_engine_api = axios.create({
     baseURL: config.CIRCLE_SWIPE_ENGINE_API,
-});
+})
