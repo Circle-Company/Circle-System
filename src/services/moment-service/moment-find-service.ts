@@ -183,6 +183,14 @@ export async function find_user_moments({ user_id, page, pageSize }: FindUserMom
                     statistic: true,
                     metadata: true,
                 })
+                const liked = await Like.findOne({
+                    where: { user_id, liked_moment_id: moment.id },
+                })
+
+                return {
+                    ...momentData,
+                    is_liked: Boolean(liked),
+                }
             })
         )
 
@@ -222,6 +230,10 @@ export async function find_user_moments_tiny({ user_id, page, pageSize }: FindUs
                     midia: true,
                 })
 
+                const liked = await Like.findOne({
+                    where: { user_id, liked_moment_id: moment.id },
+                })
+
                 return {
                     id: populated_moment.id,
                     midia: {
@@ -231,6 +243,7 @@ export async function find_user_moments_tiny({ user_id, page, pageSize }: FindUs
                     visible: populated_moment.visible,
                     deleted: populated_moment.deleted,
                     blocked: populated_moment.blocked,
+                    is_liked: Boolean(liked),
                 }
             })
         )
@@ -243,6 +256,7 @@ export async function find_user_moments_tiny({ user_id, page, pageSize }: FindUs
             return {
                 id: moment.id,
                 midia: moment.midia,
+                is_liked: moment.is_liked,
             }
         })
 
