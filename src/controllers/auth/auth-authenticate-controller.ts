@@ -4,6 +4,7 @@ import { DecryptPassword } from "../../helpers/encrypt-decrypt-password.js"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists.js"
 import { jwtEncoder } from "../../jwt/encode.js"
 
+import config from "../../config/index.js"
 import NotificationToken from "../../models/notification/notification_token-model"
 import Preference from "../../models/preferences/preference-model.js"
 import ProfilePicture from "../../models/user/profilepicture-model.js"
@@ -82,6 +83,8 @@ export async function authenticate_user(req: Request, res: Response) {
                 },
                 account: {
                     firebasePushToken: notification_token?.token || "",
+                    jwtToken: `Bearer ${newAccessToken}`,
+                    jwtExpires: config.JWT_EXPIRES,
                     deleted: user.deleted,
                     blocked: user.blocked,
                     muted: user.muted,
@@ -113,7 +116,6 @@ export async function authenticate_user(req: Request, res: Response) {
                     },
                 },
             },
-            access_token: newAccessToken,
         })
     } catch (err: unknown) {
         console.error("Error during user authentication:", err)
@@ -150,7 +152,10 @@ export async function refresh_token(req: Request, res: Response, next: NextFunct
         })
 
         // Retorna o novo token de acesso com status 200
-        return res.status(200).json({ access_token: newAccessToken })
+        return res.status(200).json({
+            jwtToken: `Bearer ${newAccessToken}`,
+            jwtExpires: Number(config.JWT_EXPIRES),
+        })
     } catch (err: unknown) {
         // Verifica se o erro é uma instância de um erro conhecido
         if (err instanceof ValidationError) {

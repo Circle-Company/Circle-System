@@ -1,3 +1,4 @@
+import config from "../../config"
 import { ValidationError } from "../../errors"
 import { ContainSpecialCharacters } from "../../helpers/contain-special-characters"
 import { DecryptPassword, EncriptedPassword } from "../../helpers/encrypt-decrypt-password"
@@ -88,6 +89,8 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
                     deleted: newUser.deleted,
                     blocked: newUser.blocked,
                     muted: newUser.muted,
+                    jwtToken: `Bearer ${newAccessToken}`,
+                    jwtExpires: config.JWT_EXPIRES,
                     send_notification_emails: newUser.send_notification_emails,
                     last_active_at: newUser.last_active_at,
                     last_login_at: newUser.last_login_at,
@@ -112,7 +115,6 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
                     },
                 },
             },
-            access_token: newAccessToken,
         }
     }
 }
