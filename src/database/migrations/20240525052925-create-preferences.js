@@ -38,7 +38,6 @@ module.exports = {
                 type: Sequelize.BOOLEAN,
                 defaultValue: false,
             },
-
             disable_like_moment_push_notification: {
                 type: Sequelize.BOOLEAN,
                 defaultValue: false,
