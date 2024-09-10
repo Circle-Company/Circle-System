@@ -427,6 +427,13 @@ export async function find_moment_statistics_view({
             message: "Only the user who owns that moment can view their statistics.",
             action: "Check if this user is the creator of the moment.",
         })
+
+    return {
+        total_likes_num: statistic.total_likes_num,
+        total_views_num: statistic.total_views_num,
+        total_shares_num: statistic.total_shares_num,
+        total_comments_num: statistic.total_comments_num,
+    }
 }
 export async function find_moment_tags({ moment_id }: FindMomentTagsProps) {
     const tags_arr = await MomentTags.findAll({
