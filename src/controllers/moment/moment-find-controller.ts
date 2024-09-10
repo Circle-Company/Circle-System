@@ -1,5 +1,6 @@
 import { Request, Response } from "express"
 import { StatusCodes } from "http-status-codes"
+import { UnauthorizedError, ValidationError } from "../../errors"
 import { MomentService } from "../../services/moment-service"
 
 export async function find_user_feed_moments(req: Request, res: Response) {
@@ -60,11 +61,23 @@ export async function find_moment_comments(req: Request, res: Response) {
 }
 
 export async function find_moment_statistics_view(req: Request, res: Response) {
-    const result = await MomentService.Find.MomentStatisticsView({
-        moment_id: Number(req.params.id),
-        user_id: Number(req.user_id),
-    })
-    res.status(StatusCodes.ACCEPTED).json(result)
+    try {
+        const result = await MomentService.Find.MomentStatisticsView({
+            moment_id: Number(req.params.id),
+            user_id: Number(req.user_id),
+        })
+        res.status(StatusCodes.ACCEPTED).json(result)
+    } catch (err: unknown) {
+        console.error("Error trying delete moment:", err)
+        if (err instanceof ValidationError) {
+            return res.status(400).json({ error: err.message })
+        } else if (err instanceof UnauthorizedError) {
+            return res.status(401).json({ error: err.message })
+        } else {
+            // Em caso de erro interno inesperado, retorna um status 500
+            return res.status(500).json({ error: "An unexpected error occurred." })
+        }
+    }
 }
 
 export async function find_moment_tags(req: Request, res: Response) {
