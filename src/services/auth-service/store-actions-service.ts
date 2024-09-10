@@ -90,7 +90,7 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
                     blocked: newUser.blocked,
                     muted: newUser.muted,
                     jwtToken: `Bearer ${newAccessToken}`,
-                    jwtExpires: config.JWT_EXPIRES,
+                    jwtExpiration: config.JWT_EXPIRES.toString(),
                     send_notification_emails: newUser.send_notification_emails,
                     last_active_at: newUser.last_active_at,
                     last_login_at: newUser.last_login_at,

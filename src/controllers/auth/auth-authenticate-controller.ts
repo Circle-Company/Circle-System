@@ -84,7 +84,7 @@ export async function authenticate_user(req: Request, res: Response) {
                 account: {
                     firebasePushToken: notification_token?.token || "",
                     jwtToken: `Bearer ${newAccessToken}`,
-                    jwtExpires: config.JWT_EXPIRES,
+                    jwtExpiration: config.JWT_EXPIRES.toString(),
                     deleted: user.deleted,
                     blocked: user.blocked,
                     muted: user.muted,
@@ -154,7 +154,7 @@ export async function refresh_token(req: Request, res: Response, next: NextFunct
         // Retorna o novo token de acesso com status 200
         return res.status(200).json({
             jwtToken: `Bearer ${newAccessToken}`,
-            jwtExpires: Number(config.JWT_EXPIRES),
+            jwtExpires: config.JWT_EXPIRES.toString(),
         })
     } catch (err: unknown) {
         // Verifica se o erro é uma instância de um erro conhecido
