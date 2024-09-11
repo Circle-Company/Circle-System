@@ -1,17 +1,13 @@
-import { search_mixer } from "./src/modules/search_mixer";
+import { ValidationError } from "../errors"
+import { search_mixer } from "./src/modules/search_mixer"
 
 type SearchEngineProps = {
-    search_term: string;
-    user_id: number;
-};
+    search_term: string
+    user_id: number
+}
 
-export async function SearchEngine({
-    user_id, 
-    search_term
-}: SearchEngineProps): Promise<any> {
-
-    console.time(`search-engine (term: ${search_term})`)
-    const mixed_search = search_mixer({user_id, search_term })
-    console.timeEnd(`search-engine (term: ${search_term})`)
-    return mixed_search
+export async function SearchEngine({ user_id, search_term }: SearchEngineProps): Promise<any> {
+    const { isValid, message } = isValidSearch(search_term)
+    if (isValid) return search_mixer({ user_id, search_term })
+    else throw new ValidationError({ message })
 }
