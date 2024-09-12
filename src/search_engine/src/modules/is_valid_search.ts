@@ -1,4 +1,5 @@
-function isValidSearch(search_term: string): { isValid: boolean; message?: string } {
+export function isValidSearch(search_term: string): { isValid: boolean; message?: string } {
+    const rules = require("../database/rules.json")
     try {
         // Verifica se o parâmetro é uma string
         if (typeof search_term !== "string") {
@@ -10,17 +11,33 @@ function isValidSearch(search_term: string): { isValid: boolean; message?: strin
             return { isValid: false, message: "Search term cannot be empty." }
         }
 
-        // Verificação de comprimento mínimo/máximo, se necessário (opcional)
-        if (search_term.length < 3 || search_term.length > 100) {
-            return { isValid: false, message: "Search term must be between 3 and 100 characters." }
-        }
-
-        // Verifica a presença de caracteres inválidos
-        const regex = /[=;]/
-        if (regex.test(search_term)) {
+        // Verificação de comprimento mínimo/máximo
+        if (
+            search_term.length < rules.min_search_length ||
+            search_term.length > rules.max_search_length
+        ) {
             return {
                 isValid: false,
-                message: "Search term contains forbidden characters (= or ;).",
+                message: `Search term must be between ${rules.min_search_length} and ${rules.max_search_length} characters.`,
+            }
+        }
+
+        // Definindo uma lista de caracteres permitidos (somente letras, números e espaços)
+        const allowedCharactersRegex = /^[a-zA-Z0-9\s]+$/
+        if (!allowedCharactersRegex.test(search_term)) {
+            return {
+                isValid: false,
+                message:
+                    "Search term contains invalid characters. Only letters, numbers, and spaces are allowed.",
+            }
+        }
+
+        // Prevenção contra SQL Injection: Verificação de padrões comuns de injeção
+        const sqlInjectionRegex = /['"%;()<>]/ // Caracteres comuns usados em injeções SQL
+        if (sqlInjectionRegex.test(search_term)) {
+            return {
+                isValid: false,
+                message: "Search term contains forbidden characters (' \" % ; ( ) < >).",
             }
         }
 
