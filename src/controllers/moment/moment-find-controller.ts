@@ -24,12 +24,11 @@ export async function find_user_moments(req: Request, res: Response) {
     res.status(StatusCodes.ACCEPTED).json(result)
 }
 export async function find_user_moments_tiny(req: Request, res: Response) {
-    const { user_pk } = req.params
     const page = parseInt(req.query.page as string, 10) || 1
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10
     const result = await MomentService.Find.UserMomentsTiny({
         user_id: Number(req.user_id),
-        finded_user_pk: Number(user_pk),
+        finded_user_pk: Number(req.params.user_pk),
         page,
         pageSize,
     })
