@@ -13,14 +13,11 @@ export async function TriggerNotification({ notification }: TriggerNotificationT
     const usersList = await ReceiverUsersList({ notification })
     const usersWithPermission = await VerifyUsersPermissions({ notification, usersList })
     const cleanedUsersList = usersWithPermission.filter((user) => user?.token !== null)
+
     const message = {
         tokens: cleanedUsersList.map((user) => {
             return user?.token
         }),
-        notification: {
-            imageUrl:
-                "https://images.pexels.com/photos/27425265/pexels-photo-27425265/free-photo-of-por-do-sol-moda-tendencia-homem.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        },
         android: {
             data: {
                 user: JSON.stringify(notificationData.senderUser),
@@ -36,6 +33,7 @@ export async function TriggerNotification({ notification }: TriggerNotificationT
     }
 
     if (cleanedUsersList.length > 0) {
+        await CreateNotificationOnDb({ notification })
         ADMIN.messaging()
             .sendMulticast(message)
             .then((response) => {
@@ -43,9 +41,6 @@ export async function TriggerNotification({ notification }: TriggerNotificationT
             })
             .catch((error) => {
                 console.log("Error sending message:", error)
-            })
-            .finally(async () => {
-                await CreateNotificationOnDb({ notification })
             })
     }
 }
