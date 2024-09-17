@@ -35,6 +35,9 @@ router.post("/create", MomentController.StoreNewMoment)
 // Records an interaction with a specific moment
 router.post("/:id/interactions/create", MomentController.StoreMomentInteraction)
 
+// Create a comment on specific moment
+router.post("/:id/comments/create", MomentController.CommentOnMoment)
+
 // Likes a specific comment
 router.post("/comments/:id/like", MomentController.LikeComment)
 
@@ -61,7 +64,7 @@ router.post("/:id/unhide", MomentController.Unhide)
 router.delete("/:id/delete", MomentController.Delete)
 
 // Deletes a list of moments from the system
-router.delete("/delete-list", MomentController.DeleteList)
+router.post("/delete-list", MomentController.DeleteList)
 
 // Restores a previously deleted moment
 router.post("/:id/undelete", MomentController.Undelete)
