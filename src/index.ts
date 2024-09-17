@@ -20,6 +20,7 @@ import { router as UserRouter } from "./routes/user-router.js"
 declare module "express-serve-static-core" {
     interface Request {
         user_id?: number
+        ipAddress?: string
         username?: string
         user?: Object
     }
