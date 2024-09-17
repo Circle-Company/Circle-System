@@ -2,13 +2,19 @@ import { InternalServerError } from "../../errors"
 import { populateMoment } from "../../helpers/populate-moments"
 import Memory from "../../models/memories/memory-model.js"
 import MemoryMoment from "../../models/memories/memory_moments-model.js"
+import Like from "../../models/moments/like-model.js"
 import Moment from "../../models/moments/moment-model.js"
 import MomentMidia from "../../models/moments/moment_midia-model.js"
 import MomentStatistic from "../../models/moments/moment_statistic-model.js"
 import UserStatistic from "../../models/user/statistic-model.js"
 import { FindMemoryMomentsProps, FindMemoryProps, FindUserMemoriesProps } from "./types"
 
-export async function find_memory_moments({ memory_id, page, pageSize }: FindMemoryMomentsProps) {
+export async function find_memory_moments({
+    memory_id,
+    page,
+    pageSize,
+    user_id,
+}: FindMemoryMomentsProps) {
     try {
         const offset = (page - 1) * pageSize
         const { count, rows: memory_moments } = await MemoryMoment.findAndCountAll({
@@ -38,35 +44,34 @@ export async function find_memory_moments({ memory_id, page, pageSize }: FindMem
             order: [["created_at", "DESC"]],
         })
 
-        const filter2 = memory_moments.map((item) => {
-            return {
-                id: item.moment.id,
-                description: item.moment.description,
-                visible: item.moment.visible,
-                deleted: item.moment.deleted,
-                blocked: item.moment.blocked,
-                created_at: item.moment.createdAt,
-                updated_at: item.moment.updatedAt,
-                midia: {
-                    content_type: item.moment.moment_midias.content_type,
-                    nhd_resolution: item.moment.moment_midias.nhd_resolution,
-                    fullhd_resolution: item.moment.moment_midias.fullhd_resolution,
-                },
-                statistics: {
-                    total_likes_num: item.moment.moment_statistics.total_likes_num,
-                },
-            }
-        })
-        const populated_moments = await Promise.all(
-            memory_moments.map(async (memory_moment) => {
-                return await populateMoment({
-                    moment_id: memory_moment.moment_id,
-                    statistic: true,
+        const mapped = await Promise.all(
+            memory_moments.map(async (item) => {
+                const liked = await Like.findOne({
+                    where: { user_id, liked_moment_id: item.moment.id },
                 })
+
+                return {
+                    id: item.moment.id,
+                    description: item.moment.description,
+                    visible: item.moment.visible,
+                    deleted: item.moment.deleted,
+                    blocked: item.moment.blocked,
+                    created_at: item.moment.createdAt,
+                    updated_at: item.moment.updatedAt,
+                    is_liked: Boolean(liked),
+                    midia: {
+                        content_type: item.moment.moment_midias.content_type,
+                        nhd_resolution: item.moment.moment_midias.nhd_resolution,
+                        fullhd_resolution: item.moment.moment_midias.fullhd_resolution,
+                    },
+                    statistics: {
+                        total_likes_num: item.moment.moment_statistics.total_likes_num,
+                    },
+                }
             })
         )
 
-        const filteredMoments = filter2.filter((moment) => {
+        const filteredMoments = mapped.filter((moment) => {
             return moment.deleted === false && moment.visible === true && moment.blocked === false
         })
         filteredMoments.sort(
