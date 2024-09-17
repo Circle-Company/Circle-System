@@ -138,13 +138,20 @@ export async function refresh_token(req: Request, res: Response, next: NextFunct
 
     try {
         // Verifica se o corpo da requisição possui as informações necessárias
-        if (!username || !id) {
+        if (!username || !id)
             throw new ValidationError({
                 message: "Username and ID are required to refresh the token.",
                 statusCode: 400, // Bad Request
             })
-        }
 
+        /**
+             
+        if (!ipAddress)
+            throw new ValidationError({
+                message: "ipAddress are required to refresh the token.",
+                statusCode: 400, // Bad Request
+            })
+*/
         // Gera um novo token de acesso
         const newAccessToken = await jwtEncoder({
             username: username,
