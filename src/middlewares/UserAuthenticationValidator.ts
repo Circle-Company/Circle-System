@@ -39,10 +39,22 @@ export async function UserAuthenticationValidator(req, res, next) {
                 })
             )
         }
+        /**
+ * 
 
+        const validIp = isValidIP(decoded.ip)
+
+        if (!validIp) {
+            throw new UnauthorizedError({
+                message: "the ip address passed is in an incorrect format",
+                action: "check if the passed ip is in the format XXX.XXX.X.X or XXX.XXX.XX.X",
+            })
+        }
+ */
         // Processa as informações decodificadas e as adiciona ao objeto 'req'
         req.user_id = decoded.sub // O 'sub' representa o 'userId'
         req.username = decoded.username // Nome de usuário incluído no payload
+        //req.ipAddress = decoded.ipAddress
         req.access_level = decoded.access_level // Nível de acesso do usuário
 
         // Passa para o próximo middleware ou rota
