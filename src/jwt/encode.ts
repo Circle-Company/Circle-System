@@ -6,12 +6,16 @@ import CONFIG from "./../config"
 type JwtEncoderProps = {
     username: string
     userId: number
+    //ipAddress: string
 }
 
-export async function jwtEncoder({ username, userId }: JwtEncoderProps): Promise<string> {
+export async function jwtEncoder({
+    username,
+    userId,
+}: //ipAddress,
+JwtEncoderProps): Promise<string> {
     // Obtendo o usuário do banco de dados
     const user = await UserModel.findOne({ where: { id: userId } })
-
     if (!user) {
         throw new Error("User not found")
     }
@@ -20,11 +24,25 @@ export async function jwtEncoder({ username, userId }: JwtEncoderProps): Promise
             message: "Username or ID is not matching.",
             action: "Check if Username and ID belongs the same user.",
         })
-
+    /**
+    if (!ipAddress) {
+        throw new UnauthorizedError({
+            message: `you must pass the "ipAddress"`,
+            action: "check if the ipAddress was passed correctly",
+        })
+    } 
+    if (!isValidIP(ipAddress)) {
+        throw new UnauthorizedError({
+            message: "the ip address passed is in an incorrect format",
+            action: "check if the passed ip is in the format XXX.XXX.X.X or XXX.XXX.XX.X",
+        })
+    }
+*/
     // Definindo o payload de forma segura, incluindo apenas o necessário
     const payload = {
         sub: userId.toString(), // Subject, geralmente o ID do usuário
         username: username, // Nome de usuário
+        //ip: ipAddress,
         iat: Math.floor(Date.now() / 1000), // Timestamp de emissão
     }
 
