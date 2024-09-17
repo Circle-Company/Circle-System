@@ -124,8 +124,6 @@ export interface CommentOnMomentProps {
     moment_id: number
     user_id: number
     content: string
-    page: number
-    pageSize: number
 }
 
 export interface ReplyCommentOnMomentProps {
