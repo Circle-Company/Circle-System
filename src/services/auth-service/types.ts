@@ -1,5 +1,5 @@
 export type StoreNewUserProps = {
-    username: string,
+    username: string
     password: string
 }
 
