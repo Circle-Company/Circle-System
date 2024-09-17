@@ -29,15 +29,10 @@ export async function unlike_moment(req: Request, res: Response) {
 }
 
 export async function comment_on_moment(req: Request, res: Response) {
-    const { user_id, moment_id, content } = req.body
-    const page = parseInt(req.query.page as string, 10) || 1
-    const pageSize = parseInt(req.query.pageSize as string, 10) || 10
     const result = await MomentService.Actions.CommentOnMoment({
-        user_id,
-        moment_id,
-        content,
-        page,
-        pageSize,
+        user_id: Number(req.user_id),
+        moment_id: Number(req.params.id),
+        content: req.body.content,
     })
     res.status(StatusCodes.ACCEPTED).json(result)
 }
@@ -74,9 +69,9 @@ export async function like_comment(req: Request, res: Response) {
 
         // Verifica o tipo de erro e retorna a resposta apropriada
         if (err instanceof ValidationError) {
-            return res.status(400).json({ error: err.message })
+            return res.status(400).json({ error: err })
         } else if (err instanceof UnauthorizedError) {
-            return res.status(401).json({ error: err.message })
+            return res.status(401).json({ error: err })
         } else {
             // Em caso de erro interno inesperado, retorna um status 500
             return res.status(500).json({ error: "An unexpected error occurred." })
