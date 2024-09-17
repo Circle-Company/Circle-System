@@ -382,7 +382,9 @@ export async function find_moment_comments({ moment_id, user_id, page, pageSize 
                     id: comment.user.id,
                     username: comment.user.username,
                     verifyed: comment.user.verifyed,
-                    profile_picture: comment.user.profile_pictures[0]?.tiny_resolution || null, // Corrigido para pegar a resolução correta
+                    profile_picture: {
+                        tiny_resolution: comment.user.profile_pictures?.tiny_resolution,
+                    }, // Corrigido para pegar a resolução correta
                 },
                 is_liked: Boolean(liked),
                 statistics: comment.comment_statistic,
