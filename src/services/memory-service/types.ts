@@ -1,5 +1,5 @@
 export type StoreNewMemoryProps = {
-    title: string,
+    title: string
     user_id: number
 }
 
@@ -10,8 +10,9 @@ export type EditMemoryTitleProps = {
 }
 
 export type StoreNewMemoryMomentProps = {
-    memory_id: string,
+    memory_id: string
     moments_list: MomentsList[]
+    user_id: number
 }
 
 export type DeleteMemoryProps = {
@@ -26,21 +27,21 @@ export type DeleteMemoryMomentProps = {
 }
 
 export type FindMemoryProps = {
-    memory_id: number,
+    memory_id: number
 }
 export type FindMemoryMomentsProps = {
-    memory_id: number,
-    page: number,
+    user_id: number
+    memory_id: number
+    page: number
     pageSize: number
 }
 
 export type FindUserMemoriesProps = {
-    user_id: number,
-    page: number,
+    user_id: number
+    page: number
     pageSize: number
 }
 
 type MomentsList = {
     id: number
 }
-
