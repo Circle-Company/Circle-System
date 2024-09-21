@@ -15,6 +15,7 @@ import {
     recommender_users,
     search_user,
 } from "./user-find-controller"
+import { store_user_metadata } from "./user-store-controller"
 
 export const UserController = {
     SearchUser: search_user,
@@ -30,4 +31,5 @@ export const UserController = {
     FollowUser: follow_user,
     UnfollowUser: unfollow_user,
     Report: report,
+    StoreUserMetadata: store_user_metadata,
 }

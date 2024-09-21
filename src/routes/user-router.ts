@@ -25,3 +25,5 @@ router.post("/unlock", UserController.UnlockUser)
 router.post("/follow", UserController.FollowUser)
 router.post("/unfollow", UserController.UnfollowUser)
 router.post("/report", UserController.Report)
+
+router.post("/metadata/store", UserController.StoreUserMetadata)
