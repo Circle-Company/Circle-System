@@ -6,14 +6,13 @@ import ProfilePicture from "../../models/user/profilepicture-model.js"
 import User from "../../models/user/user-model.js"
 
 export async function find_user_notifications(req: Request, res: Response) {
-    const { user_id } = req.body
     const page = parseInt(req.query.page as string, 10) || 1
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10
     const offset = (page - 1) * pageSize
 
     try {
         const { count, rows: notifications } = await Notification.findAndCountAll({
-            where: { receiver_user_id: user_id },
+            where: { receiver_user_id: req.user_id },
             limit: pageSize,
             order: [["created_at", "DESC"]],
             offset,
@@ -34,7 +33,7 @@ export async function find_user_notifications(req: Request, res: Response) {
 
                 const user_followed = await Follow.findOne({
                     attributes: ["followed_user_id", "user_id"],
-                    where: { followed_user_id: user.id, user_id },
+                    where: { followed_user_id: user.id, user_id: req.user_id },
                 })
 
                 if (n.content_id) {
