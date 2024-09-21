@@ -14,7 +14,7 @@ export async function TriggerNotification({ notification }: TriggerNotificationT
     const usersWithPermission = await VerifyUsersPermissions({ notification, usersList })
     const cleanedUsersList = usersWithPermission.filter((user) => user?.token !== null)
 
-    const message = {
+    const message: any = {
         tokens: cleanedUsersList.map((user) => {
             return user?.token
         }),
@@ -33,14 +33,14 @@ export async function TriggerNotification({ notification }: TriggerNotificationT
     }
 
     if (cleanedUsersList.length > 0) {
-        await CreateNotificationOnDb({ notification })
-        ADMIN.messaging()
-            .sendMulticast(message)
-            .then((response) => {
-                console.log("Successfully sent message:", response)
+        await ADMIN.messaging()
+            .sendEachForMulticast(message)
+            .then(async (response) => {
+                console.log("Successfully sent message:", JSON.stringify(response))
+                await CreateNotificationOnDb({ notification })
             })
             .catch((error) => {
-                console.log("Error sending message:", error)
+                console.log("Error sending message:", JSON.stringify(error))
             })
     }
 }
