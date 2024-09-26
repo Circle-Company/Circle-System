@@ -19,7 +19,7 @@ type SortCandidatesProps = {
 export function calcule_score({ candidates }: SortCandidatesProps) {
     return candidates.map((candidate) => {
         const weights = require("./weights.json")
-        let totalScore = candidate.weight
+        let totalScore = 0
 
         for (const criterion in weights) {
             if (candidate[criterion] !== undefined && weights[criterion].weight !== undefined) {
