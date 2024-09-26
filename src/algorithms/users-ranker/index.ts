@@ -39,6 +39,11 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                     attributes: ["latitude", "longitude"],
                 })
 
+                const findedUserCoordinates = await CoordinateModel.findOne({
+                    where: { user_id: user.id },
+                    attributes: ["latitude", "longitude"],
+                })
+
                 const you_block = await FinduserBlock({
                     user_id: userId,
                     blocked_user_id: user.id,
@@ -62,20 +67,16 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                             as: "statistics",
                             attributes: ["total_followers_num"],
                         },
-                        {
-                            model: CoordinateModel,
-                            as: "coordinates",
-                        },
                     ],
                 })
 
                 const user_coords_class = new Coordinates(
-                    userCoordinates.latitude,
-                    userCoordinates.longitude
+                    userCoordinates?.latitude ? userCoordinates?.latitude : 0,
+                    userCoordinates?.longitude ? userCoordinates?.longitude : 0
                 )
                 const candidate_coords_class = new Coordinates(
-                    user.coordinates.latitude,
-                    user.coordinates.longitude
+                    findedUserCoordinates?.latitude ? findedUserCoordinates?.latitude : 0,
+                    findedUserCoordinates?.longitude ? findedUserCoordinates?.longitude : 0
                 )
 
                 const isYou = user.id == userId ? true : false
@@ -100,7 +101,7 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                     distance: isYou
                         ? 0
                         : haversineDistance(user_coords_class, candidate_coords_class),
-                    relation_weight: relation.weight,
+                    relation_weight: relation?.weight,
                     is_you: isYou,
                 }
             })
