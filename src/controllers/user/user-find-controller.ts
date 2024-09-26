@@ -81,6 +81,14 @@ export async function recommender_users(req: Request, res: Response) {
     res.status(200).json(recommendations)
 }
 
+export async function find_user_followers(req: Request, res: Response) {
+    const result = await UserService.UserFind.FinduserFollowers({
+        user_pk: req.params.id,
+        user_id: req.user_id,
+    })
+    res.status(200).json(result)
+}
+
 export async function find_most_followed_users(req: Request, res: Response) {
     try {
         const page = parseInt(req.query.page as string, 10) || 1

@@ -12,6 +12,7 @@ import {
     find_user_by_pk,
     find_user_by_username,
     find_user_data,
+    find_user_followers,
     recommender_users,
     search_user,
 } from "./user-find-controller"
@@ -26,6 +27,7 @@ export const UserController = {
     FindSessionUserStatisticsByPk: find_session_user_statistics_by_pk,
     RecommenderUsers: recommender_users,
     FindMostFollowedUsers: find_most_followed_users,
+    FindUserFollowers: find_user_followers,
     BlockUser: block_user,
     UnlockUser: unlock_user,
     FollowUser: follow_user,

@@ -2,13 +2,14 @@ import { WTF } from "../../WTF"
 import { ValidationError } from "../../errors"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 import { Relation } from "../../helpers/relation"
-import Follow from "../../models/user/follow-model.js"
+import { default as Follow, default as FollowModel } from "../../models/user/follow-model.js"
 import ProfilePicture from "../../models/user/profilepicture-model.js"
 import Statistic from "../../models/user/statistic-model.js"
 import User from "../../models/user/user-model.js"
 import { TriggerNotification } from "../../notification-service"
 import { SearchEngine } from "../../search_engine"
 
+import { usersRankerAlgorithm } from "../../algorithms/users-ranker"
 import {
     FindUserByUsernameProps,
     FindUserDataProps,
@@ -117,6 +118,24 @@ export async function find_user_by_pk({ user_id, user_pk }: { user_id: number; u
         },
         you_follow: Boolean(user_followed),
     }
+}
+
+export async function find_user_followers({ user_pk, user_id }) {
+    const userFollowers = await FollowModel.findAll({
+        where: { followed_user_id: user_pk },
+        attributes: ["user_id"],
+    })
+
+    console.log({ user_id, user_pk })
+
+    console.log({ usersList: JSON.stringify(userFollowers) })
+
+    const list = userFollowers.map((user) => {
+        return { id: user.user_id }
+    })
+    const rankedUsers = await usersRankerAlgorithm({ userId: user_id, usersList: list })
+
+    return rankedUsers
 }
 export async function find_user_data({ username, user_id }: FindUserDataProps) {
     if ((await FindUserAlreadyExists({ username })) === false) {

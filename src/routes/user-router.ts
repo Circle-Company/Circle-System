@@ -12,6 +12,8 @@ router.get(
     CheckUserAccountStatus,
     UserController.FindUserData
 )
+
+router.get("/:id/followers", UserController.FindUserFollowers)
 router.post(USER_PROFILE_PREFIX + "/data/pk/:user_pk", UserController.FindUserByPk)
 router.post("/session/data/pk/:user_pk", UserController.FindSessionUserByPk)
 router.post("/session/statistics/pk/:user_pk", UserController.FindSessionUserStatisticsByPk)
