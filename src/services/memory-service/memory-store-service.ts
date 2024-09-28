@@ -30,6 +30,12 @@ export async function store_new_memory_moment({
     user_id,
 }: StoreNewMemoryMomentProps) {
     try {
+        // Check if memory exists
+        const memoryExists = await Memory.findOne({ where: { id: memory_id } })
+        if (!memoryExists) {
+            throw new Error(`Memory with id ${memory_id} does not exist.`)
+        }
+
         await Promise.all(
             moments_list.map(async (moment) => {
                 setTimeout(async () => {
