@@ -1,4 +1,5 @@
 import { Request, Response } from "express"
+import { Op } from "sequelize"
 import MomentMidia from "../../models/moments/moment_midia-model.js"
 import Follow from "../../models/user/follow-model.js"
 import Notification from "../../models/user/notification-model.js"
@@ -10,13 +11,23 @@ export async function find_user_notifications(req: Request, res: Response) {
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10
     const offset = (page - 1) * pageSize
 
+    // Calculate the date for the last 15 days
+    const fifteenDaysAgo = new Date()
+    fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15)
+
     try {
         const { count, rows: notifications } = await Notification.findAndCountAll({
-            where: { receiver_user_id: req.user_id },
+            where: {
+                receiver_user_id: req.user_id,
+                created_at: {
+                    [Op.gte]: fifteenDaysAgo, // Filter notifications created in the last 15 days
+                },
+            },
             limit: pageSize,
             order: [["created_at", "DESC"]],
             offset,
         })
+
         const arr = await Promise.all(
             notifications.map(async (n: any) => {
                 const user = await User.findOne({
@@ -36,9 +47,9 @@ export async function find_user_notifications(req: Request, res: Response) {
                     where: { followed_user_id: user.id, user_id: req.user_id },
                 })
 
-                if (n.content_id) {
+                if (n.moment_id) {
                     const moment_midia = await MomentMidia.findOne({
-                        where: { moment_id: n.content_id },
+                        where: { moment_id: n.moment_id },
                         attributes: ["nhd_resolution"],
                     })
 
@@ -57,7 +68,7 @@ export async function find_user_notifications(req: Request, res: Response) {
                         midia: moment_midia,
                         you_follow: Boolean(user_followed),
                     }
-                } else
+                } else {
                     return {
                         id: n.id,
                         receiver_user_id: n.receiver_user_id,
@@ -72,6 +83,7 @@ export async function find_user_notifications(req: Request, res: Response) {
                         },
                         you_follow: Boolean(user_followed),
                     }
+                }
             })
         )
 
@@ -84,5 +96,7 @@ export async function find_user_notifications(req: Request, res: Response) {
             pageSize,
         }
         res.status(200).json(json)
-    } catch {}
+    } catch (error) {
+        res.status(500).json({ message: "An error occurred", error })
+    }
 }
