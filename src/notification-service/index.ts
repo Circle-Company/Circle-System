@@ -33,11 +33,16 @@ export async function TriggerNotification({ notification }: TriggerNotificationT
     }
 
     if (cleanedUsersList.length > 0) {
+        await CreateNotificationOnDb({
+            notification,
+            usersList: cleanedUsersList.map((user) => {
+                return user?.id
+            }),
+        })
         await ADMIN.messaging()
             .sendEachForMulticast(message)
             .then(async (response) => {
                 console.log("Successfully sent message:", JSON.stringify(response))
-                await CreateNotificationOnDb({ notification })
             })
             .catch((error) => {
                 console.log("Error sending message:", JSON.stringify(error))
