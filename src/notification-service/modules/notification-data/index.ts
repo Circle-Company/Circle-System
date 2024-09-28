@@ -74,7 +74,7 @@ export async function Module({ notification }: ModuleProps): Promise<ModuleRetur
         color = "#FF1975"
         priority = "default"
     } else if (notification.type == "VIEW-USER") {
-        title = "Profile View👀"
+        title = "Profile View 👀"
         body = `@${user.username} viewed your profile now...`
         color = "#1977F3"
         priority = "default"
@@ -87,7 +87,7 @@ export async function Module({ notification }: ModuleProps): Promise<ModuleRetur
 
     if (notification.type == "ADD-TO-MEMORY" || notification.type == "LIKE-MOMENT") {
         const momentMedia = await MomentMidia.findOne({
-            where: { id: notification.data.momentId },
+            where: { moment_id: notification.data.momentId },
             attributes: ["nhd_resolution"],
         })
 
