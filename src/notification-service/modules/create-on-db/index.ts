@@ -4,9 +4,10 @@ import { NotificationProps } from "./../../types"
 
 type ModuleProps = {
     notification: NotificationProps
+    usersList: (number | undefined)[]
 }
 
-export async function Module({ notification }: ModuleProps) {
+export async function Module({ notification, usersList }: ModuleProps) {
     if (notification.type == "FOLLOW-USER" || notification.type == "VIEW-USER") {
         if (notification.data.senderUserId == notification.data.receiverUserId) {
             return new ValidationError({
@@ -33,16 +34,26 @@ export async function Module({ notification }: ModuleProps) {
             })
         }
     } else if (notification.type == "NEW-MEMORY") {
-        return await Notification.create({
-            sender_user_id: notification.data.senderUserId,
-            memory_id: notification.data.memoryId,
-            type: notification.type,
-        })
+        Promise.all(
+            usersList?.map(async (id) => {
+                return await Notification.create({
+                    sender_user_id: notification.data.senderUserId,
+                    receiver_user_id: id,
+                    memory_id: notification.data.memoryId,
+                    type: notification.type,
+                })
+            })
+        )
     } else if (notification.type == "ADD-TO-MEMORY") {
-        return await Notification.create({
-            sender_user_id: notification.data.senderUserId,
-            moment_id: notification.data.momentId,
-            type: notification.type,
-        })
+        Promise.all(
+            usersList?.map(async (id) => {
+                return await Notification.create({
+                    sender_user_id: notification.data.senderUserId,
+                    receiver_user_id: id,
+                    moment_id: notification.data.momentId,
+                    type: notification.type,
+                })
+            })
+        )
     }
 }
