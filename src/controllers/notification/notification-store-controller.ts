@@ -1,24 +1,24 @@
-import { Request, Response } from "express";
-import NotificationToken from "../../models/notification/notification_token-model.js";
+import { Request, Response } from "express"
+import NotificationToken from "../../models/notification/notification_token-model.js"
 
 export async function storeToken(req: Request, res: Response) {
-  const { userId, token } = req.body;
-  const userHasToken = await NotificationToken.findOne({
-    where: { user_id: userId },
-  });
+    const { token } = req.body
+    const userHasToken = await NotificationToken.findOne({
+        where: { user_id: req.user_id },
+    })
 
-  if (userHasToken)
-    await NotificationToken.update(
-      { token },
-      {
-        where: { user_id: userId },
-      }
-    );
-  else
-    await NotificationToken.create({
-      user_id: userId,
-      token,
-    });
+    if (userHasToken)
+        await NotificationToken.update(
+            { token },
+            {
+                where: { user_id: req.user_id },
+            }
+        )
+    else
+        await NotificationToken.create({
+            user_id: req.user_id,
+            token,
+        })
 
-  res.status(200).json({ messge: "token created with succesfull" });
+    res.status(200).json({ messge: "token created with succesfull" })
 }
