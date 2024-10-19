@@ -125,11 +125,11 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                 relation_weight,
                 is_you,
                 ...filteredUser
-            } = user
+            } = userList
             return filteredUser
         })
 
-        return finalFilteredList
+        return finalFilteredList.sort((a, b) => b.score - a.score)
     } catch (error) {
         console.error("Error in find_search_candidates:", error)
         throw error
