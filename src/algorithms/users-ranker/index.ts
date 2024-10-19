@@ -113,7 +113,23 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
 
         const listWithScore = calcule_score({ candidates: cleanedList })
 
-        return listWithScore
+        // Filtrar para remover os campos de cálculo e retornar apenas os campos relevantes
+        const finalFilteredList = listWithScore.map((userList) => {
+            const {
+                distance,
+                muted,
+                block_you,
+                follow_you,
+                has_profile_picture,
+                total_followers_num,
+                relation_weight,
+                is_you,
+                ...filteredUser
+            } = user
+            return filteredUser
+        })
+
+        return finalFilteredList
     } catch (error) {
         console.error("Error in find_search_candidates:", error)
         throw error

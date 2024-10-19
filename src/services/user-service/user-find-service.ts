@@ -60,7 +60,6 @@ export async function find_user_by_username({ user_id, username }: FindUserByUse
         send_notification_emails: user.send_notification_emails,
         name: user.name,
         description: user.description,
-        last_active_at: user.last_active_at,
         profile_picture: {
             fullhd_resolution: profile_picture.fullhd_resolution,
             tiny_resolution: profile_picture.tiny_resolution,
@@ -120,22 +119,56 @@ export async function find_user_by_pk({ user_id, user_pk }: { user_id: number; u
     }
 }
 
-export async function find_user_followers({ user_pk, user_id }) {
-    const userFollowers = await FollowModel.findAll({
+export async function find_user_followers({ user_pk, user_id, page, pageSize }) {
+    const offset = (page - 1) * pageSize
+    const { count, rows: userFollowers } = await FollowModel.findAndCountAll({
         where: { followed_user_id: user_pk },
-        attributes: ["user_id"],
+        attributes: ["user_id", "created_at"],
+        order: [["created_at", "DESC"]],
+        limit: pageSize,
+        offset,
+        include: [
+            {
+                model: User,
+                as: "following",
+                attributes: ["id", "username", "verifyed"],
+                include: [
+                    {
+                        model: ProfilePicture,
+                        as: "profile_pictures",
+                        attributes: ["tiny_resolution"],
+                    },
+                ],
+            },
+        ],
     })
 
-    console.log({ user_id, user_pk })
-
-    console.log({ usersList: JSON.stringify(userFollowers) })
-
-    const list = userFollowers.map((user) => {
-        return { id: user.user_id }
+    const userFollowersFormatted = userFollowers.map((user) => {
+        const userData = {
+            id: user.following.id,
+            username: user.following.username,
+            verifyed: user.following.verifyed,
+            profile_picture: user.following.profile_pictures,
+        }
+        return {
+            ...userData,
+            created_at: user.created_at,
+        }
     })
-    const rankedUsers = await usersRankerAlgorithm({ userId: user_id, usersList: list })
 
-    return rankedUsers
+    const totalPages = count ? Math.ceil(count / pageSize) : 1
+
+    const list = userFollowersFormatted?.map((user) => {
+        return { id: user.id }
+    })
+    const rankedUsers = list ? await usersRankerAlgorithm({ userId: user_id, usersList: list }) : []
+
+    return {
+        usersList: rankedUsers,
+        totalPages,
+        currentPage: page,
+        pageSize,
+    }
 }
 export async function find_user_data({ username, user_id }: FindUserDataProps) {
     if ((await FindUserAlreadyExists({ username })) === false) {
