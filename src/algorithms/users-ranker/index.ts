@@ -29,46 +29,61 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
     try {
         const ListWithData = await Promise.all(
             usersList.map(async (user, index) => {
-                const relation: RelationProps = await Relation.findOne({
-                    where: { user_id: userId, related_user_id: user.id },
-                    attributes: ["related_user_id", "weight"],
-                })
-
-                const userCoordinates = await CoordinateModel.findOne({
-                    where: { user_id: userId },
-                    attributes: ["latitude", "longitude"],
-                })
-
-                const findedUserCoordinates = await CoordinateModel.findOne({
-                    where: { user_id: user.id },
-                    attributes: ["latitude", "longitude"],
-                })
-
-                const you_block = await FinduserBlock({
-                    user_id: userId,
-                    blocked_user_id: user.id,
-                })
-                const block_you = await FinduserBlock({
-                    user_id: user.id,
-                    blocked_user_id: userId,
-                })
-
-                const userInformations = await User.findOne({
-                    attributes: ["id", "username", "verifyed", "muted", "blocked", "name"],
-                    where: { id: user.id },
-                    include: [
-                        {
-                            model: ProfilePicture,
-                            as: "profile_pictures",
-                            attributes: ["tiny_resolution"],
-                        },
-                        {
-                            model: Statistic,
-                            as: "statistics",
-                            attributes: ["total_followers_num"],
-                        },
-                    ],
-                })
+                const [
+                    relation,
+                    userCoordinates,
+                    findedUserCoordinates,
+                    you_block,
+                    block_you,
+                    follow_you,
+                    you_follow,
+                    userInformations,
+                ] = await Promise.all([
+                    Relation.findOne({
+                        where: { user_id: userId, related_user_id: user.id },
+                        attributes: ["related_user_id", "weight"],
+                    }),
+                    CoordinateModel.findOne({
+                        where: { user_id: userId },
+                        attributes: ["latitude", "longitude"],
+                    }),
+                    CoordinateModel.findOne({
+                        where: { user_id: user.id },
+                        attributes: ["latitude", "longitude"],
+                    }),
+                    FinduserBlock({
+                        user_id: userId,
+                        blocked_user_id: user.id,
+                    }),
+                    FinduserBlock({
+                        user_id: user.id,
+                        blocked_user_id: userId,
+                    }),
+                    findUserFollow({
+                        user_id: user.id,
+                        followed_user_id: userId,
+                    }),
+                    findUserFollow({
+                        user_id: userId,
+                        followed_user_id: user.id,
+                    }),
+                    User.findOne({
+                        attributes: ["id", "username", "verifyed", "muted", "blocked", "name"],
+                        where: { id: user.id },
+                        include: [
+                            {
+                                model: ProfilePicture,
+                                as: "profile_pictures",
+                                attributes: ["tiny_resolution"],
+                            },
+                            {
+                                model: Statistic,
+                                as: "statistics",
+                                attributes: ["total_followers_num"],
+                            },
+                        ],
+                    }),
+                ])
 
                 const user_coords_class = new Coordinates(
                     userCoordinates?.latitude ? userCoordinates?.latitude : 0,
@@ -88,12 +103,8 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                     verifyed: userInformations.verifyed,
                     muted: userInformations.muted,
                     block_you: Boolean(block_you),
-                    follow_you: Boolean(
-                        await findUserFollow({ user_id: user.id, followed_user_id: userId })
-                    ),
-                    you_follow: Boolean(
-                        await findUserFollow({ user_id: userId, followed_user_id: user.id })
-                    ),
+                    follow_you: Boolean(follow_you),
+                    you_follow: Boolean(you_follow),
                     has_profile_picture: Boolean(userInformations.profile_pictures.tiny_resolution),
                     total_followers_num: sigmoid(
                         userInformations.statistics.total_followers_num / 100
