@@ -130,6 +130,7 @@ export async function find_user_followers({ user_pk, user_id, page, pageSize }) 
         include: [
             {
                 model: User,
+                where: { blocked: false, deleted: false },
                 as: "following",
                 attributes: ["id", "username", "verifyed"],
                 include: [
@@ -144,14 +145,11 @@ export async function find_user_followers({ user_pk, user_id, page, pageSize }) 
     })
 
     const userFollowersFormatted = userFollowers.map((user) => {
-        const userData = {
+        return {
             id: user.following.id,
             username: user.following.username,
             verifyed: user.following.verifyed,
             profile_picture: user.following.profile_pictures,
-        }
-        return {
-            ...userData,
             created_at: user.created_at,
         }
     })
@@ -163,8 +161,34 @@ export async function find_user_followers({ user_pk, user_id, page, pageSize }) 
     })
     const rankedUsers = list ? await usersRankerAlgorithm({ userId: user_id, usersList: list }) : []
 
+    const rankedusersPopulated = await Promise.all(
+        rankedUsers.map(async (user) => {
+            const userData = await User.findOne({
+                where: { id: user.id },
+                attributes: ["id", "username"],
+                order: [["created_at", "DESC"]],
+                limit: pageSize,
+                offset,
+                include: [
+                    {
+                        model: ProfilePicture,
+                        as: "profile_pictures",
+                        attributes: ["tiny_resolution"],
+                    },
+                ],
+            })
+            return {
+                id: user.id,
+                username: userData.username,
+                verifyed: user.verifyed,
+                profile_picture: { tiny_resolution: userData.profile_pictures.tiny_resolution },
+                you_follow: user.you_follow,
+            }
+        })
+    )
+
     return {
-        usersList: rankedUsers,
+        users: rankedusersPopulated,
         totalPages,
         currentPage: page,
         pageSize,
@@ -174,7 +198,6 @@ export async function find_user_data({ username, user_id }: FindUserDataProps) {
     if ((await FindUserAlreadyExists({ username })) === false) {
         throw new ValidationError({
             message: "this username cannot exists",
-            statusCode: 200,
         })
     } else {
         const user = await User.findOne({
