@@ -56,19 +56,20 @@ export async function add_candidates_interactions({
                 candidate.coordinates.longitude
             )
 
-            const follow_you = await findUserFollow({
-                user_id: candidate.id,
-                followed_user_id: user_id,
-            })
-            const you_block = await FinduserBlock({
-                user_id,
-                blocked_user_id: candidate.id,
-            })
-            const block_you = await FinduserBlock({
-                user_id: candidate.id,
-                blocked_user_id: user_id,
-            })
-
+            const [follow_you, you_block, block_you] = await Promise.all([
+                findUserFollow({
+                    user_id: candidate.id,
+                    followed_user_id: user_id,
+                }),
+                FinduserBlock({
+                    user_id,
+                    blocked_user_id: candidate.id,
+                }),
+                FinduserBlock({
+                    user_id: candidate.id,
+                    blocked_user_id: user_id,
+                }),
+            ])
             return {
                 id: candidate.id,
                 username: candidate.username,
