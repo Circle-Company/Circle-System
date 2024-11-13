@@ -28,31 +28,35 @@ import UserStatistic from "../../models/user/statistic-model.js"
 
 export async function like_moment({ moment_id, user_id }) {
     try {
-        const like_exists = await Like.findOne({ where: { user_id } })
+        const like_exists = await Like.findOne({ where: { user_id, liked_moment_id: moment_id } })
         if (like_exists)
             throw new UnauthorizedError({ message: "this user has already liked it at the moment" })
         else {
             const moment = await Moment.findOne({
                 where: { id: moment_id },
-                attributes: ["user_id"],
+                attributes: ["user_id", "id"],
             })
-            await Like.create({ liked_moment_id: moment_id, user_id })
-            await MomentStatistic.increment("total_likes_num", { by: 1, where: { moment_id } })
-            await UserStatistic.increment("total_likes_num", {
-                by: 1,
-                where: { user_id: moment.user_id },
-            })
-            await Relation.AutoAdd({
-                user_id: user_id,
-                related_user_id: moment.user_id,
-                weight: 0.1,
-            })
-            await Notification.AutoSend({
-                sender_user_id: user_id,
-                receiver_user_id: moment.user_id,
-                type: "LIKE-MOMENT",
-                content_id: moment.id,
-            })
+
+            await Promise.all([
+                Like.create({ liked_moment_id: moment_id, user_id }),
+                MomentStatistic.increment("total_likes_num", { by: 1, where: { moment_id } }),
+                UserStatistic.increment("total_likes_num", {
+                    by: 1,
+                    where: { user_id: moment.user_id },
+                }),
+                Relation.AutoAdd({
+                    user_id: user_id,
+                    related_user_id: moment.user_id,
+                    weight: 0.1,
+                }),
+                Notification.AutoSend({
+                    sender_user_id: user_id,
+                    receiver_user_id: moment.user_id,
+                    type: "LIKE-MOMENT",
+                    content_id: moment.id,
+                }),
+            ])
+
             return { message: "moment was successfully liked" }
         }
     } catch (err: any) {
@@ -61,7 +65,7 @@ export async function like_moment({ moment_id, user_id }) {
 }
 export async function unlike_moment({ moment_id, user_id }) {
     try {
-        const like_exists = await Like.findOne({ where: { user_id } })
+        const like_exists = await Like.findOne({ where: { user_id, liked_moment_id: moment_id } })
         if (!like_exists)
             throw new UnauthorizedError({ message: "This user did not like at the moment" })
         await Like.destroy({ where: { liked_moment_id: moment_id, user_id } })
@@ -213,7 +217,7 @@ export async function unlike_comment({ comment_id, user_id }: UnlikeCommentProps
             attributes: ["user_id", "id"],
             where: { id: comment_id },
         })
-        await CommentLike.destroy({ comment_id, user_id })
+        await CommentLike.destroy({ where: { comment_id, user_id } })
         await CommentStatistic.increment("total_likes_num", { by: -1, where: { comment_id } })
         await Relation.AutoAdd({
             user_id: user_id,
