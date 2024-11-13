@@ -51,21 +51,29 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
             send_notification_emails: false,
         })
 
-        await ProfilePicture.create({ user_id: newUser.id })
-        await Coordinate.create({ user_id: newUser.id })
-        await Contact.create({ user_id: newUser.id })
-        const userPreferences = await Preference.create({ user_id: newUser.id })
+        await Promise.all([
+            ProfilePicture.create({ user_id: newUser.id }),
+            Coordinate.create({ user_id: newUser.id }),
+            Contact.create({ user_id: newUser.id }),
+            Preference.create({
+                user_id: newUser.id,
+                app_language: "pt",
+                translation_language: "pt",
+            }),
+        ])
 
-        const newStatistic = await Statistic.create({
-            user_id: newUser.id,
-            total_followers_num: 0,
-            total_likes_num: 0,
-            total_views_num: 0,
-        })
-        const newAccessToken = await jwtEncoder({
-            username: newUser.username,
-            userId: newUser.id,
-        })
+        const [newStatistic, newAccessToken] = await Promise.all([
+            Statistic.create({
+                user_id: newUser.id,
+                total_followers_num: 0,
+                total_likes_num: 0,
+                total_views_num: 0,
+            }),
+            jwtEncoder({
+                username: newUser.username,
+                userId: newUser.id,
+            }),
+        ])
 
         return {
             session: {
@@ -90,6 +98,7 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
                     blocked: newUser.blocked,
                     muted: newUser.muted,
                     jwtToken: `Bearer ${newAccessToken}`,
+                    unreadNotificationsCount: 0,
                     jwtExpiration: config.JWT_EXPIRES.toString(),
                     send_notification_emails: newUser.send_notification_emails,
                     last_active_at: newUser.last_active_at,
@@ -97,21 +106,20 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
                 },
                 preferences: {
                     language: {
-                        appLanguage: userPreferences?.app_language,
-                        translationLanguage: userPreferences?.translation_language,
+                        appLanguage: "pt",
+                        translationLanguage: "pt",
                     },
                     content: {
-                        disableAutoplay: userPreferences?.disable_autoplay,
-                        disableHaptics: userPreferences?.disable_haptics,
-                        disableTranslation: userPreferences?.disable_translation,
+                        disableAutoplay: false,
+                        disableHaptics: false,
+                        disableTranslation: false,
                     },
                     pushNotifications: {
-                        disableLikeMoment: userPreferences?.disable_like_moment_push_notification,
-                        disableNewMemory: userPreferences?.disable_new_memory_push_notification,
-                        disableAddToMemory:
-                            userPreferences?.disable_add_to_memory_push_notification,
-                        disableFollowUser: userPreferences?.disable_follow_user_push_notification,
-                        disableViewUser: userPreferences?.disable_view_user_push_notification,
+                        disableLikeMoment: false,
+                        disableNewMemory: false,
+                        disableAddToMemory: false,
+                        disableFollowUser: false,
+                        disableViewUser: false,
                     },
                 },
             },
