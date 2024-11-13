@@ -67,7 +67,7 @@ export async function authenticate_user(req: Request, res: Response) {
             session: {
                 user: {
                     id: user.id,
-                    name: user.name,
+                    name: user.name ? user.name : null,
                     description: user.description,
                     username: user.username,
                     verifyed: user.verifyed,
@@ -82,12 +82,12 @@ export async function authenticate_user(req: Request, res: Response) {
                     total_views_num: statistic?.total_views_num || 0,
                 },
                 account: {
-                    firebasePushToken: notification_token?.token || "",
                     jwtToken: `Bearer ${newAccessToken}`,
                     jwtExpiration: config.JWT_EXPIRES.toString(),
                     deleted: user.deleted,
                     blocked: user.blocked,
                     muted: user.muted,
+                    unreadNotificationsCount: 0,
                     send_notification_emails: user.send_notification_emails,
                     last_active_at: user.last_active_at,
                     last_login_at: user.last_login_at,
