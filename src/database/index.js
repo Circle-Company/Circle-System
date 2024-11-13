@@ -44,7 +44,9 @@ const DB_CONFIG =
         ? db_config.test
         : db_config.development
 
-export const connection = new Sequelize({ ...DB_CONFIG, logging: false })
+const enableLogging = CONFIG.NODE_ENV === "development" ? true : false
+
+export const connection = new Sequelize({ ...DB_CONFIG, logging: enableLogging })
 try {
     connection.authenticate()
     console.log("connection has been established successfully.")
