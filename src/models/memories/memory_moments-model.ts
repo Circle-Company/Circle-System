@@ -13,8 +13,8 @@ class MemoryMoment extends Model<
     InferCreationAttributes<MemoryMoment>
 > {
     declare id: CreationOptional<number> // Optional auto-increment primary key
-    declare memory_id: bigint
-    declare moment_id: bigint
+    declare memory_id: number
+    declare moment_id: number
 
     static initialize(sequelize: Sequelize): void {
         MemoryMoment.init(

@@ -4,12 +4,12 @@ import SnowflakeID from "snowflake-id"
 const snowflake = new SnowflakeID()
 
 class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Moment>> {
-    declare id: bigint // Unique identifier for each moment
+    declare id: number // Unique identifier for each moment
     declare description: string | null // Moment description
     declare visible: boolean // Visibility flag
     declare deleted: boolean // Deletion flag
     declare blocked: boolean // Blocked flag
-    declare user_id: bigint
+    declare user_id: number
 
     static initialize(sequelize: Sequelize): void {
         Moment.init(
@@ -20,7 +20,7 @@ class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Mome
                     autoIncrement: true,
                 },
                 user_id: {
-                    type: DataTypes.BIGINT,
+                    type: DataTypes.NUMBER,
                     allowNull: false,
                     references: {
                         model: "users",

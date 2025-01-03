@@ -18,8 +18,8 @@ export default class Memory extends Model<
     InferAttributes<Memory>,
     InferCreationAttributes<Memory>
 > {
-    declare id: bigint
-    declare user_id: bigint
+    declare id: string
+    declare user_id: string
     declare title: string
 
     // Mixins para métodos de associação
@@ -43,7 +43,7 @@ export default class Memory extends Model<
                     autoIncrement: true,
                 },
                 user_id: {
-                    type: DataTypes.BIGINT,
+                    type: DataTypes.NUMBER,
                     allowNull: false,
                     references: {
                         model: "users",
