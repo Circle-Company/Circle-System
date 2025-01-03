@@ -36,6 +36,8 @@ export async function like_moment({ moment_id, user_id }) {
                 where: { id: moment_id },
                 attributes: ["user_id", "id"],
             })
+            if (!moment)
+                throw new UnauthorizedError({ message: "Can´t possible find this moment." })
 
             await Promise.all([
                 Like.create({ liked_moment_id: moment_id, user_id }),
@@ -90,6 +92,8 @@ export async function unlike_moment({ moment_id, user_id }) {
 export async function view_moment({ moment_id, user_id }) {
     try {
         const moment = await Moment.findOne({ where: { id: moment_id }, attributes: ["user_id"] })
+        if (!moment) throw new UnauthorizedError({ message: "Can´t possible find this moment." })
+
         await View.create({ viewed_moment_id: moment_id, user_id })
         await MomentStatistic.increment("total_views_num", { by: 1, where: { moment_id } })
         await UserStatistic.increment("total_views_num", {
@@ -139,6 +143,8 @@ export async function comment_on_moment({ moment_id, content, user_id }: Comment
         await CommentStatistic.create({ comment_id: comment.id })
         await MomentStatistic.increment("total_comments_num", { by: 1, where: { moment_id } })
         const moment = await Moment.findOne({ where: { id: moment_id }, attributes: ["user_id"] })
+        if (!moment) throw new UnauthorizedError({ message: "Can´t possible find this moment." })
+
         await Notification.AutoSend({
             sender_user_id: user_id,
             receiver_user_id: moment.user_id,
@@ -232,6 +238,7 @@ export async function hide_moment({ moment_id, user_id }: HideMomentProps) {
         where: { id: moment_id },
         attributes: ["user_id", "id"],
     })
+    if (!moment) throw new UnauthorizedError({ message: "Can´t possible find this moment." })
 
     if (moment.user_id !== user_id) {
         throw new UnauthorizedError({
@@ -247,6 +254,7 @@ export async function unhide_moment({ moment_id, user_id }: UnhideMomentProps) {
         where: { id: moment_id },
         attributes: ["user_id", "id"],
     })
+    if (!moment) throw new UnauthorizedError({ message: "Can´t possible find this moment." })
 
     if (moment.user_id !== user_id) {
         throw new UnauthorizedError({
@@ -289,6 +297,8 @@ export async function delete_moment({ moment_id, user_id }: DeleteMomentProps) {
                     where: { id: memory_moment.memory_id },
                     attributes: ["id"],
                 })
+                if (!memory)
+                    throw new InternalServerError({ message: "Can´t possible find this memory." })
                 const memory_moments = await MemoryMoment.findAll({
                     where: { memory_id: memory.id },
                     attributes: ["moment_id", "memory_id"],
@@ -302,7 +312,7 @@ export async function delete_moment({ moment_id, user_id }: DeleteMomentProps) {
                     })
                 )
                 const filtered_memory_moments_list = memory_moments_list.filter(
-                    (item) => !item.deleted
+                    (item: any) => !item.deleted
                 )
                 if (filtered_memory_moments_list.length == 0)
                     Memory.destroy({ where: { id: memory.id } })

@@ -1,9 +1,9 @@
 import { WTF } from "../../WTF"
-import { ValidationError } from "../../errors"
+import { InternalServerError, ValidationError } from "../../errors"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 import { Relation } from "../../helpers/relation"
 import { default as Follow, default as FollowModel } from "../../models/user/follow-model.js"
-import ProfilePicture from "../../models/user/profilepicture-model.js"
+import ProfilePicture from "../../models/user/profilepicture-model"
 import Statistic from "../../models/user/statistic-model.js"
 import User from "../../models/user/user-model.js"
 import { TriggerNotification } from "../../notification-service"
@@ -19,6 +19,7 @@ import {
 
 export async function find_user_by_username({ user_id, username }: FindUserByUsernameProps) {
     const user = await User.findOne({ where: { username } })
+    if (!user) throw new InternalServerError({ message: "Can´t possible find this user" })
     await Relation.AutoAdd({
         user_id: user_id,
         related_user_id: user.id,
@@ -36,6 +37,12 @@ export async function find_user_by_username({ user_id, username }: FindUserByUse
         attributes: ["fullhd_resolution", "tiny_resolution"],
         where: { user_id: user.id },
     })
+
+    if (!user) throw new InternalServerError({ message: "Can´t possible find this user." })
+    if (!statistic)
+        throw new InternalServerError({ message: "Can´t possible find this user statistic." })
+    if (!profile_picture)
+        throw new InternalServerError({ message: "Can´t possible find this user picture." })
 
     if (user_id !== user.id) {
         await TriggerNotification({
@@ -75,6 +82,7 @@ export async function find_user_by_username({ user_id, username }: FindUserByUse
 
 export async function find_user_by_pk({ user_id, user_pk }: { user_id: number; user_pk: string }) {
     const user = await User.findOne({ where: { id: user_pk } })
+    if (!user) throw new InternalServerError({ message: "Can´t possible find this user" })
 
     const user_followed = await Follow.findOne({
         attributes: ["followed_user_id", "user_id"],
@@ -88,6 +96,13 @@ export async function find_user_by_pk({ user_id, user_pk }: { user_id: number; u
         attributes: ["fullhd_resolution", "tiny_resolution"],
         where: { user_id: user.id },
     })
+
+    if (!user_followed)
+        throw new InternalServerError({ message: "Can´t possible find followed user." })
+    if (!statistic)
+        throw new InternalServerError({ message: "Can´t possible find this user statistic." })
+    if (!profile_picture)
+        throw new InternalServerError({ message: "Can´t possible find this user picture." })
 
     if (user_id !== user.id) {
         await TriggerNotification({
@@ -163,7 +178,7 @@ export async function find_user_followers({ user_pk, user_id, page, pageSize }) 
 
     const rankedusersPopulated = await Promise.all(
         rankedUsers.map(async (user) => {
-            const userData = await User.findOne({
+            const userData: any = await User.findOne({
                 where: { id: user.id },
                 attributes: ["id", "username"],
                 order: [["created_at", "DESC"]],
@@ -177,6 +192,11 @@ export async function find_user_followers({ user_pk, user_id, page, pageSize }) 
                     },
                 ],
             })
+            if (!userData)
+                throw new InternalServerError({
+                    message: "Can´t possible find users.",
+                    action: "try again.",
+                })
             return {
                 id: user.id,
                 username: userData.username,
@@ -203,6 +223,7 @@ export async function find_user_data({ username, user_id }: FindUserDataProps) {
         const user = await User.findOne({
             where: { username },
         })
+        if (!user) throw new InternalServerError({ message: "Can´t possible find this user." })
         const profile_picture = await ProfilePicture.findOne({
             attributes: ["fullhd_resolution", "tiny_resolution"],
             where: { user_id: user.id },
@@ -254,10 +275,15 @@ export async function recommender_users({ user_id }: RecommenderUsersProps) {
 export async function find_session_user_by_pk({ user_pk }: { user_pk: string }) {
     const user = await User.findOne({ where: { id: user_pk } })
 
+    if (!user) throw new InternalServerError({ message: "Can´t possible find this user" })
+
     const profile_picture = await ProfilePicture.findOne({
         attributes: ["fullhd_resolution", "tiny_resolution"],
         where: { user_id: user.id },
     })
+
+    if (!profile_picture)
+        throw new InternalServerError({ message: "Can´t possible find this user picture" })
 
     return {
         id: user.id,
@@ -276,6 +302,10 @@ export async function find_session_user_statistics_by_pk({ user_pk }: { user_pk:
     const statistic = await Statistic.findOne({
         where: { user_id: user_pk },
     })
+
+    if (!statistic)
+        throw new InternalServerError({ message: "Can´t possible find this user statistic" })
+
     return {
         total_followers_num: statistic.total_followers_num,
         total_likes_num: statistic.total_likes_num,
