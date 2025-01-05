@@ -5,55 +5,52 @@ import Block from "../../models/user/block-model.js"
 import Follow from "../../models/user/follow-model.js"
 import Report from "../../models/user/report-model.js"
 import Statistic from "../../models/user/statistic-model.js"
-import { TriggerNotification } from "../../notification-service"
 import { BlockUserProps, FollowUserProps, ReportUserProps } from "./types"
-
 export async function follow_user({ user_id, followed_user_id }: FollowUserProps) {
-    const find_follow_exists = await Follow.findOne({
-        attributes: ["user_id", "followed_user_id"],
-        where: { user_id: user_id, followed_user_id: followed_user_id },
-    })
-
-    if (user_id == followed_user_id) {
+    // Verificar se o usuário está tentando seguir a si mesmo
+    if (user_id === followed_user_id) {
         throw new ValidationError({
             message: "The users cannot follow themselves",
         })
-    } else if (find_follow_exists) {
+    }
+
+    // Verificar se já existe uma relação de seguir
+    const find_follow_exists = await Follow.findOne({
+        where: {
+            user_id,
+            followed_user_id,
+        },
+    })
+
+    if (find_follow_exists) {
         throw new ValidationError({
             message: "This user has already been followed",
         })
     } else {
-        await Follow.create({
-            user_id: user_id,
-            followed_user_id: followed_user_id,
-        })
-        await Statistic.increment("total_followers_num", {
-            by: 1,
-            where: { user_id: followed_user_id },
-        })
-        await Relation.AutoAdd({
-            user_id: user_id,
-            related_user_id: followed_user_id,
-            weight: 1,
-        })
-        await Notification.AutoSend({
-            sender_user_id: user_id,
-            receiver_user_id: followed_user_id,
-            type: "FOLLOW-USER",
-            content_id: null,
-        })
-
-        TriggerNotification({
-            notification: {
+        await Promise.all([
+            Follow.create({
+                user_id: user_id,
+                followed_user_id: followed_user_id,
+            }),
+            Statistic.increment("total_followers_num", {
+                by: 1,
+                where: { user_id: followed_user_id },
+            }),
+            Relation.AutoAdd({
+                user_id: user_id,
+                related_user_id: followed_user_id,
+                weight: 1,
+            }),
+            Notification.AutoSend({
+                sender_user_id: user_id,
+                receiver_user_id: followed_user_id,
                 type: "FOLLOW-USER",
-                data: {
-                    senderUserId: user_id,
-                    receiverUserId: followed_user_id,
-                },
-            },
-        })
+                content_id: null,
+            }),
+        ])
     }
 }
+
 export async function unfollow_user({ user_id, followed_user_id }: FollowUserProps) {
     const find_follow_exists = await Follow.findOne({
         attributes: ["user_id", "followed_user_id"],
