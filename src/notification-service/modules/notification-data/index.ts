@@ -1,3 +1,4 @@
+import { InternalServerError } from "../../../errors/index.js"
 import MomentMidia from "../../../models/moments/moment_midia-model.js"
 import ProfilePicture from "../../../models/user/profilepicture-model.js"
 import User from "../../../models/user/user-model.js"
@@ -35,7 +36,7 @@ export async function Module({ notification }: ModuleProps): Promise<ModuleRetur
     let senderUser: senderUserProps
     let media: mediaProps | null
 
-    const user = await User.findOne({
+    const user: any = await User.findOne({
         where: { id: notification.data.senderUserId },
         attributes: ["id", "username"],
         include: [
@@ -46,6 +47,11 @@ export async function Module({ notification }: ModuleProps): Promise<ModuleRetur
             },
         ],
     })
+
+    if (!user)
+        throw new InternalServerError({
+            message: "Can´t possible find user to send notification.",
+        })
 
     senderUser = {
         id: user.id,
