@@ -189,7 +189,7 @@ export async function find_user_followers({
     const rankedusersPopulated = await Promise.all(
         rankedUsers.map(async (user) => {
             const userData: any = await User.findOne({
-                where: { id: user.id },
+                where: { id: user.id.toString() },
                 attributes: ["id", "username"],
                 order: [["created_at", "DESC"]],
                 limit: pageSize,

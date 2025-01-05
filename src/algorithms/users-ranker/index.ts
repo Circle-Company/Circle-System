@@ -40,15 +40,15 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                     userInformations,
                 ] = await Promise.all([
                     Relation.findOne({
-                        where: { user_id: userId, related_user_id: user.id },
+                        where: { user_id: userId.toString(), related_user_id: user.id.toString() },
                         attributes: ["related_user_id", "weight"],
                     }),
                     CoordinateModel.findOne({
-                        where: { user_id: userId },
+                        where: { user_id: userId.toString() },
                         attributes: ["latitude", "longitude"],
                     }),
                     CoordinateModel.findOne({
-                        where: { user_id: user.id },
+                        where: { user_id: user.id.toString() },
                         attributes: ["latitude", "longitude"],
                     }),
                     FinduserBlock({
@@ -69,7 +69,7 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                     }),
                     User.findOne({
                         attributes: ["id", "username", "verifyed", "muted", "blocked", "name"],
-                        where: { id: user.id },
+                        where: { id: user.id.toString() },
                         include: [
                             {
                                 model: ProfilePicture,
