@@ -12,6 +12,7 @@ import {
     delete_user_name,
 } from "./account-delete-controller"
 
+import { findAccountFollowings } from "./account-find-controller"
 export const AccountController = {
     EdituserDescription: edit_user_description,
     EditProfilePicture: edit_profile_picture,
@@ -21,4 +22,5 @@ export const AccountController = {
     DeleteUserDescription: delete_user_description,
     DeleteProfilePicture: delete_profile_picture,
     DeleteUserName: delete_user_name,
+    FindAccountFollowings: findAccountFollowings,
 }

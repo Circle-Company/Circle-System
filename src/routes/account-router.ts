@@ -3,8 +3,11 @@ import { RP } from "../config/routes_prefix"
 import { AccountController } from "../controllers/account"
 
 export const router = Router()
+const ACC_LIST_PREFIX = RP.LIST
 const ACC_EDIT_PREFIX = RP.EDIT
 const ACC_DELETE_PREFIX = RP.DELETE
+
+router.get(ACC_LIST_PREFIX + "/followings", AccountController.FindAccountFollowings)
 
 router.put(ACC_EDIT_PREFIX + "/description", AccountController.EdituserDescription)
 router.put(ACC_EDIT_PREFIX + "/name", AccountController.EditUserName)
