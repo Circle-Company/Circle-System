@@ -5,7 +5,7 @@ import CONFIG from "./../config"
 
 type JwtEncoderProps = {
     username: string
-    userId: number
+    userId: bigint
     //ipAddress: string
 }
 
@@ -15,7 +15,7 @@ export async function jwtEncoder({
 }: //ipAddress,
 JwtEncoderProps): Promise<string> {
     // Obtendo o usuário do banco de dados
-    const user = await UserModel.findOne({ where: { id: userId } })
+    const user = await UserModel.findByPk(BigInt(userId))
     if (!user) {
         throw new Error("User not found")
     }
@@ -40,7 +40,7 @@ JwtEncoderProps): Promise<string> {
 */
     // Definindo o payload de forma segura, incluindo apenas o necessário
     const payload = {
-        sub: userId.toString(), // Subject, geralmente o ID do usuário
+        sub: String(userId), // Subject, geralmente o ID do usuário
         username: username, // Nome de usuário
         //ip: ipAddress,
         iat: Math.floor(Date.now() / 1000), // Timestamp de emissão

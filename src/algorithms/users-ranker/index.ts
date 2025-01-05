@@ -10,18 +10,18 @@ import { findUserFollow } from "../../search_engine/src/functions/set_interactio
 import { UserObject, calcule_score } from "./calculeScore.js"
 
 type UserWithMandatoryId = {
-    id: number
+    id: bigint
     [key: string]: any // Permite qualquer outra propriedade
 }
 
 type usersRankerAlgorithmProps = {
-    userId: number
+    userId: bigint
     usersList: Array<UserWithMandatoryId>
 }
 type RelationProps = {
     id: number
-    user_id: number
-    related_user_id: number
+    user_id: bigint
+    related_user_id: bigint
     weight: number
 }
 
@@ -118,9 +118,7 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
             })
         )
         // Filtro para garantir que valores nulos sejam removidos
-        const cleanedList: UserObject[] = ListWithData.filter(
-            (user): user is UserObject => user !== null
-        )
+        const cleanedList: any = ListWithData.filter((user): user is UserObject => user !== null)
 
         const listWithScore = calcule_score({ candidates: cleanedList })
 

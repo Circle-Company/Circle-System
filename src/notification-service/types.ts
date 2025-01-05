@@ -13,22 +13,22 @@ export type NotificationType =
     | "VIEW-USER"
 
 type NotificationUser = {
-    senderUserId: number
-    receiverUserId: number
+    senderUserId: bigint
+    receiverUserId: bigint
 }
 
 type NotificationMoment = {
-    senderUserId: number
-    receiverUserId: number
-    momentId: number
+    senderUserId: bigint
+    receiverUserId: bigint
+    momentId: bigint
 }
 
 type NotificationMemory = {
-    senderUserId: number
-    memoryId: number
+    senderUserId: bigint
+    memoryId: bigint
 }
 
 type NotificationAddMemory = {
-    senderUserId: number
-    momentId: number
+    senderUserId: bigint
+    momentId: bigint
 }

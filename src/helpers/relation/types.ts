@@ -1,22 +1,22 @@
 export type AutoAddRelationProps = {
-    user_id: number,
-    related_user_id: number,
+    user_id: bigint
+    related_user_id: bigint
     weight: number
 }
 
 export type CreateRelationProps = {
-    user_id: number,
-    related_user_id: number,
+    user_id: bigint
+    related_user_id: bigint
     weight: number
 }
 
 export type EditRelationProps = {
-    user_id: number,
-    related_user_id: number,
+    user_id: bigint
+    related_user_id: bigint
     increment_weight: number
 }
 
 export type FindRelationExistsProps = {
-    user_id: number,
-    related_user_id: number,
+    user_id: bigint
+    related_user_id: bigint
 }

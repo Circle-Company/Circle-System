@@ -104,12 +104,12 @@ export async function find_user_by_pk({ user_id, user_pk }: { user_id: number; u
     if (!profile_picture)
         throw new InternalServerError({ message: "Can´t possible find this user picture." })
 
-    if (user_id !== user.id) {
+    if (BigInt(user_id) !== user.id) {
         await TriggerNotification({
             notification: {
                 type: "VIEW-USER",
                 data: {
-                    senderUserId: user_id,
+                    senderUserId: BigInt(user_id),
                     receiverUserId: user.id,
                 },
             },
@@ -134,10 +134,20 @@ export async function find_user_by_pk({ user_id, user_pk }: { user_id: number; u
     }
 }
 
-export async function find_user_followers({ user_pk, user_id, page, pageSize }) {
+export async function find_user_followers({
+    user_pk,
+    user_id,
+    page,
+    pageSize,
+}: {
+    user_pk: bigint
+    user_id: bigint
+    page: number
+    pageSize: number
+}) {
     const offset = (page - 1) * pageSize
     const { count, rows: userFollowers } = await FollowModel.findAndCountAll({
-        where: { followed_user_id: user_pk },
+        where: { followed_user_id: String(user_pk) },
         attributes: ["user_id", "created_at"],
         order: [["created_at", "DESC"]],
         limit: pageSize,
@@ -159,7 +169,7 @@ export async function find_user_followers({ user_pk, user_id, page, pageSize }) 
         ],
     })
 
-    const userFollowersFormatted = userFollowers.map((user) => {
+    const userFollowersFormatted = userFollowers.map((user: any) => {
         return {
             id: user.following.id,
             username: user.following.username,
