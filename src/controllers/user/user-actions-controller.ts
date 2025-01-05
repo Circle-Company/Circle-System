@@ -42,12 +42,7 @@ export async function follow_user(req: any, res: any) {
             message: "This user has been successfully followed",
         })
     } catch (err: any) {
-        res.status(400).send(
-            new ValidationError({
-                message: "Failed to follow this user",
-                action: "check if this user has been previously followed",
-            })
-        )
+        res.status(400).send(err)
     }
 }
 export async function unfollow_user(req: any, res: any) {
