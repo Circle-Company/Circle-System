@@ -5,10 +5,10 @@ import db_config from "../config/database.js"
 import Comment from "../models/comments/comment-model.js"
 import CommentLike from "../models/comments/comment_likes-model.js"
 import CommentStatistic from "../models/comments/comment_statistics-model.js"
-import Memory from "../models/memories/memory-model.js"
-import MemoryMoment from "../models/memories/memory_moments-model.js"
-import Like from "../models/moments/like-model.js"
-import Moment from "../models/moments/moment-model.js"
+import Memory from "../models/memories/memory-model"
+import MemoryMoment from "../models/memories/memory_moments-model"
+import Like from "../models/moments/like-model"
+import Moment from "../models/moments/moment-model"
 import MomentInteraction from "../models/moments/moment_interaction-model.js"
 import MomentMetadata from "../models/moments/moment_metadata-model.js"
 import MomentMidia from "../models/moments/moment_midia-model.js"
@@ -18,21 +18,21 @@ import ProfileClick from "../models/moments/profile_click-model.js"
 import Share from "../models/moments/share-model.js"
 import Skip from "../models/moments/skip-model.js"
 import View from "../models/moments/view-model.js"
+import Notification from "../models/notification/notification-model"
 import NotificationToken from "../models/notification/notification_token-model"
 import Preference from "../models/preferences/preference-model"
-import Tag from "../models/tags/tag-model.js"
+import Tag from "../models/tags/tag-model"
 import Block from "../models/user/block-model.js"
 import Contact from "../models/user/contact-model.js"
-import Coordinate from "../models/user/coordinate-model.js"
-import Follow from "../models/user/follow-model.js"
+import Coordinate from "../models/user/coordinate-model"
+import Follow from "../models/user/follow-model"
 import Metadata from "../models/user/metadata-model.js"
-import Notification from "../models/user/notification-model.js"
-import ProfilePicture from "../models/user/profilepicture-model.js"
+import ProfilePicture from "../models/user/profilepicture-model"
 import Relation from "../models/user/relation-model.js"
 import Report from "../models/user/report-model.js"
 import Socket from "../models/user/socket-model.js"
-import Statistic from "../models/user/statistic-model.js"
-import User from "../models/user/user-model.js"
+import Statistic from "../models/user/statistic-model"
+import User from "../models/user/user-model"
 //mysql database connection
 
 const DB_CONFIG =
@@ -55,20 +55,20 @@ try {
 }
 
 //models connections
-User.init(connection)
+User.initialize(connection)
 Metadata.init(connection)
-ProfilePicture.init(connection)
-Statistic.init(connection)
+ProfilePicture.initialize(connection)
+Statistic.initialize(connection)
 Contact.init(connection)
 Block.init(connection)
-Coordinate.init(connection)
-Follow.init(connection)
+Coordinate.initialize(connection)
+Follow.initialize(connection)
 Report.init(connection)
 Relation.init(connection)
-Notification.init(connection)
+Notification.initialize(connection)
 Socket.init(connection)
-Moment.init(connection)
-Tag.init(connection)
+Moment.initialize(connection)
+Tag.initialize(connection)
 MomentStatistic.init(connection)
 MomentMidia.init(connection)
 MomentTag.init(connection)
@@ -76,9 +76,9 @@ MomentMetadata.init(connection)
 Comment.init(connection)
 CommentLike.init(connection)
 CommentStatistic.init(connection)
-Memory.init(connection)
-MemoryMoment.init(connection)
-Like.init(connection)
+Memory.initialize(connection)
+MemoryMoment.initialize(connection)
+Like.initialize(connection)
 View.init(connection)
 Share.init(connection)
 Skip.init(connection)
