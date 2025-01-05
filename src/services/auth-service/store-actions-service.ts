@@ -1,5 +1,5 @@
 import config from "../../config"
-import { ValidationError } from "../../errors"
+import { InternalServerError, ValidationError } from "../../errors"
 import { ContainSpecialCharacters } from "../../helpers/contain-special-characters"
 import { DecryptPassword, EncriptedPassword } from "../../helpers/encrypt-decrypt-password"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
@@ -37,19 +37,23 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
         const encryptedPassword = await EncriptedPassword({ password })
         const newUser = await User.create({
             username: username.toLowerCase(),
+            old_encrypted_password: null,
             encrypted_password: encryptedPassword,
             access_level: 0,
+            name: null,
             verifyed: false,
             deleted: false,
             blocked: false,
             muted: false,
             terms_and_conditions_agreed_version: "1.0.0",
-            terms_and_conditions_agreed_at: Date.now(),
-            last_active_at: Date.now(),
-            last_login_at: Date.now(),
-            last_password_updated_at: Date.now(),
+            terms_and_conditions_agreed_at: new Date(),
+            last_active_at: new Date(),
+            last_login_at: new Date(),
+            last_password_updated_at: new Date(),
             send_notification_emails: false,
         })
+        if (!newUser)
+            throw new InternalServerError({ message: "Can´t possible create a new user." })
 
         await Promise.all([
             ProfilePicture.create({ user_id: newUser.id }),
@@ -68,6 +72,9 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
                 total_followers_num: 0,
                 total_likes_num: 0,
                 total_views_num: 0,
+                total_profile_views_num: 0,
+                total_memories_num: 0,
+                total_moments_num: 0,
             }),
             jwtEncoder({
                 username: newUser.username,
@@ -138,6 +145,7 @@ export async function change_password({
         where: { id: user_id },
         attributes: ["encrypted_password", "old_encrypted_password"],
     })
+    if (!user) throw new InternalServerError({ message: "Can´t possible find this user." })
     const new_encrypted_password = await EncriptedPassword({ password: password_input })
     if (await DecryptPassword({ password1: password_input, password2: user.encrypted_password })) {
         throw new ValidationError({

@@ -4,7 +4,7 @@ import { search_mixer } from "./src/modules/search_mixer"
 
 type SearchEngineProps = {
     search_term: string
-    user_id: number
+    user_id: bigint
 }
 
 export async function SearchEngine({ user_id, search_term }: SearchEngineProps): Promise<any> {

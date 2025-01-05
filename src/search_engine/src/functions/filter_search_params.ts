@@ -1,17 +1,13 @@
-import sequelize from "sequelize";
-import { FindSearchCandidatesProps } from "../types";
-import { Op } from "sequelize";
+import sequelize, { Op } from "sequelize"
+import { FindSearchCandidatesProps } from "../types"
 
-export function filterSearchParams({
-    user_id,
-    search_term,
-}: FindSearchCandidatesProps): Object {
+export function filterSearchParams({ user_id, search_term }: FindSearchCandidatesProps): any {
     return {
         [Op.and]: [
-             sequelize.literal(`MATCH (username) AGAINST ('${search_term}*' IN BOOLEAN MODE)`),
-            { id: { [Op.not]: user_id } },
+            sequelize.literal(`MATCH (username) AGAINST ('${search_term}*' IN BOOLEAN MODE)`),
+            { id: { [Op.not]: user_id.toString() } },
             { blocked: { [Op.not]: true } },
             { deleted: { [Op.not]: true } },
         ],
-    };
+    }
 }

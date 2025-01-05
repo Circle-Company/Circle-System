@@ -1,14 +1,15 @@
+import { InternalServerError } from "../../../../errors"
 import { Coordinates, haversineDistance } from "../../../../helpers/coordinates_distance"
-import Coordinate from "../../../../models/user/coordinate-model.js"
+import Coordinate from "../../../../models/user/coordinate-model"
 import { FinduserBlock } from "../../functions/set_interactions/find_user_block"
 import { findUserFollow } from "../../functions/set_interactions/find_user_follow"
 type FindCandidatesProps = {
-    user_id: number
+    user_id: bigint
     subtracted_candidates: candidateInput[]
 }
 
 type candidateInput = {
-    id: number
+    id: bigint
     username: string
     verifyed: boolean
     name: string | null
@@ -24,29 +25,16 @@ type candidateInput = {
     statistics: { total_followers_num: number }
 }
 
-type candidateReturn = {
-    id: number
-    username: string
-    verifyed: boolean
-    name: string | null
-    muted: boolean
-    profilePicture: {
-        tiny_resolution: string
-    }
-    follow_you: boolean
-    you_follow: boolean
-    block_you: boolean
-    distance: number
-    total_followers_num: number
-}
 export async function add_candidates_interactions({
     user_id,
     subtracted_candidates,
 }: FindCandidatesProps) {
     const user_coords = await Coordinate.findOne({
-        atributtes: ["latitude, longitude"],
-        where: { user_id },
+        attributes: ["user_id", "latitude", "longitude"],
+        where: { user_id: user_id.toString() },
     })
+
+    if (!user_coords) throw new InternalServerError({ message: "Error to find user coordinates." })
 
     return await Promise.all(
         subtracted_candidates.map(async (candidate) => {
