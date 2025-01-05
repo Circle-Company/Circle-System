@@ -1,9 +1,9 @@
 import { DataTypes, Model, Sequelize } from "sequelize"
 import SnowflakeID from "snowflake-id"
-const snowflake = new SnowflakeID()
 
+const snowflake = new SnowflakeID()
 interface UserAttributes {
-    id: number
+    id?: bigint
     username: string
     name?: string | null
     encrypted_password: string
@@ -15,16 +15,16 @@ interface UserAttributes {
     blocked: boolean
     muted: boolean
     terms_and_conditions_agreed_version?: string | null
-    terms_and_conditions_agreed_at?: Date | null
-    last_active_at?: Date | null
-    last_login_at?: Date | null
-    last_failed_login_at?: Date | null
-    last_password_updated_at?: Date | null
+    terms_and_conditions_agreed_at?: Date | string | null
+    last_active_at?: Date | string | null
+    last_login_at?: Date | string | null
+    last_failed_login_at?: Date | string | null
+    last_password_updated_at?: Date | string | null
     send_notification_emails: boolean
 }
 
 export default class User extends Model<UserAttributes> implements UserAttributes {
-    public id!: number
+    public readonly id!: bigint
     public username!: string
     public name!: string | null
     public encrypted_password!: string
@@ -36,20 +36,21 @@ export default class User extends Model<UserAttributes> implements UserAttribute
     public blocked!: boolean
     public muted!: boolean
     public terms_and_conditions_agreed_version!: string | null
-    public terms_and_conditions_agreed_at!: Date | null
-    public last_active_at!: Date | null
-    public last_login_at!: Date | null
-    public last_failed_login_at!: Date | null
-    public last_password_updated_at!: Date | null
+    public terms_and_conditions_agreed_at!: Date | string | null
+    public last_active_at!: Date | string | null
+    public last_login_at!: Date | string | null
+    public last_failed_login_at!: Date | string | null
+    public last_password_updated_at!: Date | string | null
     public send_notification_emails!: boolean
-
     static initialize(sequelize: Sequelize) {
         User.init(
             {
                 id: {
-                    type: DataTypes.NUMBER,
+                    type: DataTypes.BIGINT,
                     primaryKey: true,
-                    autoIncrement: true,
+                    autoIncrement: false,
+                    allowNull: false,
+                    defaultValue: () => snowflake.generate(),
                 },
                 username: {
                     type: DataTypes.STRING(30),
@@ -124,6 +125,7 @@ export default class User extends Model<UserAttributes> implements UserAttribute
                 sequelize,
                 modelName: "User",
                 tableName: "users",
+                timestamps: true,
             }
         )
 

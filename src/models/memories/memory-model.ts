@@ -12,8 +12,8 @@ import SnowflakeID from "snowflake-id"
 import Moment from "../moments/moment-model" // Certifique-se de que o modelo Moment está corretamente exportado
 import User from "../user/user-model" // Certifique-se de que o modelo User está corretamente exportado
 import MemoryMoment from "./memory_moments-model" // Certifique-se de que MemoryMoment está exportado corretamente
-const snowflake = new SnowflakeID()
 
+const snowflake = new SnowflakeID()
 export default class Memory extends Model<
     InferAttributes<Memory>,
     InferCreationAttributes<Memory>
@@ -38,12 +38,14 @@ export default class Memory extends Model<
         Memory.init(
             {
                 id: {
-                    type: DataTypes.NUMBER,
+                    type: DataTypes.BIGINT,
                     primaryKey: true,
-                    autoIncrement: true,
+                    autoIncrement: false,
+                    allowNull: false,
+                    defaultValue: () => snowflake.generate(),
                 },
                 user_id: {
-                    type: DataTypes.NUMBER,
+                    type: DataTypes.BIGINT,
                     allowNull: false,
                     references: {
                         model: "users",

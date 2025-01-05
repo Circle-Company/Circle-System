@@ -1,8 +1,8 @@
 import { DataTypes, Model, Sequelize } from "sequelize"
 
 interface ProfilePictureAttributes {
-    id: number
-    user_id: number
+    id?: number
+    user_id: bigint
     fullhd_resolution?: string | null
     tiny_resolution?: string | null
 }
@@ -11,8 +11,8 @@ export default class ProfilePicture
     extends Model<ProfilePictureAttributes>
     implements ProfilePictureAttributes
 {
-    public id!: number
-    public user_id!: number
+    public readonly id!: number
+    public user_id!: bigint
     public fullhd_resolution!: string | null
     public tiny_resolution!: string | null
 
@@ -20,12 +20,12 @@ export default class ProfilePicture
         ProfilePicture.init(
             {
                 id: {
-                    type: DataTypes.INTEGER.UNSIGNED,
+                    type: DataTypes.INTEGER,
                     autoIncrement: true,
                     primaryKey: true,
                 },
                 user_id: {
-                    type: DataTypes.INTEGER.UNSIGNED,
+                    type: DataTypes.BIGINT,
                     allowNull: false,
                 },
                 fullhd_resolution: {
@@ -41,6 +41,7 @@ export default class ProfilePicture
                 sequelize,
                 tableName: "profile_pictures",
                 modelName: "ProfilePicture",
+                timestamps: true,
             }
         )
     }

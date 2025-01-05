@@ -9,7 +9,7 @@ import {
 import User from "./user-model" // Certifique-se de que o modelo User está corretamente exportado
 
 class Statistic extends Model<InferAttributes<Statistic>, InferCreationAttributes<Statistic>> {
-    declare id: number
+    declare readonly id?: number
     declare total_followers_num: number
     declare total_likes_num: number
     declare total_views_num: number
@@ -69,7 +69,7 @@ class Statistic extends Model<InferAttributes<Statistic>, InferCreationAttribute
             {
                 sequelize,
                 tableName: "statistics",
-                timestamps: false, // Caso você não utilize createdAt e updatedAt
+                timestamps: true, // Caso você não utilize createdAt e updatedAt
             }
         )
     }

@@ -15,12 +15,13 @@ class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Mome
         Moment.init(
             {
                 id: {
-                    type: DataTypes.NUMBER,
+                    type: DataTypes.BIGINT,
                     primaryKey: true,
-                    autoIncrement: true,
+                    allowNull: false,
+                    defaultValue: () => snowflake.generate(),
                 },
                 user_id: {
-                    type: DataTypes.NUMBER,
+                    type: DataTypes.BIGINT,
                     allowNull: false,
                     references: {
                         model: "users",
