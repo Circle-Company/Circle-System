@@ -1,8 +1,8 @@
 import { Request, Response } from "express"
 import { Op } from "sequelize"
 import MomentMidia from "../../models/moments/moment_midia-model.js"
+import Notification from "../../models/notification/notification-model.js"
 import Follow from "../../models/user/follow-model.js"
-import Notification from "../../models/user/notification-model.js"
 import ProfilePicture from "../../models/user/profilepicture-model.js"
 import User from "../../models/user/user-model.js"
 

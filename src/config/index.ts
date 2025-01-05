@@ -1,4 +1,4 @@
-const dotenv = require("dotenv")
+import dotenv from "dotenv"
 import emails from "./emails"
 import metadata from "./metadata"
 

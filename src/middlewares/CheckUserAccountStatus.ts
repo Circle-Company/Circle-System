@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express"
 import { NotFoundError } from "../errors"
-import User from "../models/user/user-model.js"
+import User from "../models/user/user-model"
 
 export async function CheckUserAccountStatus(req: Request, res: Response, next: NextFunction) {
     const { username } = req.params
