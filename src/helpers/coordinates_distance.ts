@@ -1,5 +1,5 @@
 export class Coordinates {
-    constructor(public latitude: number, public longitude: number) {}
+    constructor(public latitude, public longitude) {}
 }
 
 export function haversineDistance(coord1: Coordinates, coord2: Coordinates): number {
