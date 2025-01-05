@@ -1,25 +1,25 @@
 import bodyParser from "body-parser"
 import express from "express"
 import "express-async-errors"
-import config from "./config/index.js"
+import config from "./config/index"
 import { RP } from "./config/routes_prefix"
 import "./database/index"
-import { UserAuthenticationValidator } from "./middlewares/UserAuthenticationValidator.js"
+import { UserAuthenticationValidator } from "./middlewares/UserAuthenticationValidator"
 
-import { router as AccountRouter } from "./routes/account-router.js"
-import { router as AdminRouter } from "./routes/admin-router.js"
-import { router as AuthRouter } from "./routes/auth-router.js"
-import { router as MemoryRouter } from "./routes/memory-router.js"
-import { router as ModeratorRouter } from "./routes/moderator-router.js"
-import { router as MomentRouterV2 } from "./routes/moment-router-v2.js"
-import { router as MomentRouter } from "./routes/moment-router.js"
-import { router as NotificationRouter } from "./routes/notification-router.js"
-import { router as PreferencesRouter } from "./routes/preferences-router.js"
-import { router as UserRouter } from "./routes/user-router.js"
+import { router as AccountRouter } from "./routes/account-router"
+import { router as AdminRouter } from "./routes/admin-router"
+import { router as AuthRouter } from "./routes/auth-router"
+import { router as MemoryRouter } from "./routes/memory-router"
+import { router as ModeratorRouter } from "./routes/moderator-router"
+import { router as MomentRouter } from "./routes/moment-router"
+import { router as MomentRouterV2 } from "./routes/moment-router-v2"
+import { router as NotificationRouter } from "./routes/notification-router"
+import { router as PreferencesRouter } from "./routes/preferences-router"
+import { router as UserRouter } from "./routes/user-router"
 
 declare module "express-serve-static-core" {
     interface Request {
-        user_id?: number
+        user_id?: bigint
         ipAddress?: string
         username?: string
         user?: Object
@@ -61,3 +61,5 @@ app.use(PREFERENCES_PREFIX, UserAuthenticationValidator, PreferencesRouter)
 app.listen(config.PORT, () =>
     console.log("🚀 circle-system (server) - running on port: " + config.PORT)
 )
+
+export default app
