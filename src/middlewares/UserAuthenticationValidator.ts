@@ -1,10 +1,15 @@
+import { NextFunction, Request, Response } from "express"
 import jwt from "jsonwebtoken"
 import CONFIG from "../config"
 import { UnauthorizedError } from "../errors"
 
 // Middleware de validação de autenticação JWT
-export async function UserAuthenticationValidator(req, res, next) {
-    const authHeader = req.headers.authorization_token
+export async function UserAuthenticationValidator(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
+    const authHeader: any = req.headers.authorization_token
 
     // Verifica se o cabeçalho de autorização está presente
     if (!authHeader) {
@@ -30,7 +35,7 @@ export async function UserAuthenticationValidator(req, res, next) {
     }
 
     // Verifica e decodifica o token JWT
-    jwt.verify(token, CONFIG.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, CONFIG.JWT_SECRET, (err: any, decoded: any) => {
         if (err) {
             return next(
                 new UnauthorizedError({
@@ -39,23 +44,12 @@ export async function UserAuthenticationValidator(req, res, next) {
                 })
             )
         }
-        /**
- * 
 
-        const validIp = isValidIP(decoded.ip)
-
-        if (!validIp) {
-            throw new UnauthorizedError({
-                message: "the ip address passed is in an incorrect format",
-                action: "check if the passed ip is in the format XXX.XXX.X.X or XXX.XXX.XX.X",
-            })
+        // Adiciona informações ao objeto 'req' após validação do token
+        if (decoded) {
+            req.user_id = decoded.sub // O 'sub' representa o 'userId'
+            req.username = decoded.username // Nome de usuário incluído no payload
         }
- */
-        // Processa as informações decodificadas e as adiciona ao objeto 'req'
-        req.user_id = decoded.sub // O 'sub' representa o 'userId'
-        req.username = decoded.username // Nome de usuário incluído no payload
-        //req.ipAddress = decoded.ipAddress
-        req.access_level = decoded.access_level // Nível de acesso do usuário
 
         // Passa para o próximo middleware ou rota
         next()
