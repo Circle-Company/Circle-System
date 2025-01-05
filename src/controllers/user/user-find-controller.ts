@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express"
 import { MFU } from "../../MFU"
-import { UnauthorizedError, ValidationError } from "../../errors"
+import { InternalServerError, UnauthorizedError, ValidationError } from "../../errors"
 import { UserService } from "../../services/user-service"
 
 export async function find_user_by_username(req: Request, res: Response) {
@@ -84,9 +84,11 @@ export async function recommender_users(req: Request, res: Response) {
 export async function find_user_followers(req: Request, res: Response) {
     const page = parseInt(req.query.page as string, 10) || 1
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10
+
+    if (!req.user_id) throw new InternalServerError({ message: "req.user_id can not be null." })
     const result = await UserService.UserFind.FinduserFollowers({
-        user_pk: req.params.id,
-        user_id: req.user_id,
+        user_pk: BigInt(req.params.id),
+        user_id: BigInt(req.user_id),
         page,
         pageSize,
     })
