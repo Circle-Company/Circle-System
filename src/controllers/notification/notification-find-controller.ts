@@ -1,10 +1,11 @@
 import { Request, Response } from "express"
 import { Op } from "sequelize"
+import { InternalServerError } from "../../errors"
 import MomentMidia from "../../models/moments/moment_midia-model.js"
-import Notification from "../../models/notification/notification-model.js"
-import Follow from "../../models/user/follow-model.js"
-import ProfilePicture from "../../models/user/profilepicture-model.js"
-import User from "../../models/user/user-model.js"
+import Notification from "../../models/notification/notification-model"
+import Follow from "../../models/user/follow-model"
+import ProfilePicture from "../../models/user/profilepicture-model"
+import User from "../../models/user/user-model"
 
 export async function find_user_notifications(req: Request, res: Response) {
     const page = parseInt(req.query.page as string, 10) || 1
@@ -30,7 +31,7 @@ export async function find_user_notifications(req: Request, res: Response) {
 
         const arr = await Promise.all(
             notifications.map(async (n: any) => {
-                const user = await User.findOne({
+                const user: any = await User.findOne({
                     attributes: ["id", "username", "verifyed"],
                     where: { id: n.sender_user_id },
                     include: [
@@ -41,6 +42,9 @@ export async function find_user_notifications(req: Request, res: Response) {
                         },
                     ],
                 })
+
+                if (!user)
+                    throw new InternalServerError({ message: "Can't possible find this user." })
 
                 const user_followed = await Follow.findOne({
                     attributes: ["followed_user_id", "user_id"],

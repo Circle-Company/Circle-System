@@ -1,15 +1,15 @@
 import { NextFunction, Request, Response } from "express"
-import { InternalServerError, ValidationError } from "../../errors/index.js"
-import { DecryptPassword } from "../../helpers/encrypt-decrypt-password.js"
-import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists.js"
-import { jwtEncoder } from "../../jwt/encode.js"
+import { InternalServerError, ValidationError } from "../../errors"
+import { DecryptPassword } from "../../helpers/encrypt-decrypt-password"
+import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
+import { jwtEncoder } from "../../jwt/encode"
 
-import config from "../../config/index.js"
-import NotificationToken from "../../models/notification/notification_token-model"
+import config from "../../config"
+import NotificationToken from "../../models/notification/notification_token-model.js"
 import Preference from "../../models/preferences/preference-model.js"
-import ProfilePicture from "../../models/user/profilepicture-model.js"
-import Statistic from "../../models/user/statistic-model.js"
-import User from "../../models/user/user-model.js"
+import ProfilePicture from "../../models/user/profilepicture-model"
+import Statistic from "../../models/user/statistic-model"
+import User from "../../models/user/user-model"
 
 export async function authenticate_user(req: Request, res: Response) {
     const { username, password } = req.body

@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken"
-import { ValidationError } from "../errors/index.js"
-import UserModel from "../models/user/user-model.js"
+import { ValidationError } from "../errors"
+import UserModel from "../models/user/user-model"
 import CONFIG from "./../config"
 
 type JwtEncoderProps = {

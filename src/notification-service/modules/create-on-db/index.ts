@@ -1,5 +1,5 @@
 import { ValidationError } from "../../../errors"
-import Notification from "../../../models/notification/notification-model.js"
+import Notification from "../../../models/notification/notification-model"
 import { NotificationProps } from "./../../types"
 
 type ModuleProps = {
