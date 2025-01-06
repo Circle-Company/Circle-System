@@ -1,6 +1,6 @@
 export interface UserObject {
     [key: string]: any // Permite qualquer outra propriedade
-    id: number
+    id: any
     verifyed: boolean
     muted: boolean
     block_you: boolean
