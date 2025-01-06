@@ -28,7 +28,7 @@ export async function find_user_feed_moments({
     user_id,
 }: FindUserFeedMomentsProps) {
     try {
-        return await swipe_engine_api
+        return await swipeEngineApi
             .post("/moments/get/feed", { interaction_queue: { ...interaction_queue, user_id } })
             .then(async function (response) {
                 return await Promise.all(
@@ -46,6 +46,11 @@ export async function find_user_feed_moments({
                             attributes: ["user_id"],
                         })
 
+                        if (!moment_user_id)
+                            throw new InternalServerError({
+                                message: "Error to find moment owner.",
+                        })
+
                         const moment_user_followed = await Follow.findOne({
                             where: {
                                 user_id,
@@ -58,7 +63,7 @@ export async function find_user_feed_moments({
                                 liked_moment_id: moment_id,
                             },
                         })
-                        const moment_user = await User.findOne({
+                        const moment_user = (await User.findOne({
                             where: { id: moment_user_id.user_id },
                             attributes: ["id", "username", "verifyed"],
                             include: [
@@ -68,7 +73,7 @@ export async function find_user_feed_moments({
                                     attributes: ["fullhd_resolution", "tiny_resolution"],
                                 },
                             ],
-                        })
+                        })) as UserType
 
                         const { count, rows: comments } = await Comment.findAndCountAll({
                             where: { moment_id: moment_with_midia.id },
@@ -98,7 +103,7 @@ export async function find_user_feed_moments({
 
                         const returnsComments = await Promise.all(
                             sortedComments.map(async (comment: any) => {
-                                const user = await User.findOne({
+                                const user = (await User.findOne({
                                     where: { id: comment.user_id },
                                     attributes: ["id", "username", "verifyed"],
                                     include: [
@@ -108,6 +113,11 @@ export async function find_user_feed_moments({
                                             attributes: ["fullhd_resolution", "tiny_resolution"],
                                         },
                                     ],
+                                })) as UserType
+
+                                if (!user)
+                                    throw new InternalServerError({
+                                        message: "Error to find comment owner.",
                                 })
 
                                 delete comment["user_id"]
