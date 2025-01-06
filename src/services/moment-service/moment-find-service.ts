@@ -1,19 +1,19 @@
 import { Op } from "sequelize"
-import { swipe_engine_api } from "../../apis/swipe-engine"
+import { swipeEngineApi } from "../../apis/swipe-engine"
 import { InternalServerError, UnauthorizedError } from "../../errors"
 import { populateMoment } from "../../helpers/populate-moments"
 import Comment from "../../models/comments/comment-model.js"
 import CommentLike from "../../models/comments/comment_likes-model.js"
 import CommentStatistic from "../../models/comments/comment_statistics-model.js"
-import MemoryMoment from "../../models/memories/memory_moments-model.js"
-import Like from "../../models/moments/like-model.js"
-import Moment from "../../models/moments/moment-model.js"
+import MemoryMoment from "../../models/memories/memory_moments-model"
+import Like from "../../models/moments/like-model"
+import Moment from "../../models/moments/moment-model"
 import Statistic from "../../models/moments/moment_statistic-model.js"
 import MomentTags from "../../models/moments/moment_tag-model.js"
-import Tag from "../../models/tags/tag-model.js"
-import Follow from "../../models/user/follow-model.js"
-import ProfilePicture from "../../models/user/profilepicture-model.js"
-import User from "../../models/user/user-model.js"
+import Tag from "../../models/tags/tag-model"
+import Follow from "../../models/user/follow-model"
+import ProfilePicture from "../../models/user/profilepicture-model"
+import User from "../../models/user/user-model"
 import {
     FindMomentStatisticsViewProps,
     FindMomentTagsProps,
@@ -21,6 +21,7 @@ import {
     FindUserMomentsProps,
     FindUserMomentsTinyExcludeMemoryProps,
     MomentProps,
+    UserType,
 } from "./types"
 
 export async function find_user_feed_moments({
@@ -49,7 +50,7 @@ export async function find_user_feed_moments({
                         if (!moment_user_id)
                             throw new InternalServerError({
                                 message: "Error to find moment owner.",
-                        })
+                            })
 
                         const moment_user_followed = await Follow.findOne({
                             where: {
@@ -118,7 +119,7 @@ export async function find_user_feed_moments({
                                 if (!user)
                                     throw new InternalServerError({
                                         message: "Error to find comment owner.",
-                                })
+                                    })
 
                                 delete comment["user_id"]
 
@@ -433,6 +434,9 @@ export async function find_moment_statistics_view({
         where: { id: statistic.moment_id },
         attributes: ["user_id", "id"],
     })
+
+    if (!moment_from_statistic)
+        throw new InternalServerError({ message: "Error to find moment from statistic." })
 
     if (moment_from_statistic.user_id !== user_id)
         throw new UnauthorizedError({
