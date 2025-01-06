@@ -2,10 +2,10 @@ import { WTF } from "../../WTF"
 import { InternalServerError, ValidationError } from "../../errors"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 import { Relation } from "../../helpers/relation"
-import { default as Follow, default as FollowModel } from "../../models/user/follow-model.js"
+import { default as Follow, default as FollowModel } from "../../models/user/follow-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
-import Statistic from "../../models/user/statistic-model.js"
-import User from "../../models/user/user-model.js"
+import Statistic from "../../models/user/statistic-model"
+import User from "../../models/user/user-model"
 import { TriggerNotification } from "../../notification-service"
 import { SearchEngine } from "../../search_engine"
 
@@ -233,7 +233,7 @@ export async function find_user_data({ username, user_id }: FindUserDataProps) {
         const user = await User.findOne({
             where: { username },
         })
-        if (!user) throw new InternalServerError({ message: "Can´t possible find this user." })
+        if (!user) throw new InternalServerError({ message: "Can't possible find this user." })
         const profile_picture = await ProfilePicture.findOne({
             attributes: ["fullhd_resolution", "tiny_resolution"],
             where: { user_id: user.id },
