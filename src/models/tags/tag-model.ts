@@ -4,7 +4,7 @@ import SnowflakeID from "snowflake-id"
 const snowflake = new SnowflakeID()
 
 class Tag extends Model {
-    public readonly id!: number
+    public readonly id!: bigint
     public title!: string
 
     static initialize(sequelize: Sequelize): typeof Tag {
