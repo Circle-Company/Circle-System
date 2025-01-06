@@ -2,9 +2,9 @@ import { ValidationError } from "../../errors"
 import { Notification } from "../../helpers/notification"
 import { Relation } from "../../helpers/relation"
 import Block from "../../models/user/block-model.js"
-import Follow from "../../models/user/follow-model.js"
+import Follow from "../../models/user/follow-model"
 import Report from "../../models/user/report-model.js"
-import Statistic from "../../models/user/statistic-model.js"
+import Statistic from "../../models/user/statistic-model"
 import { BlockUserProps, FollowUserProps, ReportUserProps } from "./types"
 export async function follow_user({ user_id, followed_user_id }: FollowUserProps) {
     // Verificar se o usuário está tentando seguir a si mesmo
