@@ -28,9 +28,8 @@ import Coordinate from "../models/user/coordinate-model"
 import Follow from "../models/user/follow-model"
 import Metadata from "../models/user/metadata-model.js"
 import ProfilePicture from "../models/user/profilepicture-model"
-import Relation from "../models/user/relation-model.js"
+import Relation from "../models/user/relation-model"
 import Report from "../models/user/report-model.js"
-import Socket from "../models/user/socket-model.js"
 import Statistic from "../models/user/statistic-model"
 import User from "../models/user/user-model"
 //mysql database connection
@@ -64,9 +63,8 @@ Block.init(connection)
 Coordinate.initialize(connection)
 Follow.initialize(connection)
 Report.init(connection)
-Relation.init(connection)
+Relation.initialize(connection)
 Notification.initialize(connection)
-Socket.init(connection)
 Moment.initialize(connection)
 Tag.initialize(connection)
 MomentStatistic.init(connection)
@@ -99,7 +97,6 @@ Follow.associate(connection.models)
 Report.associate(connection.models)
 Relation.associate(connection.models)
 Notification.associate(connection.models)
-Socket.associate(connection.models)
 Moment.associate(connection.models)
 Tag.associate(connection.models)
 MomentStatistic.associate(connection.models)
