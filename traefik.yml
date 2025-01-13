@@ -1,0 +1,42 @@
+# Habilita o dashboard do Traefik
+api:
+    dashboard: true
+
+# Define os pontos de entrada para HTTP
+entryPoints:
+    web:
+        address: ":80" # Porta para HTTP
+    websecure:
+        address: ":443" # Porta para HTTPS (opcional, se usar SSL)
+    dashboard:
+        address: ":8080"
+
+# Define os provedores, como Docker
+providers:
+    docker:
+        exposedByDefault: false # Desativa a exposição automática de containers
+
+# Configuração de balanceamento de carga para as APIs
+http:
+    routers:
+        api:
+            entryPoints:
+                - web
+            rule: "Host(`localhost`)" # Requisições para localhost
+            service: api-service # Nome do serviço de balanceamento
+            middlewares:
+                - compress # Middleware para compressão
+            priority: 1 # Prioridade do roteador
+
+    services:
+        api-service:
+            loadBalancer:
+                servers:
+                    - url: "http://circle-system-01:3000" # Primeira instância
+                    - url: "http://circle-system-02:3000" # Segunda instância
+                    - url: "http://circle-system-03:3000" # Terceira instância
+                passHostHeader: true # Passa o cabeçalho do host para as instâncias backend
+
+# Configurações de logs
+log:
+    level: INFO # Pode ser DEBUG, INFO, WARN, ERROR

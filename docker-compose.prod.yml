@@ -1,0 +1,107 @@
+version: "3.8" # Use a versão 3.8 para suporte completo a recursos avançados
+services:
+    traefik:
+        container_name: reverse-proxy
+        image: traefik:v3.3.1
+        command:
+            - "--api.dashboard=true" # Habilita o dashboard
+            - "--providers.docker=true" # Ativa integração com o Docker
+            - "--providers.docker.exposedbydefault=false" # Desativa exposição automática de containers
+            - "--entrypoints.web.address=:80" # Entrada para HTTP
+            - "--entrypoints.dashboard.address=:8080" # Entrada para o dashboard
+        ports:
+            - "80:80" # Porta pública HTTP
+            - "8080:8080" # Porta para o dashboard
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro # Acesso ao Docker socket
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.dashboard.rule=PathPrefix(`/`)" # Exibe o dashboard na raiz da porta 8080
+            - "traefik.http.routers.dashboard.service=api@internal" # Serviço interno para o dashboard
+            - "traefik.http.routers.dashboard.entrypoints=dashboard" # Usa o ponto de entrada `dashboard`
+    api-instance-01:
+        container_name: circle-system-01
+        build:
+            context: . # Diretório onde está o Dockerfile
+            dockerfile: Dockerfile
+            target: production
+        ports:
+            - "3000:3000"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.api.rule=Host(`localhost`)" # Roteia para localhost
+            - "traefik.http.routers.api.entrypoints=web"
+            - "traefik.http.services.api.loadbalancer.server.port=3000" # Porta da API
+        environment:
+            - PORT=3000
+            - RUN_SCRIPTS_MODE=false
+            - NODE_ENV=production
+            - CIRCLE_SWIPE_ENGINE_API=http://localhost:5000/
+        env_file:
+            - .env
+        expose:
+            - "3000"
+        deploy:
+            resources:
+                limits:
+                    cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
+                    memory: "0.3GB" # Limita o uso de memória do container para 512 MB
+        command: npm start
+
+    api-instance-02:
+        container_name: circle-system-02
+        build:
+            context: . # Diretório onde está o Dockerfile
+            dockerfile: Dockerfile
+            target: production
+        ports:
+            - "3001:3000"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.api.rule=Host(`localhost`)" # Roteia para localhost
+            - "traefik.http.routers.api.entrypoints=web"
+            - "traefik.http.services.api.loadbalancer.server.port=3000" # Porta da API
+        environment:
+            - PORT=3000
+            - RUN_SCRIPTS_MODE=false
+            - NODE_ENV=production
+            - CIRCLE_SWIPE_ENGINE_API=http://localhost:5000/
+        env_file:
+            - .env
+        expose:
+            - "3000"
+        deploy:
+            resources:
+                limits:
+                    cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
+                    memory: "0.3GB" # Limita o uso de memória do container para 512 MB
+        command: npm start
+
+    api-instance-03:
+        container_name: circle-system-03
+        build:
+            context: . # Diretório onde está o Dockerfile
+            dockerfile: Dockerfile
+            target: production
+        ports:
+            - "3002:3000"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.api.rule=Host(`localhost`)" # Roteia para localhost
+            - "traefik.http.routers.api.entrypoints=web"
+            - "traefik.http.services.api.loadbalancer.server.port=3000" # Porta da API
+        environment:
+            - PORT=3000
+            - RUN_SCRIPTS_MODE=false
+            - NODE_ENV=production
+            - CIRCLE_SWIPE_ENGINE_API=http://localhost:5000/
+        env_file:
+            - .env
+        expose:
+            - "3000"
+        deploy:
+            resources:
+                limits:
+                    cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
+                    memory: "0.3GB" # Limita o uso de memória do container para 512 MB
+        command: npm start

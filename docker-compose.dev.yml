@@ -1,0 +1,18 @@
+version: "3.8" # Use a versão 3.8 para suporte completo a recursos avançados
+services:
+    api-01:
+        container_name: circle_system-build
+        build:
+            context: . # Diretório onde está o Dockerfile
+            dockerfile: Dockerfile
+            target: build
+        ports:
+            - "3000:3000"
+        environment:
+            - PORT=3000
+            - RUN_SCRIPTS_MODE=false
+            - NODE_ENV=development
+            - CIRCLE_SWIPE_ENGINE_API=http://localhost:5000/
+        env_file:
+            - .env
+        command: npm run build
