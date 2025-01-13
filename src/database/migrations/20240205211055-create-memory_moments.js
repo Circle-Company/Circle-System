@@ -4,8 +4,14 @@
 module.exports = {
     async up(queryInterface, Sequelize) {
         return queryInterface.createTable("memory_moments", {
-            memory_id: {
+            id: {
                 type: Sequelize.INTEGER(),
+                primaryKey: true,
+                autoIncrement: true,
+                allowNull: false,
+            },
+            memory_id: {
+                type: Sequelize.BIGINT(),
                 allowNull: false,
                 references: {
                     model: "memories", // Certifique-se de ajustar para o nome real da tabela de memories
@@ -15,7 +21,7 @@ module.exports = {
                 onDelete: "CASCADE",
             },
             moment_id: {
-                type: Sequelize.INTEGER(),
+                type: Sequelize.BIGINT(),
                 allowNull: false,
                 references: {
                     model: "moments", // Certifique-se de ajustar para o nome real da tabela de moments
