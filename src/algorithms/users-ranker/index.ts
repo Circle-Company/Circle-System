@@ -2,7 +2,7 @@ import { Coordinates, haversineDistance } from "../../helpers/coordinates_distan
 import { sigmoid } from "../../math/sigmoid"
 import CoordinateModel from "../../models/user/coordinate-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
-import Relation from "../../models/user/relation-model.js"
+import Relation from "../../models/user/relation-model"
 import Statistic from "../../models/user/statistic-model"
 import User from "../../models/user/user-model"
 import { FinduserBlock } from "../../search_engine/src/functions/set_interactions/find_user_block"
