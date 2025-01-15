@@ -18,12 +18,6 @@ type usersRankerAlgorithmProps = {
     userId: bigint
     usersList: Array<UserWithMandatoryId>
 }
-type RelationProps = {
-    id: number
-    user_id: bigint
-    related_user_id: bigint
-    weight: number
-}
 
 export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlgorithmProps) {
     try {
@@ -40,15 +34,15 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                     userInformations,
                 ] = await Promise.all([
                     Relation.findOne({
-                        where: { user_id: userId.toString(), related_user_id: user.id.toString() },
+                        where: { user_id: userId, related_user_id: user.id },
                         attributes: ["related_user_id", "weight"],
                     }),
                     CoordinateModel.findOne({
-                        where: { user_id: userId.toString() },
+                        where: { user_id: userId },
                         attributes: ["latitude", "longitude"],
                     }),
                     CoordinateModel.findOne({
-                        where: { user_id: user.id.toString() },
+                        where: { user_id: user.id },
                         attributes: ["latitude", "longitude"],
                     }),
                     FinduserBlock({
@@ -69,7 +63,7 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                     }),
                     User.findOne({
                         attributes: ["id", "username", "verifyed", "muted", "blocked", "name"],
-                        where: { id: user.id.toString() },
+                        where: { id: user.id },
                         include: [
                             {
                                 model: ProfilePicture,
@@ -82,7 +76,7 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                                 attributes: ["total_followers_num"],
                             },
                         ],
-                    }),
+                    }) as any,
                 ])
 
                 const user_coords_class = new Coordinates(
