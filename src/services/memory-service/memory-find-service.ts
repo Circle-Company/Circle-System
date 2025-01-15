@@ -1,12 +1,12 @@
 import { InternalServerError } from "../../errors"
 import { populateMoment } from "../../helpers/populate-moments"
-import Memory from "../../models/memories/memory-model.js"
-import MemoryMoment from "../../models/memories/memory_moments-model.js"
-import Like from "../../models/moments/like-model.js"
-import Moment from "../../models/moments/moment-model.js"
+import Memory from "../../models/memories/memory-model"
+import MemoryMoment from "../../models/memories/memory_moments-model"
+import Like from "../../models/moments/like-model"
+import Moment from "../../models/moments/moment-model"
 import MomentMidia from "../../models/moments/moment_midia-model.js"
 import MomentStatistic from "../../models/moments/moment_statistic-model.js"
-import UserStatistic from "../../models/user/statistic-model.js"
+import UserStatistic from "../../models/user/statistic-model"
 import { FindMemoryMomentsProps, FindMemoryProps, FindUserMemoriesProps } from "./types"
 
 export async function find_memory_moments({
@@ -18,7 +18,7 @@ export async function find_memory_moments({
     try {
         const offset = (page - 1) * pageSize
         const { count, rows: memory_moments } = await MemoryMoment.findAndCountAll({
-            where: { memory_id: memory_id },
+            where: { memory_id: memory_id.toString() },
             attributes: ["created_at", "moment_id"],
             include: [
                 {
@@ -45,7 +45,7 @@ export async function find_memory_moments({
         })
 
         const mapped = await Promise.all(
-            memory_moments.map(async (item) => {
+            memory_moments.map(async (item: any) => {
                 const liked = await Like.findOne({
                     where: { user_id, liked_moment_id: item.moment.id },
                 })
@@ -93,7 +93,7 @@ export async function find_memory_moments({
 export async function find_memory_moments_id({ memory_id }: FindMemoryProps) {
     try {
         const memory_moments = await MemoryMoment.findAll({
-            where: { memory_id: memory_id },
+            where: { memory_id: memory_id.toString() },
             attributes: ["moment_id"],
         })
 
@@ -108,9 +108,12 @@ export async function find_memory_moments_id({ memory_id }: FindMemoryProps) {
 export async function find_memory({ memory_id }: FindMemoryProps) {
     try {
         const memory = await Memory.findOne({
-            where: { id: memory_id },
+            where: { id: memory_id.toString() },
             attributes: ["id", "title"],
         })
+
+        if (!memory) throw new InternalServerError({ message: "Can't possible find this memory." })
+
         return {
             id: memory.id,
             title: memory.title,
@@ -125,7 +128,7 @@ export async function find_user_memories({ user_id, page, pageSize }: FindUserMe
         console.log()
         const offset = (page - 1) * pageSize
         const { count, rows: memories } = await Memory.findAndCountAll({
-            where: { user_id },
+            where: { user_id: user_id.toString() },
             order: [["updated_at", "DESC"]],
             limit: pageSize,
             offset,
@@ -133,18 +136,23 @@ export async function find_user_memories({ user_id, page, pageSize }: FindUserMe
         const totalPages = Math.ceil(count / pageSize)
 
         const userStatistic = await UserStatistic.findOne({
-            where: { user_id },
+            where: { user_id: user_id.toString() },
             attributes: ["total_memories_num"],
         })
+
+        if (!userStatistic)
+            throw new InternalServerError({ message: "Can't possible find user statistic." })
 
         const transformedOutput = await Promise.all(
             memories.map(async (memory) => {
                 const memoryMoments = await MemoryMoment.findAll({
                     where: { memory_id: memory.id },
+                    attributes: ["memory_id", "moment_id"],
                 })
 
                 const moments = await Promise.all(
                     memoryMoments.map(async (memory_moment) => {
+                        console.log({ memory_moment })
                         return await populateMoment({
                             moment_id: memory_moment.moment_id,
                             statistic: true,
@@ -173,6 +181,7 @@ export async function find_user_memories({ user_id, page, pageSize }: FindUserMe
                                 ? slicedMoment[0].created_at
                                 : memory.updated_at,
                         moments: slicedMoment,
+                        total_moments_num: moments.length,
                     }
                 }
                 return null // Retornar null se a memória não tiver momentos válidos
@@ -184,7 +193,7 @@ export async function find_user_memories({ user_id, page, pageSize }: FindUserMe
 
         // Ordena memórias filtradas
         filteredOutput.sort(
-            (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+            (a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
         )
 
         return {

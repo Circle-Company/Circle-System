@@ -1,31 +1,17 @@
-import {
-    Association,
-    BelongsToManyGetAssociationsMixin,
-    DataTypes,
-    HasManyGetAssociationsMixin,
-    InferAttributes,
-    InferCreationAttributes,
-    Model,
-    Sequelize,
-} from "sequelize"
+import { Association, DataTypes, Model, Sequelize } from "sequelize"
 import SnowflakeID from "snowflake-id"
 import Moment from "../moments/moment-model" // Certifique-se de que o modelo Moment está corretamente exportado
 import User from "../user/user-model" // Certifique-se de que o modelo User está corretamente exportado
 import MemoryMoment from "./memory_moments-model" // Certifique-se de que MemoryMoment está exportado corretamente
 
 const snowflake = new SnowflakeID()
-export default class Memory extends Model<
-    InferAttributes<Memory>,
-    InferCreationAttributes<Memory>
-> {
-    declare id: string
-    declare user_id: string
-    declare title: string
 
-    // Mixins para métodos de associação
-    declare getUser: BelongsToManyGetAssociationsMixin<User>
-    declare getMoments: BelongsToManyGetAssociationsMixin<Moment>
-    declare getMemoryMoments: HasManyGetAssociationsMixin<MemoryMoment>
+export default class Memory extends Model {
+    declare id: bigint // `id` é obrigatório no retorno
+    declare user_id: bigint
+    declare title: string
+    declare created_at: Date
+    declare updated_at: Date
 
     // Associações estáticas
     declare static associations: {
@@ -47,18 +33,25 @@ export default class Memory extends Model<
                 user_id: {
                     type: DataTypes.BIGINT,
                     allowNull: false,
-                    references: {
-                        model: "users",
-                        key: "id",
-                    },
                 },
                 title: {
                     type: DataTypes.STRING(255),
                     allowNull: false,
                 },
+                created_at: {
+                    type: DataTypes.DATE,
+                    allowNull: false,
+                    defaultValue: new Date(),
+                },
+                updated_at: {
+                    type: DataTypes.DATE,
+                    allowNull: false,
+                    defaultValue: new Date(),
+                },
             },
             {
                 sequelize,
+                timestamps: true,
                 modelName: "Memory",
                 tableName: "memories",
             }

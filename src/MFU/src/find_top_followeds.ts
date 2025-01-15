@@ -1,24 +1,21 @@
-import Statistic from '../../models/user/statistic-model.js'
+import Statistic from "../../models/user/statistic-model"
 
 type FindTopFollowedsProps = {
-    page: number,
+    page: number
     pageSize: number
 }
 
-export async function FindTopFolloweds({
-    page, pageSize
-}: FindTopFollowedsProps) {
-
+export async function FindTopFolloweds({ page, pageSize }: FindTopFollowedsProps) {
     const offset = (page - 1) * pageSize
 
     const { count, rows: topUsers } = await Statistic.findAndCountAll({
-        attributes: ['total_followers_num', 'user_id'],
-        order: [['total_followers_num', 'DESC']],
+        attributes: ["total_followers_num", "user_id"],
+        order: [["total_followers_num", "DESC"]],
         limit: pageSize,
         offset,
-      });
+    })
 
-    const totalPages = Math.ceil(count / pageSize);
+    const totalPages = Math.ceil(count / pageSize)
 
     return {
         topUsers,
@@ -26,6 +23,4 @@ export async function FindTopFolloweds({
         currentPage: page,
         pageSize,
     }
-
-
 }

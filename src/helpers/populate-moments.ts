@@ -1,20 +1,23 @@
-import Statistic from '../models/moments/moment_statistic-model.js'
-import Metadata from '../models/moments/moment_metadata-model.js'
-import MomentMidia from '../models/moments/moment_midia-model.js'
-import Comment from '../models/comments/comment-model.js'
-import CommentStatistic from '../models/comments/comment_statistics-model.js'
-import Moment from '../models/moments/moment-model.js'
-import MomentTag from '../models/moments/moment_tag-model.js'
-import Tag from '../models/tags/tag-model.js'
+import { InternalServerError } from "../errors"
+import Moment from "../models/moments/moment-model"
+import Metadata from "../models/moments/moment_metadata-model.js"
+import MomentMidia from "../models/moments/moment_midia-model.js"
+import Statistic from "../models/moments/moment_statistic-model.js"
+import MomentTag from "../models/moments/moment_tag-model.js"
+import Tag from "../models/tags/tag-model"
 
 type PopulateMomentsProps = {
-    moment_id: number,
-    stats?: boolean,
-    metadata?: boolean,
-    midia?: boolean,
-    statistic?: boolean,
-    comments?: boolean,
-    tags?: boolean,
+    moment_id: bigint
+    stats?: boolean
+    metadata?: boolean
+    midia?: boolean
+    statistic?: boolean
+    comments?: boolean
+    tags?: boolean
+}
+
+interface MomentType extends Moment {
+    createdAt: string
 }
 
 export async function populateMoment({
@@ -25,58 +28,73 @@ export async function populateMoment({
     statistic = false,
     tags = false,
 }: PopulateMomentsProps) {
-    const momentData: any = {};
+    const momentData: any = {}
 
-    const moment = await Moment.findOne({ where: { id: moment_id }, attributes: ["id", "description", 'createdAt'] });
-    momentData.id = moment.id;
-    momentData.description = moment.description;
-    momentData.created_at = moment.createdAt;
+    const moment = (await Moment.findOne({
+        where: { id: moment_id },
+        attributes: ["id", "description", "createdAt"],
+    })) as MomentType
 
-    if(stats) {
+    if (!moment) throw new InternalServerError({ message: "Can't possible find moment." })
+    momentData.id = moment.id
+    momentData.description = moment.description
+    momentData.created_at = moment.createdAt
+
+    if (stats) {
         const momentStats = await Moment.findOne({
             where: { id: moment_id },
-            attributes: ['visible', 'deleted', 'blocked']
+            attributes: ["visible", "deleted", "blocked"],
         })
+
+        if (!momentStats)
+            throw new InternalServerError({ message: "Can't possible find moment stats." })
         momentData.visible = momentStats.visible
         momentData.deleted = momentStats.deleted
         momentData.blocked = momentStats.blocked
-
-    }if (metadata) {
+    }
+    if (metadata) {
+        // @ts-ignore
         const metadata = await Metadata.findOne({
             where: { moment_id },
-            attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'moment_id']}
-        });
-        momentData.metadata = metadata;
+            attributes: { exclude: ["createdAt", "updatedAt", "id", "moment_id"] },
+        })
+        momentData.metadata = metadata
     }
 
     if (midia) {
+        // @ts-ignore
         const midia = await MomentMidia.findOne({
             where: { moment_id },
-            attributes: ['content_type', 'nhd_resolution', 'fullhd_resolution']
-        });
-        momentData.midia = midia;
+            attributes: ["content_type", "nhd_resolution", "fullhd_resolution"],
+        })
+        momentData.midia = midia
     }
 
     if (statistic) {
-        const statistic = await Statistic.findOne({ where: { moment_id }, attributes: ['total_likes_num'] })
-        momentData.statistics = statistic;
+        // @ts-ignore
+        const statistic = await Statistic.findOne({
+            where: { moment_id },
+            attributes: ["total_likes_num"],
+        })
+        momentData.statistics = statistic
     }
 
     if (tags) {
+        // @ts-ignore
         const tags = await MomentTag.findAll({
             where: { moment_id },
-            include: [{ model: Tag, as: 'tag', attributes: ['title', 'id'] }],
-            attributes: []
-        });
+            include: [{ model: Tag, as: "tag", attributes: ["title", "id"] }],
+            attributes: [],
+        })
 
-        const tags_titles = tags.map(momentTag => {
+        const tags_titles = tags.map((momentTag: any) => {
             return {
                 id: momentTag.tag.id,
-                title: momentTag.tag.title
-            };
-        });
-        momentData.tags = tags_titles;
+                title: momentTag.tag.title,
+            }
+        })
+        momentData.tags = tags_titles
     }
 
-    return momentData;
+    return momentData
 }

@@ -1,11 +1,12 @@
+import Relation from "../../models/user/relation-model"
 import { FindRelationExistsProps } from "./types"
-import Relation from '../../models/user/relation-model.js'
 
 export async function find_relation_exists({
-    user_id, related_user_id
+    user_id,
+    related_user_id,
 }: FindRelationExistsProps): Promise<boolean> {
     const finded = await Relation.findOne({
-        where: { user_id, related_user_id }
+        where: { user_id, related_user_id },
     })
     return Boolean(finded)
 }

@@ -1,26 +1,21 @@
-import {
-    CreationOptional,
-    DataTypes,
-    InferAttributes,
-    InferCreationAttributes,
-    Model,
-    Sequelize,
-} from "sequelize"
+import { Association, DataTypes, Model, Sequelize } from "sequelize"
 import Moment from "../moments/moment-model"
-import Memory from "./memory-model" // Adjust the path to your Moment model
-class MemoryMoment extends Model<
-    InferAttributes<MemoryMoment>,
-    InferCreationAttributes<MemoryMoment>
-> {
-    declare id: CreationOptional<number> // Optional auto-increment primary key
-    declare memory_id: number
-    declare moment_id: number
+import Memory from "./memory-model"
+class MemoryMoment extends Model {
+    declare readonly id: number
+    declare memory_id: bigint
+    declare moment_id: bigint
+
+    declare static associations: {
+        memory: Association<MemoryMoment, Memory>
+        moment: Association<MemoryMoment, Moment>
+    }
 
     static initialize(sequelize: Sequelize): void {
         MemoryMoment.init(
             {
                 id: {
-                    type: DataTypes.INTEGER,
+                    type: DataTypes.INTEGER.UNSIGNED,
                     autoIncrement: true,
                     primaryKey: true,
                 },
@@ -28,7 +23,7 @@ class MemoryMoment extends Model<
                     type: DataTypes.BIGINT,
                     allowNull: false,
                     references: {
-                        model: "memories",
+                        model: Memory,
                         key: "id",
                     },
                     onUpdate: "CASCADE",
@@ -38,25 +33,37 @@ class MemoryMoment extends Model<
                     type: DataTypes.BIGINT,
                     allowNull: false,
                     references: {
-                        model: "moments",
+                        model: Moment,
                         key: "id",
                     },
                     onUpdate: "CASCADE",
                     onDelete: "CASCADE",
+                },
+                created_at: {
+                    type: DataTypes.DATE,
+                    allowNull: false,
+                    defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+                },
+                updated_at: {
+                    type: DataTypes.DATE,
+                    allowNull: false,
+                    defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
                 },
             },
             {
                 sequelize,
                 modelName: "MemoryMoment",
                 tableName: "memory_moments",
-                timestamps: false, // Disable timestamps if not needed
+                timestamps: true,
+                createdAt: "created_at",
+                updatedAt: "updated_at",
             }
         )
     }
 
     static associate(models: { Memory: typeof Memory; Moment: typeof Moment }): void {
-        this.belongsTo(models.Memory, { foreignKey: "memory_id", as: "memory" })
-        this.belongsTo(models.Moment, { foreignKey: "moment_id", as: "moment" })
+        MemoryMoment.belongsTo(models.Memory, { foreignKey: "memory_id", as: "memory" })
+        MemoryMoment.belongsTo(models.Moment, { foreignKey: "moment_id", as: "moment" })
     }
 }
 

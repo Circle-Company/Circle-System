@@ -22,4 +22,4 @@ class NotificationToken extends Model {
         })
     }
 }
-export default NotificationToken
+module.exports = NotificationToken
