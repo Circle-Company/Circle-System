@@ -1,6 +1,6 @@
-import bodyParser from "body-parser"
-import express from "express"
-import "express-async-errors"
+const express = require("express")
+const bodyParser = require("body-parser")
+require("express-async-errors")
 import config from "./config/index"
 import { RP } from "./config/routes_prefix"
 import "./database/index"
