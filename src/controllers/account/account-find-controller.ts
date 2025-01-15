@@ -22,7 +22,7 @@ export async function findAccountFollowings(req: Request, res: Response): Promis
         // Consulta paginada
         const { rows: followingUsers, count: totalItems } = await Follow.findAndCountAll({
             where: { user_id: String(req.user_id) },
-            attributes: [],
+            attributes: ["created_at"],
             include: [
                 {
                     model: User,
@@ -54,6 +54,7 @@ export async function findAccountFollowings(req: Request, res: Response): Promis
                 verifyed: item.followers.verifyed,
                 profile_picture: item.followers.profile_pictures,
                 statistic: item.followers.statistics,
+                followed_at: item.created_at,
             }
         })
 
