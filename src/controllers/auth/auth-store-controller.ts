@@ -4,7 +4,6 @@ import { Twilio } from "twilio"
 import CONFIG from "../../config"
 import { InternalServerError, ValidationError } from "../../errors"
 import { isValidPhoneNumber } from "../../helpers/is_valid_phone_number"
-import Socket from "../../models/user/socket-model.js"
 import { AuthService } from "../../services/auth-service"
 let OTP: number | null
 
@@ -19,23 +18,6 @@ export async function store_new_user(req: Request, res: Response) {
         return res.status(200).json(user)
     } catch (err: any) {
         throw new InternalServerError({ message: err.message })
-    }
-}
-
-export async function send_socket(req: Request, res: Response) {
-    const { user_id, socket_id } = req.body
-
-    const socket_exists = await Socket.findOne({ where: { user_id } })
-    if (socket_exists) {
-        await Socket.update({ socket_id }, { where: { user_id } })
-        res.status(200).json({
-            message: `socket was updated successfully`,
-        })
-    } else {
-        await Socket.create({ user_id, socket_id })
-        res.status(200).json({
-            message: `socket was created successfully`,
-        })
     }
 }
 
