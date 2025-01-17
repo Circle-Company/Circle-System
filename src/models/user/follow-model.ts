@@ -32,6 +32,9 @@ export default class Follow extends Model<FollowAttributes> implements FollowAtt
                 sequelize,
                 modelName: "Follow",
                 tableName: "follows",
+                timestamps: true,
+                createdAt: "created_at",
+                updatedAt: "updated_at",
             }
         )
     }
