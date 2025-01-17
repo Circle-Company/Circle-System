@@ -4,9 +4,14 @@ import { InternalServerError, UnauthorizedError, ValidationError } from "../../e
 import { MomentService } from "../../services/moment-service"
 
 export async function find_user_feed_moments(req: Request, res: Response) {
+    if (!req.user_id) {
+        throw new UnauthorizedError({
+            message: "User ID is missing. You must be authenticated to access this resource.",
+        })
+    }
     const result = await MomentService.Find.UserFeedMoments({
         interaction_queue: req.body,
-        user_id: Number(req.user_id),
+        user_id: req.user_id,
     })
     res.status(StatusCodes.ACCEPTED).json(result)
 }
@@ -15,9 +20,16 @@ export async function find_user_moments(req: Request, res: Response) {
     const { user_pk } = req.params
     const page = parseInt(req.query.page as string, 10) || 1
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10
+
+    if (!req.user_id) {
+        throw new UnauthorizedError({
+            message: "User ID is missing. You must be authenticated to access this resource.",
+        })
+    }
+
     const result = await MomentService.Find.UserMoments({
-        user_id: Number(req.user_id),
-        finded_user_pk: Number(user_pk),
+        user_id: req.user_id,
+        finded_user_pk: BigInt(user_pk),
         page,
         pageSize,
     })
@@ -26,9 +38,20 @@ export async function find_user_moments(req: Request, res: Response) {
 export async function find_user_moments_tiny(req: Request, res: Response) {
     const page = parseInt(req.query.page as string, 10) || 1
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10
+    if (!req.user_id) {
+        throw new UnauthorizedError({
+            message: "User ID is missing. You must be authenticated to access this resource.",
+        })
+    }
+    if (!req.params.user_pk)
+        throw new InternalServerError({
+            message: "req.params.user_pk is missing.",
+            action: "Verify if your request is passing params correctly.",
+        })
+
     const result = await MomentService.Find.UserMomentsTiny({
-        user_id: Number(req.user_id),
-        finded_user_pk: Number(req.params.user_pk),
+        user_id: req.user_id,
+        finded_user_pk: BigInt(req.params.user_pk),
         page,
         pageSize,
     })
@@ -36,9 +59,19 @@ export async function find_user_moments_tiny(req: Request, res: Response) {
 }
 
 export async function find_user_moments_tiny_exclude_memory(req: Request, res: Response) {
+    if (!req.user_id) {
+        throw new UnauthorizedError({
+            message: "User ID is missing. You must be authenticated to access this resource.",
+        })
+    }
+    if (!req.params.id)
+        throw new InternalServerError({
+            message: "req.params.id is missing.",
+            action: "Verify if your request is passing params correctly.",
+        })
     const result = await MomentService.Find.UserMomentsTinyExcludeMemory({
-        memory_id: Number(req.params.id),
-        user_id: Number(req.user_id),
+        memory_id: BigInt(req.params.id),
+        user_id: BigInt(req.user_id),
     })
     res.status(StatusCodes.ACCEPTED).json(result)
 }
@@ -49,7 +82,7 @@ export async function find_moment_comments(req: Request, res: Response) {
         const pageSize = parseInt(req.query.pageSize as string, 10) || 10
         const result = await MomentService.Find.MomentComments({
             moment_id: req.params.id,
-            user_id: Number(req.user_id),
+            user_id: req.user_id,
             pageSize,
             page,
         })
@@ -61,9 +94,19 @@ export async function find_moment_comments(req: Request, res: Response) {
 
 export async function find_moment_statistics_view(req: Request, res: Response) {
     try {
+        if (!req.user_id) {
+            throw new UnauthorizedError({
+                message: "User ID is missing. You must be authenticated to access this resource.",
+            })
+        }
+        if (!req.params.id)
+            throw new InternalServerError({
+                message: "req.params.id is missing.",
+                action: "Verify if your request is passing params correctly.",
+            })
         const result = await MomentService.Find.MomentStatisticsView({
-            moment_id: Number(req.params.id),
-            user_id: Number(req.user_id),
+            moment_id: BigInt(req.params.id),
+            user_id: req.user_id,
         })
         res.status(StatusCodes.ACCEPTED).json(result)
     } catch (err: unknown) {
@@ -80,8 +123,13 @@ export async function find_moment_statistics_view(req: Request, res: Response) {
 }
 
 export async function find_moment_tags(req: Request, res: Response) {
+    if (!req.params.id)
+        throw new InternalServerError({
+            message: "req.params.id is missing.",
+            action: "Verify if your request is passing params correctly.",
+        })
     const result = await MomentService.Find.MomentTags({
-        moment_id: Number(req.params.id),
+        moment_id: BigInt(req.params.id),
     })
     res.status(StatusCodes.ACCEPTED).json(result)
 }
