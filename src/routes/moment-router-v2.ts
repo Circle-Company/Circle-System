@@ -15,7 +15,7 @@ router.get("/:user_pk", MomentController.FindUserMoments)
 router.get("/tiny/:user_pk", MomentController.FindUserMomentsTiny)
 
 // Retrieves a minimized version of the user's moments, excluding memories
-router.post("/tiny/exclude-memory/:id", MomentController.FindUserMomentsTinyExcludeMemory)
+router.get("/tiny/exclude-memory/:id", MomentController.FindUserMomentsTinyExcludeMemory)
 
 // Routes for handling comments and tags
 // Retrieves comments for a specific moment
