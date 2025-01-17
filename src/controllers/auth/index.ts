@@ -13,7 +13,6 @@ export const AuthController = {
     SendVerificationCode: send_verification_code,
     VerifyCode: verify_code,
     RefreshToken: refresh_token,
-    SendSocket: send_socket,
     UsernameAlreadyInUse: find_username_already_in_use,
-    ChangePassword: change_password
+    ChangePassword: change_password,
 }
