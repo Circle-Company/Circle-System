@@ -11,12 +11,12 @@ import SnowflakeID from "snowflake-id"
 const snowflake = new SnowflakeID()
 
 class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Moment>> {
-    declare id: number // Unique identifier for each moment
-    declare description: string | null // Moment description
-    declare visible: boolean // Visibility flag
-    declare deleted: boolean // Deletion flag
-    declare blocked: boolean // Blocked flag
-    declare user_id: number
+    declare id: CreationOptional<bigint>
+    declare description: CreationOptional<string | null>
+    declare visible: CreationOptional<boolean>
+    declare deleted: CreationOptional<boolean>
+    declare blocked: CreationOptional<boolean>
+    declare user_id: bigint
 
     static initialize(sequelize: Sequelize): void {
         Moment.init(
@@ -105,6 +105,10 @@ class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Mome
             foreignKey: "moment_id",
             as: "moment_comments",
         })
+        this.hasMany(models.MemoryMoment, {
+            foreignKey: "moment_id",
+            as: "memory_moments",
+        })
         this.belongsToMany(models.Tag, {
             through: "MomentTag",
             foreignKey: "moment_id",
@@ -119,8 +123,7 @@ class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Mome
             foreignKey: "liked_moment_id",
             as: "likes",
         })
-        // Uncomment and adjust if necessary
-        // this.hasMany(models.Notification, { foreignKey: "moment_id" });
+        this.hasMany(models.Notification, { foreignKey: "moment_id" })
     }
 }
 
