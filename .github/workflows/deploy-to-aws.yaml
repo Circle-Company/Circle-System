@@ -17,7 +17,7 @@ jobs:
               run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
             - name: Build Docker Image
-              run: docker build -t tiagosavioli/circle-system:latest .
+              run: docker build --target build -t tiagosavioli/circle-system:latest .
 
             - name: Publish Image to Docker Hub
               run: docker push tiagosavioli/circle-system:latest
