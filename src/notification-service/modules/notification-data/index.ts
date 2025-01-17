@@ -50,7 +50,7 @@ export async function Module({ notification }: ModuleProps): Promise<ModuleRetur
 
     if (!user)
         throw new InternalServerError({
-            message: "Can´t possible find user to send notification.",
+            message: "Can't possible find user to send notification.",
         })
 
     senderUser = {
@@ -92,10 +92,11 @@ export async function Module({ notification }: ModuleProps): Promise<ModuleRetur
     }
 
     if (notification.type == "ADD-TO-MEMORY" || notification.type == "LIKE-MOMENT") {
-        const momentMedia = await MomentMidia.findOne({
+        // @ts-ignore
+        const momentMedia = (await MomentMidia.findOne({
             where: { moment_id: notification.data.momentId },
             attributes: ["nhd_resolution"],
-        })
+        })) as any
 
         media = { nhd_resolution: momentMedia.nhd_resolution }
     } else media = null

@@ -14,7 +14,7 @@ type ModuleProps = {
 export async function Module({ usersList, notification }: ModuleProps): Promise<(User | null | undefined)[]> {
     const results = await Promise.all(
         usersList.map(async (user) => {
-            const userPreferences = await Preference.findOne({
+            // @ts-ignore
                 where: { user_id: user.id },
                 attributes: [
                     "disable_like_moment_push_notification",

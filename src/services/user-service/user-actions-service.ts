@@ -84,6 +84,7 @@ export async function unfollow_user({ user_id, followed_user_id }: FollowUserPro
     }
 }
 export async function block_user({ user_id, blocked_user_id }: BlockUserProps) {
+    // @ts-ignore
     const find_block_exists = await Block.findOne({
         attributes: ["user_id", "blocked_user_id"],
         where: { user_id: user_id, blocked_user_id: blocked_user_id },
@@ -104,6 +105,7 @@ export async function block_user({ user_id, blocked_user_id }: BlockUserProps) {
                 followed_user_id: blocked_user_id,
             },
         })
+        // @ts-ignore
         await Block.create({
             user_id: user_id,
             blocked_user_id: blocked_user_id,
@@ -116,6 +118,7 @@ export async function block_user({ user_id, blocked_user_id }: BlockUserProps) {
     }
 }
 export async function unlock_user({ user_id, blocked_user_id }: BlockUserProps) {
+    // @ts-ignore
     const find_block_exists = await Block.findOne({
         attributes: ["user_id", "blocked_user_id"],
         where: { user_id: user_id, blocked_user_id: blocked_user_id },
@@ -126,6 +129,7 @@ export async function unlock_user({ user_id, blocked_user_id }: BlockUserProps) 
             message: "this user has already been unlocked",
         })
     } else {
+        // @ts-ignore
         await Block.destroy({
             where: {
                 user_id: user_id,
@@ -145,6 +149,7 @@ export async function report_user({
     reported_content_type,
     report_type,
 }: ReportUserProps) {
+    // @ts-ignore
     const find_report_exists = await Report.findOne({
         attributes: ["user_id", "reported_content_id"],
         where: { user_id, reported_content_id, reported_content_type, report_type },
@@ -158,6 +163,7 @@ export async function report_user({
             message: "ta user cannot report themselves",
         })
     } else {
+        // @ts-ignore
         await Report.create({
             user_id,
             reported_content_id,

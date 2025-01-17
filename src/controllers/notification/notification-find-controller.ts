@@ -52,6 +52,7 @@ export async function find_user_notifications(req: Request, res: Response) {
                 })
 
                 if (n.moment_id) {
+                    // @ts-ignore
                     const moment_midia = await MomentMidia.findOne({
                         where: { moment_id: n.moment_id },
                         attributes: ["nhd_resolution"],

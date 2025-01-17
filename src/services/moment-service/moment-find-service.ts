@@ -76,13 +76,15 @@ export async function find_user_feed_moments({
                             ],
                         })) as UserType
 
+                        // @ts-ignore
                         const { count, rows: comments } = await Comment.findAndCountAll({
                             where: { moment_id: moment_with_midia.id },
                             attributes: ["id", "content", "created_at", "user_id"],
                         })
 
                         const comments_with_likes = await Promise.all(
-                            comments.map(async (comment) => {
+                            comments.map(async (comment: any) => {
+                                // @ts-ignore
                                 const statistic = await CommentStatistic.findOne({
                                     where: { comment_id: comment.id },
                                     attributes: ["total_likes_num"],
@@ -296,9 +298,11 @@ export async function find_user_moments_tiny_exclude_memory({
     memory_id,
 }: FindUserMomentsTinyExcludeMemoryProps) {
     try {
-        const memory_moments = await MemoryMoment.findAll({ where: { memory_id } })
+        const memory_moments = await MemoryMoment.findAll({
+            where: { memory_id: memory_id.toString() },
+        })
         console.log(memory_moments)
-        const memoryMomentsIds = memory_moments.map((i: any) => i.moment_id)
+        const memoryMomentsIds = memory_moments.map((i: any) => i.moment_id.toString())
 
         const moments = await Moment.findAll({
             where: {
@@ -354,6 +358,7 @@ export async function find_user_moments_tiny_exclude_memory({
 export async function find_moment_comments({ moment_id, user_id, page, pageSize }) {
     const offset = (page - 1) * pageSize
 
+    // @ts-ignore
     const { count, rows: comments } = await Comment.findAndCountAll({
         where: { moment_id },
         attributes: ["id", "content", "createdAt"],
@@ -382,7 +387,8 @@ export async function find_moment_comments({ moment_id, user_id, page, pageSize 
     })
 
     const comments_formatted = await Promise.all(
-        comments.map(async (comment) => {
+        comments.map(async (comment: any) => {
+            // @ts-ignore
             const liked = await CommentLike.findOne({
                 where: { user_id, comment_id: comment.id },
             })
@@ -419,7 +425,8 @@ export async function find_moment_statistics_view({
     moment_id,
     user_id,
 }: FindMomentStatisticsViewProps) {
-    const statistic = await Statistic.findOne({
+    // @ts-ignore
+    const statistic = (await Statistic.findOne({
         where: { moment_id },
         attributes: [
             "total_likes_num",
@@ -428,7 +435,7 @@ export async function find_moment_statistics_view({
             "total_comments_num",
             "moment_id",
         ],
-    })
+    })) as any
 
     const moment_from_statistic = await Moment.findOne({
         where: { id: statistic.moment_id },
@@ -452,6 +459,7 @@ export async function find_moment_statistics_view({
     }
 }
 export async function find_moment_tags({ moment_id }: FindMomentTagsProps) {
+    // @ts-ignore
     const tags_arr = await MomentTags.findAll({
         where: { moment_id },
         attributes: [],
@@ -463,7 +471,7 @@ export async function find_moment_tags({ moment_id }: FindMomentTagsProps) {
             },
         ],
     })
-    return tags_arr.map((i) => {
+    return tags_arr.map((i: any) => {
         return { id: i.tag.id, title: i.tag.title }
     })
 }

@@ -7,8 +7,10 @@ export async function CreateUsersPreferences() {
     Promise.all(
         allUsers.map(async (user) => {
             console.log(user)
+            // @ts-ignore
             const hasPreference = await Preference.findOne({ where: { user_id: user.id } })
             if (!hasPreference) {
+                // @ts-ignore
                 await Preference.create({ user_id: user.id })
                 console.log("preference created with success")
             } else {

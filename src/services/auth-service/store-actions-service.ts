@@ -58,7 +58,9 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
         await Promise.all([
             ProfilePicture.create({ user_id: newUser.id }),
             Coordinate.create({ user_id: newUser.id }),
+            // @ts-ignore
             Contact.create({ user_id: newUser.id }),
+            // @ts-ignore
             Preference.create({
                 user_id: newUser.id,
                 app_language: "pt",

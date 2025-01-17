@@ -4,8 +4,9 @@ import Preference from "../../models/preferences/preference-model.js"
 export async function get_user_preferences(req: any, res: any) {
     const { user_id } = req.params
     try {
+        // @ts-ignore
         const preferences = await Preference.findOne({
-            where: { user_id },
+            where: { user_id: user_id.toString() },
             attributes: { exclude: ["user_id", "createdAt", "updatedAt", "id"] },
         })
         res.status(200).json(preferences)
