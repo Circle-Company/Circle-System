@@ -5,7 +5,7 @@ export function filterSearchParams({ user_id, search_term }: FindSearchCandidate
     return {
         [Op.and]: [
             sequelize.literal(`MATCH (username) AGAINST ('${search_term}*' IN BOOLEAN MODE)`),
-            { id: { [Op.not]: user_id.toString() } },
+            { id: { [Op.not]: user_id } },
             { blocked: { [Op.not]: true } },
             { deleted: { [Op.not]: true } },
         ],
