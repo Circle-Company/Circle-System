@@ -28,6 +28,5 @@ export async function unknown_candidates({
     const candidates_with_score = calcule_score({ candidates_with_interactions })
     const sorted_candidates = sort_candidates({ candidates_with_score })
     const top_candidates = filter_top_candidates({ sorted_candidates, count: 20 })
-    console.log(subtracted_candidates)
     return top_candidates
 }
