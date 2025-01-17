@@ -8,7 +8,10 @@ import { StoreNewMemoryMomentProps, StoreNewMemoryProps } from "./types"
 export async function store_new_memory({ user_id, title }: StoreNewMemoryProps) {
     try {
         await UserStatistic.increment("total_memories_num", { by: 1, where: { user_id } })
-        const memory = await Memory.create({ user_id, title })
+        const memory = await Memory.create({ user_id: user_id, title })
+
+        if (!memory) throw new InternalServerError({ message: "Can't possible find this memory." })
+
         await TriggerNotification({
             notification: {
                 type: "NEW-MEMORY",
@@ -18,7 +21,13 @@ export async function store_new_memory({ user_id, title }: StoreNewMemoryProps) 
                 },
             },
         })
-        return memory
+        return {
+            id: memory.id.toString(),
+            title: memory.title,
+            user_id: memory.user_id.toString(),
+            created_at: memory.created_at,
+            updated_at: memory.updated_at,
+        }
     } catch (err: any) {
         throw new InternalServerError({ message: err.message })
     }
@@ -39,14 +48,20 @@ export async function store_new_memory_moment({
         await Promise.all(
             moments_list.map(async (moment) => {
                 setTimeout(async () => {
-                    await MemoryMoment.create({ memory_id, moment_id: moment.id })
-                    await Memory.update({ updated_at: new Date() }, { where: { id: memory_id } })
+                    await MemoryMoment.create({
+                        memory_id: BigInt(memory_id),
+                        moment_id: BigInt(moment.id),
+                    })
+                    await Memory.update(
+                        { updated_at: new Date() },
+                        { where: { id: BigInt(memory_id) } }
+                    )
                     await TriggerNotification({
                         notification: {
                             type: "ADD-TO-MEMORY",
                             data: {
-                                senderUserId: user_id,
-                                momentId: moment.id,
+                                senderUserId: BigInt(user_id),
+                                momentId: BigInt(moment.id),
                             },
                         },
                     })
@@ -55,6 +70,6 @@ export async function store_new_memory_moment({
         )
         return { message: "moments have been successfully added to memory" }
     } catch (err: any) {
-        throw new InternalServerError({ message: err.message })
+        console.log(err)
     }
 }

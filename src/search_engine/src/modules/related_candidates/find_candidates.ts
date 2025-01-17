@@ -13,10 +13,10 @@ type FindCandidatesProps = {
 }
 export async function find_candidates({ user_id }: FindCandidatesProps) {
     try {
-        const relations: RelationProps[] = await Relation.findAll({
-            where: { user_id },
+        const relations = (await Relation.findAll({
+            where: { user_id: user_id },
             attributes: ["related_user_id", "weight"],
-        })
+        })) as RelationProps[]
 
         const users_related = Promise.all(
             relations.map(async (relation) => {

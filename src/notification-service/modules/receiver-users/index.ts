@@ -6,13 +6,9 @@ type ModuleProps = {
     notification: NotificationProps
 }
 
-type ModuleReturnProps = {
-    usersIdsList: number[] | []
-}
-
 export async function Module({
     notification,
-}: ModuleProps): Promise<{ id: number; token: string }[]> {
+}: ModuleProps): Promise<{ id: bigint; token: string }[]> {
     if (notification.type == "ADD-TO-MEMORY" || notification.type == "NEW-MEMORY") {
         const usersList = await getUsersList({
             senderUserId: notification.data.senderUserId,

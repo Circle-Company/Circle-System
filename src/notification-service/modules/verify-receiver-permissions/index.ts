@@ -2,7 +2,7 @@ import Preference from "../../../models/preferences/preference-model.js"
 import { NotificationProps } from "../../types.js"
 
 type User = {
-    id: number
+    id: bigint
     token: string
 }
 
@@ -11,10 +11,14 @@ type ModuleProps = {
     notification: NotificationProps
 }
 
-export async function Module({ usersList, notification }: ModuleProps): Promise<(User | null | undefined)[]> {
+export async function Module({
+    usersList,
+    notification,
+}: ModuleProps): Promise<(User | null | undefined)[]> {
     const results = await Promise.all(
         usersList.map(async (user) => {
             // @ts-ignore
+            const userPreferences = (await Preference.findOne({
                 where: { user_id: user.id },
                 attributes: [
                     "disable_like_moment_push_notification",
@@ -26,7 +30,7 @@ export async function Module({ usersList, notification }: ModuleProps): Promise<
                     "disable_sugestions_push_notification",
                     "disable_around_you_push_notification",
                 ],
-            })
+            })) as any
 
             if (!userPreferences) {
                 throw new Error(`Preferences not found for user ID: ${user.id}`)
