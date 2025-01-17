@@ -1,5 +1,7 @@
+import User from "../../models/user/user-model"
+
 export interface MomentProps {
-    id: number
+    id: bigint
     description: string
     midia: MidiaProps
     metadata: MetadataProps
@@ -10,8 +12,12 @@ export interface MomentProps {
     deleted?: boolean
 }
 
+export interface UserType extends User {
+    profile_pictures: any
+}
+
 export interface NewMomentProps {
-    id: number
+    id: bigint
     description: string
     midia: {
         content_type: "IMAGE" | "VIDEO"
@@ -51,7 +57,7 @@ export interface MidiaProps {
 }
 
 export interface CommentProps {
-    user_id: string
+    user_id: bigint
     content: string
 }
 
@@ -63,7 +69,7 @@ export interface InteractionQueueProps {
 
 export interface MomentInteractionProps {
     id: number
-    user_id: number
+    user_id: bigint
     tags: TagsProps[]
     duration: number
     type: "IMAGE" | "VIDEO"
@@ -85,50 +91,50 @@ interface InteractionProps {
 }
 
 export interface TagsProps {
-    id: number
+    id: bigint
     name: string
 }
 
 export interface FindUserFeedMomentsProps {
     interaction_queue: InteractionQueueProps
-    user_id: number
+    user_id: bigint
 }
 
 export interface FindUserMomentsProps {
     page: number
     pageSize: number
-    user_id: number
-    finded_user_pk: number
+    user_id: bigint
+    finded_user_pk: bigint
 }
 
 export interface FindUserMomentsTinyExcludeMemoryProps {
-    memory_id: number
-    user_id: number
+    memory_id: bigint
+    user_id: bigint
 }
 
 export interface FindMomentTagsProps {
-    moment_id: number
+    moment_id: bigint
 }
 
 export interface FindMomentStatisticsViewProps {
-    moment_id: number
-    user_id: number
+    moment_id: bigint
+    user_id: bigint
 }
 
 export interface StoreNewMomentsProps {
-    user_id: number
+    user_id: bigint
     moment: NewMomentProps
 }
 
 export interface CommentOnMomentProps {
-    moment_id: number
-    user_id: number
+    moment_id: bigint
+    user_id: bigint
     content: string
 }
 
 export interface ReplyCommentOnMomentProps {
-    moment_id: number
-    user_id: number
+    moment_id: bigint
+    user_id: bigint
     parent_comment_id: number
     content: string
     page: number
@@ -136,31 +142,31 @@ export interface ReplyCommentOnMomentProps {
 }
 
 export interface LikeCommentProps {
-    comment_id: number
-    user_id: number
+    comment_id: bigint
+    user_id: bigint
 }
 
 export interface UnlikeCommentProps {
-    comment_id: number
-    user_id: number
+    comment_id: bigint
+    user_id: bigint
 }
 
 export interface HideMomentProps {
-    moment_id: number
-    user_id: number
+    moment_id: bigint
+    user_id: bigint
 }
 
 export interface UnhideMomentProps {
-    moment_id: number
-    user_id: number
+    moment_id: bigint
+    user_id: bigint
 }
 
 export interface DeleteMomentProps {
-    moment_id: number
-    user_id: number
+    moment_id: bigint
+    user_id: bigint
 }
 
 export interface UndeleteMomentProps {
-    moment_id: number
-    user_id: number
+    moment_id: bigint
+    user_id: bigint
 }
