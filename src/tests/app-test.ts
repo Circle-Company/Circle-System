@@ -57,4 +57,6 @@ app.listen(config.PORT, () =>
     console.log("🚀 circle-system (server) - running on port: " + config.PORT)
 )
 
+export const testBearerToken =
+    "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MjgxNDIwMDYyODk0ODU0MTQ0IiwidXNlcm5hbWUiOiJ0aWFnby5zYXZpb2xpIiwiaWF0IjoxNzM2MTkwNDg2LCJleHAiOjE3MzYxOTQwODYsImF1ZCI6IkNpcmNsZUFwcCIsImlzcyI6IkNpcmNsZUNvbXBhbnkifQ.SNOjvLXmswXiBTIzwkCuG0rCKGd8ajvLV_VhaNyOXfE"
 export default app
