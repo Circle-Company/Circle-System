@@ -166,7 +166,6 @@ export default class User extends Model<UserAttributes> implements UserAttribute
             foreignKey: "user_id",
             as: "blocks",
         })
-        this.hasOne(models.Socket, { foreignKey: "user_id", as: "sockets" })
         this.hasOne(models.NotificationToken, {
             foreignKey: "user_id",
             as: "notification_tokens",
