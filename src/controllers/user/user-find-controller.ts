@@ -23,7 +23,7 @@ export async function find_user_by_pk(req: Request, res: Response) {
 
 export async function find_session_user_by_pk(req: Request, res: Response) {
     const { user_pk } = req.params
-    const user = await UserService.UserFind.FindSessionByPk({ user_pk })
+    const user = await UserService.UserFind.FindSessionByPk({ user_pk: BigInt(user_pk) })
     return res.status(200).json(user)
 }
 
@@ -66,9 +66,10 @@ export async function find_user_data(req: Request, res: Response, next: NextFunc
 
 export async function search_user(req: Request, res: Response) {
     const { username_to_search, user_id } = req.body
+    console.log({ username_to_search, user_id })
 
     const search_result = await UserService.UserFind.SearchUser({
-        user_id,
+        user_id: BigInt(user_id),
         username_to_search,
     })
     res.status(200).json(search_result)
