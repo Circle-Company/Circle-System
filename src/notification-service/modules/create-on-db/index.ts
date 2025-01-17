@@ -4,7 +4,7 @@ import { NotificationProps } from "./../../types"
 
 type ModuleProps = {
     notification: NotificationProps
-    usersList: (number | undefined)[]
+    usersList: (bigint | undefined)[]
 }
 
 export async function Module({ notification, usersList }: ModuleProps) {

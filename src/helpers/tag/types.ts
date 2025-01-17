@@ -3,8 +3,8 @@ export type CreateTagProps = {
 }
 
 export type CreateMomentTagProps = {
-    tag_id: number,
-    moment_id: number
+    tag_id: bigint
+    moment_id: bigint
 }
 
 export type FindTagExistsProps = {
@@ -12,7 +12,7 @@ export type FindTagExistsProps = {
 }
 
 export type AutoAddTagsProps = {
-    moment_id: number,
+    moment_id: bigint
     tags: TagProps[]
 }
 
