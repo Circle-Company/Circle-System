@@ -29,9 +29,19 @@ export async function unlike_moment(req: Request, res: Response) {
 }
 
 export async function comment_on_moment(req: Request, res: Response) {
+    if (!req.user_id) {
+        throw new UnauthorizedError({
+            message: "User ID is missing. You must be authenticated to access this resource.",
+        })
+    }
+    if (!req.params.id)
+        throw new InternalServerError({
+            message: "req.params.id is missing.",
+            action: "Verify if your request is passing params correctly.",
+        })
     const result = await MomentService.Actions.CommentOnMoment({
-        user_id: Number(req.user_id),
-        moment_id: Number(req.params.id),
+        user_id: req.user_id,
+        moment_id: BigInt(req.params.id),
         content: req.body.content,
     })
     res.status(StatusCodes.ACCEPTED).json(result)
@@ -59,9 +69,14 @@ export async function like_comment(req: Request, res: Response) {
                 message: "User ID is missing. You must be authenticated to access this resource.",
             })
         }
+        if (!req.params.id)
+            throw new InternalServerError({
+                message: "req.params.id is missing.",
+                action: "Verify if your request is passing params correctly.",
+            })
         const result = await MomentService.Actions.LikeComment({
-            comment_id: Number(req.params.id),
-            user_id: Number(req.user_id),
+            comment_id: BigInt(req.params.id),
+            user_id: req.user_id,
         })
         res.status(StatusCodes.ACCEPTED).json(result)
     } catch (err: unknown) {
@@ -86,9 +101,14 @@ export async function unlike_comment(req: Request, res: Response) {
                 message: "User ID is missing. You must be authenticated to access this resource.",
             })
         }
+        if (!req.params.id)
+            throw new InternalServerError({
+                message: "req.params.id is missing.",
+                action: "Verify if your request is passing params correctly.",
+            })
         const result = await MomentService.Actions.UnlikeComment({
-            comment_id: Number(req.params.id),
-            user_id: Number(req.user_id),
+            comment_id: BigInt(req.params.id),
+            user_id: req.user_id,
         })
         res.status(StatusCodes.ACCEPTED).json(result)
     } catch (err: unknown) {
@@ -106,9 +126,19 @@ export async function unlike_comment(req: Request, res: Response) {
 
 export async function hide_moment(req: Request, res: Response) {
     try {
+        if (!req.user_id) {
+            throw new UnauthorizedError({
+                message: "User ID is missing. You must be authenticated to access this resource.",
+            })
+        }
+        if (!req.params.id)
+            throw new InternalServerError({
+                message: "req.params.id is missing.",
+                action: "Verify if your request is passing params correctly.",
+            })
         const result = await MomentService.Actions.Hide({
-            moment_id: Number(req.params.id),
-            user_id: Number(req.user_id),
+            moment_id: BigInt(req.params.id),
+            user_id: req.user_id,
         })
         res.status(StatusCodes.ACCEPTED).json(result)
     } catch (err: unknown) {
@@ -126,9 +156,19 @@ export async function hide_moment(req: Request, res: Response) {
 
 export async function unhide_moment(req: Request, res: Response) {
     try {
+        if (!req.user_id) {
+            throw new UnauthorizedError({
+                message: "User ID is missing. You must be authenticated to access this resource.",
+            })
+        }
+        if (!req.params.id)
+            throw new InternalServerError({
+                message: "req.params.id is missing.",
+                action: "Verify if your request is passing params correctly.",
+            })
         const result = await MomentService.Actions.Unhide({
-            moment_id: Number(req.params.id),
-            user_id: Number(req.user_id),
+            moment_id: BigInt(req.params.id),
+            user_id: req.user_id,
         })
         res.status(StatusCodes.ACCEPTED).json(result)
     } catch (err: unknown) {
@@ -146,9 +186,19 @@ export async function unhide_moment(req: Request, res: Response) {
 
 export async function delete_moment(req: Request, res: Response) {
     try {
+        if (!req.user_id) {
+            throw new UnauthorizedError({
+                message: "User ID is missing. You must be authenticated to access this resource.",
+            })
+        }
+        if (!req.params.id)
+            throw new InternalServerError({
+                message: "req.params.id is missing.",
+                action: "Verify if your request is passing params correctly.",
+            })
         const result = await MomentService.Actions.Delete({
-            moment_id: Number(req.params.id),
-            user_id: Number(req.user_id),
+            moment_id: BigInt(req.params.id),
+            user_id: req.user_id,
         })
         res.status(StatusCodes.ACCEPTED).json(result)
     } catch (err: unknown) {
@@ -166,17 +216,32 @@ export async function delete_moment(req: Request, res: Response) {
 
 export async function delete_moment_list(req: Request, res: Response) {
     const { moment_ids_list } = req.body
+    if (!req.user_id) {
+        throw new UnauthorizedError({
+            message: "User ID is missing. You must be authenticated to access this resource.",
+        })
+    }
     const result = await MomentService.Actions.DeleteList({
         moment_ids_list,
-        user_id: Number(req.user_id),
+        user_id: req.user_id,
     })
     res.status(StatusCodes.ACCEPTED).json(result)
 }
 
 export async function undelete_moment(req: Request, res: Response) {
+    if (!req.user_id) {
+        throw new UnauthorizedError({
+            message: "User ID is missing. You must be authenticated to access this resource.",
+        })
+    }
+    if (!req.params.id)
+        throw new InternalServerError({
+            message: "req.params.id is missing.",
+            action: "Verify if your request is passing params correctly.",
+        })
     const result = await MomentService.Actions.Undelete({
-        moment_id: Number(req.params.id),
-        user_id: Number(req.user_id),
+        moment_id: BigInt(req.params.id),
+        user_id: req.user_id,
     })
     res.status(StatusCodes.ACCEPTED).json(result)
 }
