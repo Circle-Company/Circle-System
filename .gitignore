@@ -1,6 +1,8 @@
 node_modules
 .env
+.bash
 build
 dist
+scripts
 seeders
 firebase-settings.json
