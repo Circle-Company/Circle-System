@@ -48,21 +48,23 @@ export async function store_new_moment({ user_id, moment }: StoreNewMomentsProps
     })
 
     const new_moment = await Moment.create({
-        user_id: Number(user_id),
+        user_id: user_id,
         description: moment.description,
         visible: true,
         blocked: false,
     })
 
     await UserStatistic.increment("total_moments_num", { by: 1, where: { user_id } })
-
+    // @ts-ignore
     await MomentMidia.create({
         moment_id: new_moment.id,
         content_type: moment.midia.content_type,
         fullhd_resolution: fullhd_aws_s3_url,
         nhd_resolution: nhd_aws_s3_url,
     })
+    // @ts-ignore
     await Statistic.create({ moment_id: new_moment.id })
+    // @ts-ignore
     await Metadata.create({
         moment_id: new_moment.id,
         duration: Math.trunc(moment.metadata.duration),
@@ -76,7 +78,15 @@ export async function store_new_moment({ user_id, moment }: StoreNewMomentsProps
     return new_moment
 }
 
-export async function store_moment_interaction({ interaction, user_id, moment_id }) {
+export async function store_moment_interaction({
+    interaction,
+    user_id,
+    moment_id,
+}: {
+    interaction: any
+    user_id: bigint
+    moment_id: bigint
+}) {
     try {
         const moment = await Moment.findOne({
             where: { id: moment_id },
@@ -92,7 +102,7 @@ export async function store_moment_interaction({ interaction, user_id, moment_id
                 message: "This moment has already been previously deleted",
                 action: "Make sure this moment has visible to be interacted.",
             })
-        return await swipe_engine_api
+        return await swipeEngineApi
             .post("/moments/store/interaction", {
                 interaction,
                 user_id,
