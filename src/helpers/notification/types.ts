@@ -5,22 +5,6 @@ export type CreateNotificationProps = {
     content_id: bigint | null
 }
 
-export type SendNotificationProps = {
-    notification: {
-        id: bigint
-        sender_user_id: bigint
-        receiver_user_id: bigint
-        viewed: boolean
-        type: NotificationType
-        content_id: bigint
-        midia?: {
-            nhd_resolution: string
-        }
-        created_at: string
-        updated_at: string
-    }
-}
-
 export type AutoSendNotificationProps = {
     sender_user_id: bigint
     receiver_user_id: bigint
