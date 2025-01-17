@@ -39,7 +39,7 @@ export async function LocationService({
     })
 
     // Filtrar os resultados para garantir que estão dentro do raio usando Haversine
-    const nearbyUsers = nearbyCoordinates
+    const nearbyUsers: any = nearbyCoordinates
         .map((coord) => {
             if (!coord.latitude || !coord.longitude)
                 throw new InternalServerError({
