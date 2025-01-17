@@ -23,7 +23,7 @@ export async function complete_candidates_informations({
         filtered_candidates.map(async (candidate) => {
             const user: any = await User.findOne({
                 attributes: ["id", "username", "verifyed", "muted", "blocked", "name"],
-                where: { id: candidate.user.user_id.toString() },
+                where: { id: candidate.user.user_id },
                 include: [
                     {
                         model: ProfilePicture,

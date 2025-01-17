@@ -11,7 +11,7 @@ export async function findUserFollow({
 }: FindUserFollow): Promise<boolean> {
     const user_followed = await Follow.findOne({
         attributes: ["followed_user_id", "user_id"],
-        where: { followed_user_id: followed_user_id.toString(), user_id: user_id.toString() },
+        where: { followed_user_id, user_id },
     })
 
     return Boolean(user_followed)
