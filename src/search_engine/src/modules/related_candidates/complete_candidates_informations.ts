@@ -1,7 +1,7 @@
-import { InternalServerError } from "../../../../errors/index.js"
-import ProfilePicture from "../../../../models/user/profilepicture-model.js"
-import Statistic from "../../../../models/user/statistic-model.js"
-import User from "../../../../models/user/user-model.js"
+import { InternalServerError } from "../../../../errors"
+import ProfilePicture from "../../../../models/user/profilepicture-model"
+import Statistic from "../../../../models/user/statistic-model"
+import User from "../../../../models/user/user-model"
 import { findUserFollow } from "../../functions/set_interactions/find_user_follow"
 interface UserObject {
     user: {

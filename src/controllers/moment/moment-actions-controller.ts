@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import { StatusCodes } from "http-status-codes"
 import { ValidationError } from "sequelize"
-import { UnauthorizedError } from "../../errors"
+import { InternalServerError, UnauthorizedError } from "../../errors"
 import { MomentService } from "../../services/moment-service"
 
 export async function view_moment(req: Request, res: Response) {

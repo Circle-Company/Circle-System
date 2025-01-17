@@ -1,6 +1,6 @@
-import { InternalServerError } from "../../../../errors/index.js"
-import Relation from "../../../../models/user/relation-model.js"
-import User from "../../../../models/user/user-model.js"
+import { InternalServerError } from "../../../../errors"
+import Relation from "../../../../models/user/relation-model"
+import User from "../../../../models/user/user-model"
 
 type RelationProps = {
     id: number

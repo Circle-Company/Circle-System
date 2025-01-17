@@ -5,7 +5,7 @@ import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 import { jwtEncoder } from "../../jwt/encode"
 
 import config from "../../config"
-import NotificationToken from "../../models/notification/notification_token-model.js"
+import NotificationToken from "../../models/notification/notification_token-model"
 import Preference from "../../models/preferences/preference-model.js"
 import ProfilePicture from "../../models/user/profilepicture-model"
 import Statistic from "../../models/user/statistic-model"
@@ -41,17 +41,19 @@ export async function authenticate_user(req: Request, res: Response) {
             [
                 Statistic.findOne({
                     attributes: ["total_followers_num", "total_likes_num", "total_views_num"],
-                    where: { user_id: user.id },
+                    where: { user_id: user.id.toString() },
                 }),
                 ProfilePicture.findOne({
                     attributes: ["fullhd_resolution", "tiny_resolution"],
-                    where: { user_id: user.id },
+                    where: { user_id: user.id.toString() },
                 }),
+                // @ts-ignore
                 NotificationToken.findOne({
-                    where: { user_id: user.id },
+                    where: { user_id: user.id.toString() },
                     attributes: ["token"],
-                }),
-                Preference.findOne({ where: { user_id: user.id } }),
+                }) as any,
+                // @ts-ignore
+                Preference.findOne({ where: { user_id: user.id.toString() } }) as any,
             ]
         )
 

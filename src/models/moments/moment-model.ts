@@ -1,4 +1,11 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model, Sequelize } from "sequelize"
+import {
+    CreationOptional,
+    DataTypes,
+    InferAttributes,
+    InferCreationAttributes,
+    Model,
+    Sequelize,
+} from "sequelize"
 import SnowflakeID from "snowflake-id"
 
 const snowflake = new SnowflakeID()

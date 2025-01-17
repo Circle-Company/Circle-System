@@ -1,6 +1,11 @@
-import { authenticate_user, refresh_token} from "./auth-authenticate-controller";
-import { find_username_already_in_use } from './auth-find-controller';
-import { store_new_user, verify_code, send_verification_code, send_socket, change_password} from "./auth-store-controller";
+import { authenticate_user, refresh_token } from "./auth-authenticate-controller"
+import { find_username_already_in_use } from "./auth-find-controller"
+import {
+    change_password,
+    send_verification_code,
+    store_new_user,
+    verify_code,
+} from "./auth-store-controller"
 
 export const AuthController = {
     StoreNewUser: store_new_user,

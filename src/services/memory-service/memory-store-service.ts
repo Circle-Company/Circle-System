@@ -1,7 +1,7 @@
 import { InternalServerError } from "../../errors"
-import Memory from "../../models/memories/memory-model.js"
-import MemoryMoment from "../../models/memories/memory_moments-model.js"
-import UserStatistic from "../../models/user/statistic-model.js"
+import Memory from "../../models/memories/memory-model"
+import MemoryMoment from "../../models/memories/memory_moments-model"
+import UserStatistic from "../../models/user/statistic-model"
 import { TriggerNotification } from "../../notification-service"
 import { StoreNewMemoryMomentProps, StoreNewMemoryProps } from "./types"
 

@@ -1,7 +1,7 @@
-import Coordinate from "../../../../models/user/coordinate-model.js"
-import ProfilePicture from "../../../../models/user/profilepicture-model.js"
-import Statistic from "../../../../models/user/statistic-model.js"
-import User from "../../../../models/user/user-model.js"
+import Coordinate from "../../../../models/user/coordinate-model"
+import ProfilePicture from "../../../../models/user/profilepicture-model"
+import Statistic from "../../../../models/user/statistic-model"
+import User from "../../../../models/user/user-model"
 import { filterSearchParams } from "../../functions/filter_search_params"
 
 type FindCandidatesProps = {

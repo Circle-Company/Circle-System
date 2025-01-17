@@ -1,5 +1,6 @@
 import { Request, Response } from "express"
 import { StatusCodes } from "http-status-codes"
+import { InternalServerError } from "../../errors"
 import { Memory } from "../../services/memory-service"
 
 export async function find_memory_moments(req: Request, res: Response) {

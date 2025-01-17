@@ -1,7 +1,7 @@
-import { InternalServerError } from "../../../errors/index.js"
+import { InternalServerError } from "../../../errors"
 import MomentMidia from "../../../models/moments/moment_midia-model.js"
-import ProfilePicture from "../../../models/user/profilepicture-model.js"
-import User from "../../../models/user/user-model.js"
+import ProfilePicture from "../../../models/user/profilepicture-model"
+import User from "../../../models/user/user-model"
 import { NotificationProps } from "../../types"
 
 type senderUserProps = {

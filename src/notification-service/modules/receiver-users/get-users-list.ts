@@ -1,4 +1,4 @@
-import Follow from "../../../models/user/follow-model.js"
+import Follow from "../../../models/user/follow-model"
 type GetUsersListProps = {
     senderUserId: number
 }

@@ -1,6 +1,6 @@
 import { Request, Response } from "express"
 import { StatusCodes } from "http-status-codes"
-import { UnauthorizedError, ValidationError } from "../../errors"
+import { InternalServerError, UnauthorizedError, ValidationError } from "../../errors"
 import { MomentService } from "../../services/moment-service"
 
 export async function find_user_feed_moments(req: Request, res: Response) {
