@@ -11,12 +11,15 @@ jobs:
         runs-on: [ubuntu-latest]
 
         steps:
-            - name: Login to docker hub
-                run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            - name: Checkout Source
+              uses: actions/checkout@v3
+
+            - name: Login to Docker Hub
+              run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
             - name: Build docker image
-                run: docker build -t tiagosavioli/circle-system:latest .
+              run: docker build --target build -t tiagosavioli/circle-system:latest .
             - name: Publish image to Docker Hub
-                run: docker push tiagosavioli/circle-system:latest .
+              run: docker push tiagosavioli/circle-system:latest .
 
     deploy:
         name: Deploy to EC2
@@ -25,38 +28,38 @@ jobs:
 
         steps:
             - name: Setup SSH
-                uses: webfactory/ssh-agent@v0.5.3
-                with:
-                ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+              uses: webfactory/ssh-agent@v0.5.3
+              with:
+              ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
 
             - name: Deploy Containers
-                run: |
-                ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-                # Login no Docker Hub
-                docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+              run: |
+              ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+              # Login no Docker Hub
+              docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
-                # Baixando a última imagem
-                docker pull tiagosavioli/circle-system:latest
+              # Baixando a última imagem
+              docker pull tiagosavioli/circle-system:latest
 
-                # Removendo containers antigos (se existirem)
-                docker rm -f circle-system-01 || true
-                docker rm -f circle-system-02 || true
-                docker rm -f circle-system-03 || true
-                docker rm -f reverse-proxy || true
+              # Removendo containers antigos (se existirem)
+              docker rm -f circle-system-01 || true
+              docker rm -f circle-system-02 || true
+              docker rm -f circle-system-03 || true
+              docker rm -f reverse-proxy || true
 
-                # Rodando instâncias da aplicação
-                docker run -d --name circle-system-01 --restart unless-stopped -p 3000:3000 tiagosavioli/circle-system:latest
-                docker run -d --name circle-system-02 --restart unless-stopped -p 3001:3000 tiagosavioli/circle-system:latest
-                docker run -d --name circle-system-03 --restart unless-stopped -p 3002:3000 tiagosavioli/circle-system:latest
+              # Rodando instâncias da aplicação
+              docker run -d --name circle-system-01 --restart unless-stopped -p 3000:3000 tiagosavioli/circle-system:latest
+              docker run -d --name circle-system-02 --restart unless-stopped -p 3001:3000 tiagosavioli/circle-system:latest
+              docker run -d --name circle-system-03 --restart unless-stopped -p 3002:3000 tiagosavioli/circle-system:latest
 
-                # Rodando o Traefik como proxy reverso
-                docker run -d --name reverse-proxy --restart unless-stopped \
-                    -p 80:80 -p 8080:8080 \
-                    -v /var/run/docker.sock:/var/run/docker.sock:ro \
-                    traefik:v3.3.1 \
-                    --api.dashboard=true \
-                    --providers.docker=true \
-                    --providers.docker.exposedbydefault=false \
-                    --entrypoints.web.address=:80 \
-                    --entrypoints.dashboard.address=:8080
-                EOF
+              # Rodando o Traefik como proxy reverso
+              docker run -d --name reverse-proxy --restart unless-stopped \
+                  -p 80:80 -p 8080:8080 \
+                  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+                  traefik:v3.3.1 \
+                  --api.dashboard=true \
+                  --providers.docker=true \
+                  --providers.docker.exposedbydefault=false \
+                  --entrypoints.web.address=:80 \
+                  --entrypoints.dashboard.address=:8080
+              EOF
