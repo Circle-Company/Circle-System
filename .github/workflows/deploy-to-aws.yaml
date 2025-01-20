@@ -18,7 +18,7 @@ jobs:
             - name: Build docker image
               run: docker build --target build -t tiagosavioli/circle-system:latest .
             - name: Publish image to Docker Hub
-              run: docker push tiagosavioli/circle-system:latest .
+              run: docker push tiagosavioli/circle-system:latest
 
     deploy:
         name: Deploy to EC2
