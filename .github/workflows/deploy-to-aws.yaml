@@ -32,6 +32,7 @@ jobs:
                   ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
               env:
                   SSH_PRIVATE_KEY: ${{secrets.EC2_SSH_PRIVATE_KEY}}
+                  ACTIONS_STEP_DEBUG: true
             - name: Deploy Containers
               run: |
                   ssh -o StrictHostKeyChecking=no ubuntu@"$SSH_PRIVATE_KEY" << 'EOF'
