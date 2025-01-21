@@ -31,8 +31,6 @@ jobs:
 
             - name: Setup SSH
               uses: webfactory/ssh-agent@v0.5.3
-              with:
-                  ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
               env:
                   PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
             - name: Deploy Containers
