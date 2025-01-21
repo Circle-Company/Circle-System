@@ -22,7 +22,7 @@ http:
         api:
             entryPoints:
                 - web
-            rule: "Host(`localhost`)" # Requisições para localhost
+            rule: "Host(`circlecompany.com.br`)" # Requisições para localhost
             service: api-service # Nome do serviço de balanceamento
             middlewares:
                 - compress # Middleware para compressão

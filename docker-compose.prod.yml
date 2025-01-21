@@ -11,9 +11,13 @@ services:
             - "--entrypoints.dashboard.address=:8080" # Entrada para o dashboard
         ports:
             - "80:80" # Porta pública HTTP
+            - "443:443"
             - "8080:8080" # Porta para o dashboard
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro # Acesso ao Docker socket
+            - ./traefik.yml:/etc/traefik/traefik.yml:ro
+            - ./dynamic.yml:/etc/traefik/dynamic.yml:ro
+            - ./acme.json:/acme.json
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.dashboard.rule=PathPrefix(`/`)" # Exibe o dashboard na raiz da porta 8080
