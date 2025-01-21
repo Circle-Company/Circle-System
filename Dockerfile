@@ -3,7 +3,7 @@ FROM node:18-alpine AS build
 
 WORKDIR /app
 
-COPY package*.json tsconfig*.json firebase-settings*.json ./
+COPY package*.json tsconfig*.json firebase-settings*.json nginx.conf ./
 
 RUN npm cache clean --force
 
@@ -20,7 +20,7 @@ FROM node:18-alpine AS production
 
 WORKDIR /app
 
-COPY package*.json firebase-settings*.json .env ./
+COPY package*.json firebase-settings*.json nginx.conf .env ./
 
 RUN npm cache clean --force
 

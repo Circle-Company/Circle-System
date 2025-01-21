@@ -54,37 +54,102 @@ jobs:
                   docker rm -f circle-system-01 || true;
                   docker rm -f circle-system-02 || true;
                   docker rm -f circle-system-03 || true;
-                  docker rm -f reverse-proxy || true;
+                  name: Push-to-EC2
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    build:
+        name: Build Docker Image
+        runs-on: [ubuntu-latest]
+
+        steps:
+            - name: Checkout Source
+              uses: actions/checkout@v3
+
+            - name: Login to Docker Hub
+              run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            - name: Build docker image
+              run: docker build --target build -t tiagosavioli/circle-system:latest .
+            - name: Publish image to Docker Hub
+              run: docker push tiagosavioli/circle-system:latest
+
+    deploy:
+        name: Deploy to EC2
+        needs: build
+        runs-on: self-hosted
+
+        steps:
+            - name: Check out code
+              uses: actions/checkout@v2
+              env:
+                  PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+
+            - name: Save and Configure SSH Key
+              run: |
+                  # Salva a chave privada do EC2
+                  echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > circle-system-key.pem
+                  # Ajusta as permissões para a chave funcionar corretamente
+                  chmod 600 circle-system-key.pem
+
+            - name: Add EC2 to Known Hosts
+              run: ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
+
+            - name: Deploy Containers
+              run: |
+                  ssh -o StrictHostKeyChecking=no -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP}} <<EOF
+                  # Login no Docker Hub
+                  echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+                  # Baixando a última imagem
+                  docker pull tiagosavioli/circle-system:latest;
+
+                  # Removendo containers antigos (se existirem)
+                  docker rm -f circle-system-01 || true;
+                  docker rm -f circle-system-02 || true;
+                  docker rm -f circle-system-03 || true;
+                  docker rm -f nginx || true;
 
                   # Rodando instâncias da aplicação
-                  docker run -d --name circle-system-01 --restart unless-stopped \
-                  -p 3000:3000 \
-                  --label "traefik.enable=true" \
-                  --label "traefik.http.routers.circle-system.rule=Host(`yourdomain.com`)" \
-                  --label "traefik.http.services.circle-system.loadbalancer.server.port=3000" \
-                  tiagosavioli/circle-system:latest;
+                  docker run -d --name circle-system-01 --restart unless-stopped -p 3000:3000 tiagosavioli/circle-system:latest;
+                  docker run -d --name circle-system-02 --restart unless-stopped -p 3001:3000 tiagosavioli/circle-system:latest;
+                  docker run -d --name circle-system-03 --restart unless-stopped -p 3002:3000 tiagosavioli/circle-system:latest;
 
-                  docker run -d --name circle-system-02 --restart unless-stopped \
-                  -p 3001:3000 \
-                  --label "traefik.enable=true" \
-                  --label "traefik.http.routers.circle-system.rule=Host(`yourdomain.com`)" \
-                  --label "traefik.http.services.circle-system.loadbalancer.server.port=3000" \
-                  tiagosavioli/circle-system:latest;
 
-                  docker run -d --name circle-system-03 --restart unless-stopped \
-                  -p 3002:3000 \
-                  --label "traefik.enable=true" \
-                  --label "traefik.http.routers.circle-system.rule=Host(`yourdomain.com`)" \
-                  --label "traefik.http.services.circle-system.loadbalancer.server.port=3000" \
-                  tiagosavioli/circle-system:latest;
+                  # Criando configuração do Nginx
+                  echo '
+                  worker_processes auto;
 
-                  # Rodando o Traefik como proxy reverso
-                  docker run -d --name reverse-proxy --restart unless-stopped \
-                  -p 80:80 -p 8080:8080 \
-                  -v /var/run/docker.sock:/var/run/docker.sock:ro \
-                  traefik:v3.3.1 \
-                  --api.dashboard=true \
-                  --providers.docker=true \
-                  --providers.docker.exposedbydefault=false \
-                  --entrypoints.web.address=:80 \
-                  --entrypoints.dashboard.address=:8080
+                  events {
+                      worker_connections 1024;
+                  }
+
+                  http {
+                      upstream backend {
+                          server circle-system-01:3000;
+                          server circle-system-02:3000;
+                          server circle-system-03:3000;
+                      }
+
+                      server {
+                          listen 80;
+
+                          location / {
+                              proxy_pass http://backend;
+                              proxy_http_version 1.1;
+                              proxy_set_header Upgrade \$http_upgrade;
+                              proxy_set_header Connection "upgrade";
+                              proxy_set_header Host \$host;
+                              proxy_cache_bypass \$http_upgrade;
+                          }
+                      }
+                  }
+                  ' > nginx.conf
+                   # Subindo o Nginx
+                  docker run -d --name nginx --restart unless-stopped \
+                  -p 80:80 \
+                  -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro \
+                  nginx:latest;
+                  EOF
