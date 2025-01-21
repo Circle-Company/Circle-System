@@ -55,10 +55,6 @@ jobs:
                   docker rm -f circle-system-02 || true;
                   docker rm -f circle-system-03 || true;
                   name: Push-to-EC2
-on:
-    push:
-        branches:
-            - main
 
 jobs:
     build:
