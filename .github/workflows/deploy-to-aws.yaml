@@ -28,9 +28,6 @@ jobs:
         steps:
             - name: Check out code
               uses: actions/checkout@v2
-
-            - name: Setup SSH
-              uses: webfactory/ssh-agent@v0.5.3
               env:
                   PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
             - name: Deploy Containers
