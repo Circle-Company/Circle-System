@@ -33,12 +33,15 @@ jobs:
 
             - name: Save and Configure SSH Key
               run: |
-                  echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | tr -d '\r' > private_key
-                  chmod 600 private_key
+                  echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | tr -d '\r' > circle-system-key.pem
+                  chmod 600 circle-system-key.pem
+
+            - name: Add EC2 to Known Hosts
+              run: ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
             - name: Deploy Containers
               run: |
-                  ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{ secrets.EC2_PUBLIC_IP}} << 'EOF'
+                  ssh -o StrictHostKeyChecking=no -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP}} << 'EOF'
                   # Login no Docker Hub
                   echo '${{ secrets.DOCKER_PASSWORD }}' | docker login -u '${{ secrets.DOCKER_USERNAME }}'
 
