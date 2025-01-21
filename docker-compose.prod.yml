@@ -20,9 +20,10 @@ services:
             - ./acme.json:/acme.json
         labels:
             - "traefik.enable=true"
-            - "traefik.http.routers.dashboard.rule=PathPrefix(`/`)" # Exibe o dashboard na raiz da porta 8080
+            - "traefik.http.routers.dashboard.rule=Host(`dashboard.circlecompany.com.br`)" # Subdomínio para o dashboard
             - "traefik.http.routers.dashboard.service=api@internal" # Serviço interno para o dashboard
             - "traefik.http.routers.dashboard.entrypoints=dashboard" # Usa o ponto de entrada `dashboard`
+        restart: unless-stopped
     api-instance-01:
         container_name: circle-system-01
         build:
@@ -33,7 +34,7 @@ services:
             - "3000:3000"
         labels:
             - "traefik.enable=true"
-            - "traefik.http.routers.api.rule=Host(`localhost`)" # Roteia para localhost
+            - "traefik.http.routers.api.rule=Host(`circlecompany.com.br`)" # Roteia para o domínio principal
             - "traefik.http.routers.api.entrypoints=web"
             - "traefik.http.services.api.loadbalancer.server.port=3000" # Porta da API
         environment:
@@ -51,6 +52,7 @@ services:
                     cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
                     memory: "0.3GB" # Limita o uso de memória do container para 512 MB
         command: npm start
+        restart: unless-stopped
 
     api-instance-02:
         container_name: circle-system-02
@@ -62,7 +64,7 @@ services:
             - "3001:3000"
         labels:
             - "traefik.enable=true"
-            - "traefik.http.routers.api.rule=Host(`localhost`)" # Roteia para localhost
+            - "traefik.http.routers.api.rule=Host(`circlecompany.com.br`)" # Roteia para o domínio principal
             - "traefik.http.routers.api.entrypoints=web"
             - "traefik.http.services.api.loadbalancer.server.port=3000" # Porta da API
         environment:
@@ -80,6 +82,7 @@ services:
                     cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
                     memory: "0.3GB" # Limita o uso de memória do container para 512 MB
         command: npm start
+        restart: unless-stopped
 
     api-instance-03:
         container_name: circle-system-03
@@ -91,7 +94,7 @@ services:
             - "3002:3000"
         labels:
             - "traefik.enable=true"
-            - "traefik.http.routers.api.rule=Host(`localhost`)" # Roteia para localhost
+            - "traefik.http.routers.api.rule=Host(`circlecompany.com.br`)" # Roteia para o domínio principal
             - "traefik.http.routers.api.entrypoints=web"
             - "traefik.http.services.api.loadbalancer.server.port=3000" # Porta da API
         environment:
@@ -109,3 +112,4 @@ services:
                     cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
                     memory: "0.3GB" # Limita o uso de memória do container para 512 MB
         command: npm start
+        restart: unless-stopped
