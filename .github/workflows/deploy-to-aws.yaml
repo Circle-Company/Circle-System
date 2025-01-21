@@ -70,5 +70,5 @@ jobs:
                       --providers.docker=true \
                       --providers.docker.exposedbydefault=false \
                       --entrypoints.web.address=:80 \
-                      --entrypoints.dashboard.address=:8080;
-                  "
+                      --entrypoints.dashboard.address=:8080
+                  EOF
