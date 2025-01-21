@@ -26,39 +26,44 @@ jobs:
         runs-on: self-hosted
 
         steps:
-            - name: Setup SSH
-              uses: webfactory/ssh-agent@v0.5.3
-              with:
-                  ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-
-            - name: Deploy Containers
+            - name: Save and Setup SSH Key
               run: |
-                  ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP}} << 'EOF'
-                  # Login no Docker Hub
-                  echo '${{ secrets.DOCKER_PASSWORD }}' | docker login -u '${{ secrets.DOCKER_USERNAME }}'
+              echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key.pem
+              chmod 600 private_key.pem
+              eval $(ssh-agent -s)
+              ssh-add private_key.pem
 
-                  # Baixando a última imagem
-                  docker pull tiagosavioli/circle-system:latest;
+            - name: Add Known Hosts
+              run: ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
-                  # Removendo containers antigos (se existirem)
-                  docker rm -f circle-system-01 || true;
-                  docker rm -f circle-system-02 || true;
-                  docker rm -f circle-system-03 || true;
-                  docker rm -f reverse-proxy || true;
+            - name: Deploy to EC2
+              run: |
+              ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP }} << EOF
+              # Login no Docker Hub
+              echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-                  # Rodando instâncias da aplicação
-                  docker run -d --name circle-system-01 --restart unless-stopped -p 3000:3000 tiagosavioli/circle-system:latest;
-                  docker run -d --name circle-system-02 --restart unless-stopped -p 3001:3000 tiagosavioli/circle-system:latest;
-                  docker run -d --name circle-system-03 --restart unless-stopped -p 3002:3000 tiagosavioli/circle-system:latest;
+              # Baixando a última imagem
+              docker pull tiagosavioli/circle-system:latest
 
-                  # Rodando o Traefik como proxy reverso
-                  docker run -d --name reverse-proxy --restart unless-stopped \
-                      -p 80:80 -p 8080:8080 \
-                      -v /var/run/docker.sock:/var/run/docker.sock:ro \
-                      traefik:v3.3.1 \
-                      --api.dashboard=true \
-                      --providers.docker=true \
-                      --providers.docker.exposedbydefault=false \
-                      --entrypoints.web.address=:80 \
-                      --entrypoints.dashboard.address=:8080;
-                  "
+              # Removendo containers antigos
+              docker rm -f circle-system-01 || true
+              docker rm -f circle-system-02 || true
+              docker rm -f circle-system-03 || true
+              docker rm -f reverse-proxy || true
+
+              # Rodando instâncias da aplicação
+              docker run -d --name circle-system-01 --restart unless-stopped -p 3000:3000 tiagosavioli/circle-system:latest
+              docker run -d --name circle-system-02 --restart unless-stopped -p 3001:3000 tiagosavioli/circle-system:latest
+              docker run -d --name circle-system-03 --restart unless-stopped -p 3002:3000 tiagosavioli/circle-system:latest
+
+                # Rodando o Traefik como proxy reverso
+              docker run -d --name reverse-proxy --restart unless-stopped \
+                  -p 80:80 -p 8080:8080 \
+                  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+                  traefik:v3.3.1 \
+                  --api.dashboard=true \
+                  --providers.docker=true \
+                  --providers.docker.exposedbydefault=false \
+                  --entrypoints.web.address=:80 \
+                  --entrypoints.dashboard.address=:8080
+              EOF
