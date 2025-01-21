@@ -38,6 +38,9 @@ jobs:
                   # Ajusta as permissões para a chave funcionar corretamente
                   chmod 600 circle-system-key.pem
 
+            - name: Add EC2 to Known Hosts
+              run: ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
+
             - name: Deploy Containers
               run: |
                   ssh -o StrictHostKeyChecking=no -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP}} <<EOF
@@ -54,18 +57,34 @@ jobs:
                   docker rm -f reverse-proxy || true;
 
                   # Rodando instâncias da aplicação
-                  docker run -d --name circle-system-01 --restart unless-stopped -p 3000:3000 tiagosavioli/circle-system:latest;
-                  docker run -d --name circle-system-02 --restart unless-stopped -p 3001:3000 tiagosavioli/circle-system:latest;
-                  docker run -d --name circle-system-03 --restart unless-stopped -p 3002:3000 tiagosavioli/circle-system:latest;
+                  docker run -d --name circle-system-01 --restart unless-stopped \
+                  -p 3000:3000 \
+                  --label "traefik.enable=true" \
+                  --label "traefik.http.routers.circle-system.rule=Host(`yourdomain.com`)" \
+                  --label "traefik.http.services.circle-system.loadbalancer.server.port=3000" \
+                  tiagosavioli/circle-system:latest;
+
+                  docker run -d --name circle-system-02 --restart unless-stopped \
+                  -p 3001:3000 \
+                  --label "traefik.enable=true" \
+                  --label "traefik.http.routers.circle-system.rule=Host(`yourdomain.com`)" \
+                  --label "traefik.http.services.circle-system.loadbalancer.server.port=3000" \
+                  tiagosavioli/circle-system:latest;
+
+                  docker run -d --name circle-system-03 --restart unless-stopped \
+                  -p 3002:3000 \
+                  --label "traefik.enable=true" \
+                  --label "traefik.http.routers.circle-system.rule=Host(`yourdomain.com`)" \
+                  --label "traefik.http.services.circle-system.loadbalancer.server.port=3000" \
+                  tiagosavioli/circle-system:latest;
 
                   # Rodando o Traefik como proxy reverso
                   docker run -d --name reverse-proxy --restart unless-stopped \
-                      -p 80:80 -p 8080:8080 \
-                      -v /var/run/docker.sock:/var/run/docker.sock:ro \
-                      traefik:v3.3.1 \
-                      --api.dashboard=true \
-                      --providers.docker=true \
-                      --providers.docker.exposedbydefault=false \
-                      --entrypoints.web.address=:80 \
-                      --entrypoints.dashboard.address=:8080
-                  EOF
+                  -p 80:80 -p 8080:8080 \
+                  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+                  traefik:v3.3.1 \
+                  --api.dashboard=true \
+                  --providers.docker=true \
+                  --providers.docker.exposedbydefault=false \
+                  --entrypoints.web.address=:80 \
+                  --entrypoints.dashboard.address=:8080
