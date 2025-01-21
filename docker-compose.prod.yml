@@ -46,11 +46,6 @@ services:
             - .env
         expose:
             - "3000"
-        deploy:
-            resources:
-                limits:
-                    cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
-                    memory: "0.3GB" # Limita o uso de memória do container para 512 MB
         command: npm start
         restart: unless-stopped
 
@@ -76,11 +71,6 @@ services:
             - .env
         expose:
             - "3000"
-        deploy:
-            resources:
-                limits:
-                    cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
-                    memory: "0.3GB" # Limita o uso de memória do container para 512 MB
         command: npm start
         restart: unless-stopped
 
@@ -106,10 +96,5 @@ services:
             - .env
         expose:
             - "3000"
-        deploy:
-            resources:
-                limits:
-                    cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
-                    memory: "0.3GB" # Limita o uso de memória do container para 512 MB
         command: npm start
         restart: unless-stopped
