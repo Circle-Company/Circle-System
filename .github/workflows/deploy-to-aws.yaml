@@ -30,10 +30,11 @@ jobs:
               uses: webfactory/ssh-agent@v0.5.3
               with:
                   ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-
+              env:
+                  SSH_PRIVATE_KEY: ${{secrets.EC2_SSH_PRIVATE_KEY}}
             - name: Deploy Containers
               run: |
-                  ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+                  ssh -o StrictHostKeyChecking=no ubuntu@"$SSH_PRIVATE_KEY" << 'EOF'
                   # Login no Docker Hub
                   echo '${{ secrets.DOCKER_PASSWORD }}' | docker login -u '${{ secrets.DOCKER_USERNAME }}' --password-stdin;
 
