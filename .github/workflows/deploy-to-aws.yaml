@@ -101,9 +101,8 @@ jobs:
                       }
                   }
                   ' > nginx.conf
-                   # Subindo o Nginx
+                  # Inicie o Nginx
                   docker run -d --name nginx --restart unless-stopped \
-                  -p 80:80 \
-                  -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro \
-                  nginx:latest;
-                  EOF
+                    -p 80:80 \
+                    -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro \
+                    nginx:latest
