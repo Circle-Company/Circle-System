@@ -45,6 +45,9 @@ jobs:
               run: |
                   ssh -o StrictHostKeyChecking=no -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP}} <<EOF
 
+                  # Inicia o acesso de administrador
+                  sudo -i
+
                   # Verificar se a porta 80 está em uso e liberar se necessário
                   if lsof -i:80 > /dev/null; then
                       echo "Port 80 is in use. Releasing it..."
@@ -84,7 +87,7 @@ jobs:
                           server circle-system-03:3000;
                       }
 
-                      server {
+                      server {  
                           listen 80;
 
                           location / {
