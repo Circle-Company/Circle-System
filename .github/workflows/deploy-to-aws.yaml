@@ -49,10 +49,7 @@ jobs:
                   sudo -i
 
                   # Verificar se a porta 80 está em uso e liberar se necessário
-                  if lsof -i:80 > /dev/null; then
-                      echo "Port 80 is in use. Releasing it..."
-                      sudo fuser -k 80/tcp
-                  fi
+                  sudo fuser -k 80/tcp
 
                   # Login no Docker Hub
                   echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
