@@ -8,6 +8,12 @@ services:
         volumes:
             - ./nginx.conf:/etc/nginx/nginx.conf:ro # Configuração do Nginx
         restart: unless-stopped
+        networks:
+            - app-network
+        depends_on:
+            - circle-system-01
+            - circle-system-02
+            - circle-system-03
 
     api-instance-01:
         container_name: circle-system-01
@@ -21,6 +27,8 @@ services:
             - PORT=3000
             - NODE_ENV=production
         restart: unless-stopped
+        networks:
+            - app-network
 
     api-instance-02:
         container_name: circle-system-02
@@ -34,6 +42,8 @@ services:
             - PORT=3000
             - NODE_ENV=production
         restart: unless-stopped
+        networks:
+            - app-network
 
     api-instance-03:
         container_name: circle-system-03
@@ -47,3 +57,5 @@ services:
             - PORT=3000
             - NODE_ENV=production
         restart: unless-stopped
+        networks:
+            - app-network

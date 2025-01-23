@@ -57,6 +57,12 @@ jobs:
                   # Login no Docker Hub
                   echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+                  # Deletando possível rede criada
+                  docker network rm app-network
+
+                  # Criando network para containers
+                  docker network create app-network
+
                   # Baixando a última imagem
                   docker pull tiagosavioli/circle-system:latest;
 
@@ -71,6 +77,10 @@ jobs:
                   docker run -d --name circle-system-02 --restart unless-stopped -p 3001:3000 tiagosavioli/circle-system:latest;
                   docker run -d --name circle-system-03 --restart unless-stopped -p 3002:3000 tiagosavioli/circle-system:latest;
 
+                  # Colocando containers na rede
+                  docker network connect app-network circle-system-01
+                  docker network connect app-network circle-system-02
+                  docker network connect app-network circle-system-03
 
                   # Criando configuração do Nginx
                   echo '
@@ -101,6 +111,10 @@ jobs:
                       }
                   }
                   ' > nginx.conf
+
+                  # Colocando nginx na rede
+                  docker network connect app-network nginx
+
                   # Inicie o Nginx
                   docker run -d --name nginx --restart unless-stopped \
                     -p 80:80 \
