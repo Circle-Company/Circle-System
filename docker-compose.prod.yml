@@ -1,4 +1,9 @@
 version: "3.8"
+
+networks:
+    app-network:
+        driver: bridge
+
 services:
     api-instance-01:
         container_name: circle-system-01
@@ -11,6 +16,14 @@ services:
         environment:
             - PORT=3000
             - NODE_ENV=production
+        networks:
+            - app-network
+        deploy:
+            resources:
+                limits:
+                    cpus: "0.25" # Limita o container a usar no máximo 50% de uma CPU
+                    memory: "0.3GB" # Limita o uso de memória do container para 512 MB
+        command: npm start
 
     api-instance-02:
         container_name: circle-system-02
@@ -23,6 +36,14 @@ services:
         environment:
             - PORT=3000
             - NODE_ENV=production
+        networks:
+            - app-network
+        deploy:
+            resources:
+                limits:
+                    cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
+                    memory: "0.25GB" # Limita o uso de memória do container para 512 MB
+        command: npm start
 
     api-instance-03:
         container_name: circle-system-03
@@ -35,6 +56,15 @@ services:
         environment:
             - PORT=3000
             - NODE_ENV=production
+        networks:
+            - app-network
+        deploy:
+            resources:
+                limits:
+                    cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
+                    memory: "0.25GB" # Limita o uso de memória do container para 512 MB
+        command: npm start
+
     nginx:
         image: nginx:latest
         container_name: nginx-proxy
