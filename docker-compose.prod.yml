@@ -21,48 +21,8 @@ services:
         deploy:
             resources:
                 limits:
-                    cpus: "0.25" # Limita o container a usar no máximo 50% de uma CPU
-                    memory: "0.3GB" # Limita o uso de memória do container para 512 MB
-        command: npm start
-
-    api-instance-02:
-        container_name: circle-system-02
-        build:
-            context: .
-            dockerfile: Dockerfile
-            target: production
-        expose:
-            - "3000"
-        environment:
-            - PORT=3000
-            - NODE_ENV=production
-        networks:
-            - app-network
-        deploy:
-            resources:
-                limits:
-                    cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
-                    memory: "0.25GB" # Limita o uso de memória do container para 512 MB
-        command: npm start
-
-    api-instance-03:
-        container_name: circle-system-03
-        build:
-            context: .
-            dockerfile: Dockerfile
-            target: production
-        expose:
-            - "3000"
-        environment:
-            - PORT=3000
-            - NODE_ENV=production
-        networks:
-            - app-network
-        deploy:
-            resources:
-                limits:
-                    cpus: "0.3" # Limita o container a usar no máximo 50% de uma CPU
-                    memory: "0.25GB" # Limita o uso de memória do container para 512 MB
+                    cpus: "0.5" # Limita o container a usar no máximo 50% de uma CPU
+                    memory: "0.5GB" # Limita o uso de memória do container para 512 MB
         command: npm start
 
     nginx:
