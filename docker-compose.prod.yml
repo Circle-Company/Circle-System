@@ -5,7 +5,7 @@ networks:
         driver: bridge
 
 services:
-    api-instance-01:
+    backend:
         container_name: circle-system-01
         build:
             context: .
@@ -28,7 +28,13 @@ services:
     nginx:
         image: nginx:latest
         container_name: nginx-proxy
+        depends_on:
+            - backend
         ports:
             - "80:80" # Porta pública HTTP
         volumes:
             - ./nginx.conf:/etc/nginx/nginx.conf:ro # Configuração do Nginx
+
+    networks:
+        app-network:
+            driver: bridge
