@@ -23,7 +23,7 @@ jobs:
     deploy:
         name: Deploy to EC2
         needs: build
-        runs-on: [aws-ec2]
+        runs-on: self-hosted
 
         steps:
             - name: Check out code
