@@ -43,7 +43,7 @@ jobs:
 
             - name: Deploy Containers
               run: |
-                  ssh -o StrictHostKeyChecking=no -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP}} <<EOF
+                  ssh StrictHostKeyChecking=no -o IdentitiesOnly=yes -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP}} <<EOF
 
                   # Inicia o acesso de administrador
                   sudo -i
@@ -95,6 +95,12 @@ jobs:
                   }
 
                   ' > nginx.conf
+
+                  # Criar uma rede Docker (se não existir)
+                  docker network create circle_network || true;
+
+                  # Rodando instância da aplicação e conectando à rede correta
+                  docker run -d --name circle-system-01 --restart unless-stopped --network circle_network -p 3000:3000 tiagosavioli/circle-system:latest;
 
                   # Inicie o Nginx
                   docker run -d --name nginx --restart unless-stopped \

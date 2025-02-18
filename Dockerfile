@@ -24,7 +24,11 @@ COPY package*.json firebase-settings*.json nginx.conf .env ./
 
 RUN npm cache clean --force
 
-RUN npm install
+RUN npm install --only=production
 
 COPY --from=build /app/build ./build
+
+# Garantir que o .env está no local correto
+RUN ls -la /app
+
 CMD ["npm", "start"]
