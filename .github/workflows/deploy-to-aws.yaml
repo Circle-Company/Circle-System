@@ -43,7 +43,7 @@ jobs:
 
             - name: Deploy Containers
               run: |
-                  ssh StrictHostKeyChecking=no -o IdentitiesOnly=yes -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP}} <<EOF
+                  ssh -o StrictHostKeyChecking=no IdentitiesOnly=yes -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP}} <<EOF
 
                   # Inicia o acesso de administrador
                   sudo -i
