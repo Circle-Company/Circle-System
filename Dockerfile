@@ -3,12 +3,12 @@ FROM node:18-alpine AS build
 
 WORKDIR /app
 
-COPY package*.json tsconfig*.json firebase-settings*.json nginx.conf ./
-
+# Copia apenas arquivos essenciais para instalar dependências corretamente
+COPY package*.json ./ 
+COPY tsconfig*.json ./ 
+COPY firebase-settings*.json ./ 
+COPY nginx.conf ./ 
 COPY .env /app/.env
-COPY firebase-settings.json /app/firebase-settings.json
-
-RUN npm cache clean --force
 
 RUN npm install
 RUN npm uninstall sharp
@@ -18,21 +18,23 @@ COPY . .
 
 RUN npm run build
 
+# Define o comando de inicialização do container
+CMD ["npm", "start"]
+
 #Production stage
 FROM node:18-alpine AS production
 
 WORKDIR /app
 
-COPY package*.json firebase-settings*.json nginx.conf .env ./
-
-COPY .env /app/.env
-COPY firebase-settings.json /app/firebase-settings.json
-
-RUN npm cache clean --force
+# Copia apenas os arquivos necessários da fase de build
+COPY --from=build /app/build ./build
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/firebase-settings.json ./firebase-settings.json
+COPY --from=build /app/nginx.conf ./nginx.conf
+COPY --from=build /app/.env ./
 
 RUN npm install --only=production
-
-COPY --from=build /app/build ./build
 
 # Garantir que o .env está no local correto
 RUN ls -la /app
