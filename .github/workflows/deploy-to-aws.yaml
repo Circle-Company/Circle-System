@@ -34,16 +34,16 @@ jobs:
             - name: Save and Configure SSH Key
               run: |
                   # Salva a chave privada do EC2
-                  echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ubuntu-key.pem
+                  echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > circle-system-key.pem
                   # Ajusta as permissões para a chave funcionar corretamente
-                  chmod 600 ubuntu-key.pem
+                  chmod 600 circle-system-key.pem
 
             - name: Add EC2 to Known Hosts
               run: ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
             - name: Deploy Containers
               run: |
-                  ssh -o IdentitiesOnly=yes -i ubuntu-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP}} <<EOF
+                  ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP}} <<EOF
 
                   # Inicia o acesso de administrador
                   sudo -i
@@ -107,3 +107,4 @@ jobs:
                     -p 80:80 \
                     -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro \
                     nginx:latest
+                EOF
