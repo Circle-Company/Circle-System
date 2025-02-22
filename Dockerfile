@@ -22,6 +22,9 @@ WORKDIR /app
 
 COPY package*.json firebase-settings*.json nginx.conf .env ./
 
+COPY .env /app/.env
+COPY firebase-settings.json /app/firebase-settings.json
+
 RUN npm cache clean --force
 
 RUN npm install --only=production
