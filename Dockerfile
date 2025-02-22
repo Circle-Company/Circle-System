@@ -5,6 +5,9 @@ WORKDIR /app
 
 COPY package*.json tsconfig*.json firebase-settings*.json nginx.conf ./
 
+COPY .env /app/.env
+COPY firebase-settings.json /app/firebase-settings.json
+
 RUN npm cache clean --force
 
 RUN npm install
