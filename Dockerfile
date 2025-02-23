@@ -6,7 +6,9 @@ WORKDIR /app
 # Copia apenas arquivos essenciais para instalar dependências corretamente
 COPY package*.json ./ 
 COPY tsconfig*.json ./ 
-COPY .env ./
+
+RUN ls -la /app
+
 
 RUN npm install
 RUN npm uninstall sharp
