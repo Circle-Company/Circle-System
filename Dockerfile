@@ -7,7 +7,9 @@ WORKDIR /app
 COPY package*.json ./ 
 COPY tsconfig*.json ./ 
 
-RUN npm install
+ENV NODE_ENV=production
+
+RUN npm ci && npm cache clean --force
 RUN npm uninstall sharp
 RUN npm install --platform=linux --arch=x64 sharp
 RUN npm install body-parser
@@ -30,7 +32,6 @@ COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/nginx.conf ./nginx.conf
 
 RUN npm install --only=production
-
 # Garantir que o .env está no local correto
 RUN ls -la /app
 

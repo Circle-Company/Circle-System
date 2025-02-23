@@ -11,38 +11,9 @@ services:
         environment:
             - PORT=3000
             - RUN_SCRIPTS_MODE=false
-            - NODE_ENV=production
+            - NODE_ENV=development
             - CIRCLE_SWIPE_ENGINE_API=http://localhost:5000/
-            - PRODUCTION_DB_HOST=${PRODUCTION_DB_HOST}
-            - PRODUCTION_DB_USERNAME=${PRODUCTION_DB_USERNAME}
-            - PRODUCTION_DB_PASSWORD=${PRODUCTION_DB_PASSWORD}
-            - PRODUCTION_DB_NAME=${PRODUCTION_DB_NAME}
-            - PRODUCTION_DB_CLEAN_ALLOW=${PRODUCTION_DB_CLEAN_ALLOW}
-            - JWT_EXPIRES=${JWT_EXPIRES}
-            - JWT_SECRET=${JWT_SECRET}
-            - JWT_ISSUER=${JWT_ISSUER}
-            - JWT_AUDIENCE=${JWT_AUDIENCE}
-            - PRIVATE_KEY_PASSPHRASE=${PRIVATE_KEY_PASSPHRASE}
-            - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-            - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-            - AWS_ENDPOINT=${AWS_ENDPOINT}
-            - AWS_REGION=${AWS_REGION}
-            - AWS_MIDIA_BUCKET_DEVELOPMENT=${AWS_MIDIA_BUCKET_DEVELOPMENT}
-            - AWS_MIDIA_BUCKET_TEST=${AWS_MIDIA_BUCKET_TEST}
-            - AWS_MIDIA_BUCKET_PRODUCTION=${AWS_MIDIA_BUCKET_PRODUCTION}
-            - AWS_PROFILE_MIDIA_BUCKET_DEVELOPMENT=${AWS_PROFILE_MIDIA_BUCKET_DEVELOPMENT}
-            - AWS_PROFILE_MIDIA_BUCKET_TEST=${AWS_PROFILE_MIDIA_BUCKET_TEST}
-            - AWS_PROFILE_MIDIA_BUCKET_PRODUCTION=${AWS_PROFILE_MIDIA_BUCKET_PRODUCTION}
-            - EMAIL_DEFAULT_SENDER=${EMAIL_DEFAULT_SENDER}
-            - PUBLIC_REGISTRATION=${PUBLIC_REGISTRATION}
-            - INVITE_REGISTRATION=${INVITE_REGISTRATION}
-            - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
-            - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
-            - TWILIO_MESSAGE_SERVICE_SID=${TWILIO_MESSAGE_SERVICE_SID}
-            - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
         env_file:
-            - .env
-        volumes:
-            - ./.env:/app/.env # Monta o .env corretamente dentro do container
-            - ./firebase-settings.json:/app/firebase-settings.json # Copia o arquivo do host para o container
+            - path: ./.env
+              required: true
         command: npm run build
