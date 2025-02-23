@@ -16,4 +16,6 @@ services:
         env_file:
             - path: ./.env
               required: true
+        volumes:
+            - ./.env:/app/.env # Monta o .env corretamente dentro do container
         command: npm run build

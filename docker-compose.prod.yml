@@ -23,6 +23,8 @@ services:
             - CIRCLE_SWIPE_ENGINE_API=http://localhost:5000/
         networks:
             - app-network
+        volumes:
+            - ./.env:/app/.env # Monta o .env corretamente dentro do container
         deploy:
             resources:
                 limits:
