@@ -42,7 +42,7 @@ jobs:
             - name: Deploy Containers
               run: |
                   ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-                  echo "${{ secrets.ENV_FILE_CIRCLE_SYSTEM_PROD }}" > .env
+                  echo "${{ secrets.ENV_FILE_CIRCLE_SYSTEM_PROD }}" | awk '{$1=$1};1' | tr -d '\r' > /home/ubuntu/.env
                   cat .env  # (opcional, apenas para verificar se foi criado)
                   set -e # Para a execução se algum comando falhar
 
