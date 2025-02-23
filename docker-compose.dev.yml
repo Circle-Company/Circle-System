@@ -16,6 +16,5 @@ services:
         env_file:
             - .env
         volumes:
-            - .env:/app/.env # Garante que o .env seja copiado
             - ./firebase-settings.json:/app/firebase-settings.json # Copia o arquivo do host para o container
         command: npm run build

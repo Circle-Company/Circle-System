@@ -17,7 +17,9 @@ services:
             - .env
         environment:
             - PORT=3000
+            - RUN_SCRIPTS_MODE=false
             - NODE_ENV=production
+            - CIRCLE_SWIPE_ENGINE_API=http://localhost:5000/
         networks:
             - app-network
         deploy:
@@ -26,14 +28,19 @@ services:
                     cpus: "0.5" # Limita o container a usar no máximo 50% de uma CPU
                     memory: "0.5GB" # Limita o uso de memória do container para 512 MB
         volumes:
-            - .env:/app/.env # Garante que o .env seja copiado
             - ./firebase-settings.json:/app/firebase-settings.json # Copia o arquivo do host para o container
-        command: npm start
+        healthcheck: # 🩺 Garante que o container está pronto antes de o Nginx tentar acessá-lo
+            test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+            interval: 10s
+            retries: 3
+            start_period: 5s
+            timeout: 5s
     nginx:
         image: nginx:latest
         container_name: nginx-proxy
         depends_on:
-            - backend
+            backend:
+                condition: service_healthy # ✅ Agora o Nginx só sobe quando o backend estiver pronto
         ports:
             - "80:80" # Porta pública HTTP
         volumes:

@@ -6,9 +6,6 @@ WORKDIR /app
 # Copia apenas arquivos essenciais para instalar dependências corretamente
 COPY package*.json ./ 
 COPY tsconfig*.json ./ 
-COPY firebase-settings*.json ./ 
-COPY nginx.conf ./ 
-COPY .env /app/.env
 
 RUN npm install
 RUN npm uninstall sharp
@@ -30,9 +27,7 @@ WORKDIR /app
 COPY --from=build /app/build ./build
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/firebase-settings.json ./firebase-settings.json
 COPY --from=build /app/nginx.conf ./nginx.conf
-COPY --from=build /app/.env ./
 
 RUN npm install --only=production
 
