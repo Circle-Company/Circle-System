@@ -26,7 +26,7 @@ jobs:
         name: Deploy to EC2
         needs: build
         runs-on: self-hosted
-        environment: ENV_FILE
+
         steps:
             - name: Checkout Code
               uses: actions/checkout@v2
@@ -40,6 +40,7 @@ jobs:
               run: ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
             - name: Deploy Containers
+              environment: ENV_FILE
               run: |
                   ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
                   touch .env
