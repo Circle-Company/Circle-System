@@ -155,5 +155,3 @@ jobs:
                     nginx:latest
 
                   echo "✅ Deploy concluído com sucesso!"
-
-                  EOF
