@@ -26,7 +26,7 @@ jobs:
         name: Deploy to EC2
         needs: build
         runs-on: self-hosted
-
+        environment: ENV_FILE
         steps:
             - name: Checkout Code
               uses: actions/checkout@v2
@@ -42,11 +42,53 @@ jobs:
             - name: Deploy Containers
               run: |
                   ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i circle-system-key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-                  echo "${{ secrets.ENV_FILE_CIRCLE_SYSTEM_PROD }}" | awk '{$1=$1};1' | tr -d '\r' > /home/ubuntu/.env
-                  cat .env  # (opcional, apenas para verificar se foi criado)
-                  set -e # Para a execução se algum comando falhar
+                  touch .env
+                  echo PORT=${{ vars.PORT }} >> .env
+                  echo NODE_ENV=${{ vars.NODE_ENV }} >> .env
+                  echo API_VERSION=${{ vars.API_VERSION }} >> .env
+                  echo RUN_SCRIPTS_MODE=${{ vars.RUN_SCRIPTS_MODE }} >> .env
+                  echo CIRCLE_SWIPE_ENGINE_API=${{ vars.CIRCLE_SWIPE_ENGINE_API }} >> .env
+                  echo PRODUCTION_DB_HOST=${{ secrets.PRODUCTION_DB_HOST }} >> .env
+                  echo PRODUCTION_DB_USERNAME=${{ secrets.PRODUCTION_DB_USERNAME }} >> .env
+                  echo PRODUCTION_DB_PASSWORD=${{ secrets.PRODUCTION_DB_PASSWORD }} >> .env
+                  echo PRODUCTION_DB_NAME=${{ secrets.PRODUCTION_DB_NAME }} >> .env
+                  echo PRODUCTION_DB_CLEAN_ALLOW=${{ vars.PRODUCTION_DB_CLEAN_ALLOW }} >> .env
+                  echo JWT_EXPIRES=${{ vars.JWT_EXPIRES }} >> .env
+                  echo JWT_SECRET=${{ secrets.JWT_SECRET }} >> .env
+                  echo JWT_ISSUER=${{ vars.JWT_ISSUER }} >> .env
+                  echo JWT_AUDIENCE=${{ vars.JWT_AUDIENCE }} >> .env
+                  echo PRIVATE_KEY_PASSPHRASE=${{ secrets.PRIVATE_KEY_PASSPHRASE}} >> .env
+                  echo AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} >> .env
+                  echo AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} >> .env
+                  echo AWS_ENDPOINT=${{ secrets.AWS_ENDPOINT }} >> .env
+                  echo AWS_REGION=${{ vars.AWS_REGION }} >> .env
+                  echo AWS_MIDIA_BUCKET_DEVELOPMENT=${{ secrets.AWS_MIDIA_BUCKET }} >> .env
+                  echo AWS_MIDIA_BUCKET_TEST=${{ secrets.AWS_MIDIA_BUCKET }} >> .env
+                  echo AWS_MIDIA_BUCKET_PRODUCTION=${{ secrets.AWS_MIDIA_BUCKET }} >> .env
+                  echo AWS_PROFILE_MIDIA_BUCKET_DEVELOPMENT=${{ secrets.AWS_PROFILE_MIDIA_BUCKET }} >> .env
+                  echo AWS_PROFILE_MIDIA_BUCKET_TEST=${{ secrets.AWS_PROFILE_MIDIA_BUCKET }} >> .env
+                  echo AWS_PROFILE_MIDIA_BUCKET_PRODUCTION=${{ secrets.AWS_PROFILE_MIDIA_BUCKET }} >> .env
+                  echo EMAIL_DEFAULT_SENDER="" >> .env
+                  echo PUBLIC_REGISTRATION="" >> .env
+                  echo INVITE_REGISTRATION="" >> .env
+                  echo TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }} >> .env
+                  echo TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }} >> .env
+                  echo TWILIO_MESSAGE_SERVICE_SID=${{ secrets.TWILIO_MESSAGE_SERVICE_SID }} >> .env
+                  echo TWILIO_PHONE_NUMBER=${{ secrets.TWILIO_PHONE_NUMBER }} >> .env
+                  echo FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} >> .env
+                  echo FIREBASE_PRIVATE_KEY_ID=${{ secrets.FIREBASE_PRIVATE_KEY_ID }} >> .env
+                  echo FIREBASE_AUTH_URI=${{ vars.FIREBASE_AUTH_URI }} >> .env
+                  echo FIREBASE_TOKEN_URI=${{ vars.FIREBASE_TOKEN_URI }} >> .env
+                  echo FIREBASE_AUTH_PROVIDER_CERT_URL=${{ vars.FIREBASE_AUTH_PROVIDER_CERT_URL }} >> .env
+                  echo FIREBASE_UNIVERSE_DOMAIN=${{ vars.FIREBASE_UNIVERSE_DOMAIN }} >> .env
+                  echo FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }} >> .env
+                  echo FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }} >> .env
+                  echo FIREBASE_CLIENT_ID=${{ secrets.FIREBASE_CLIENT_ID }} >> .env
+                  echo FIREBASE_CLIENT_CERT_URL=${{ secrets.FIREBASE_CLIENT_CERT_URL }} >> .env
+                  cat .env
+                  echo "✅ Arquivo .env Criado com Sucesso."
 
-                  echo "🛠️ Iniciando Deploy no EC2..."
+                  echo "Iniciando Deploy no EC2."
 
                   # Atualiza pacotes e reinicia o Docker
                   sudo apt-get update -y
@@ -105,6 +147,7 @@ jobs:
 
                   # Iniciar Nginx corretamente
                   docker run -d --name nginx \
+                    --env-file /home/ubuntu/app/.env \
                     --restart unless-stopped \
                     --network circle_network \
                     -p 80:80 \
