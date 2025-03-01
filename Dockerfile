@@ -6,15 +6,7 @@ WORKDIR /app
 # Copia apenas arquivos essenciais para instalar dependências corretamente
 COPY package*.json ./ 
 COPY tsconfig*.json ./ 
-<<<<<<< HEAD
-<<<<<<< HEAD
-
 RUN ls -la /app
-
-=======
->>>>>>> parent of acd7c9a (fix:import env)
-=======
->>>>>>> parent of acd7c9a (fix:import env)
 
 RUN npm install
 RUN npm uninstall sharp
