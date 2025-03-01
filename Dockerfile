@@ -7,9 +7,12 @@ WORKDIR /app
 COPY package*.json ./ 
 COPY tsconfig*.json ./ 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 RUN ls -la /app
 
+=======
+>>>>>>> parent of acd7c9a (fix:import env)
 =======
 >>>>>>> parent of acd7c9a (fix:import env)
 
