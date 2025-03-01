@@ -68,7 +68,10 @@ jobs:
                     --build-arg FIREBASE_AUTH_PROVIDER_CERT_URL=${{ vars.FIREBASE_AUTH_PROVIDER_CERT_URL }} \
                     --build-arg FIREBASE_CLIENT_CERT_URL=${{ secrets.FIREBASE_CLIENT_CERT_URL }} \
                     --build-arg FIREBASE_UNIVERSE_DOMAIN=${{ secrets.FIREBASE_UNIVERSE_DOMAIN }} \
-                    -t tiagosavioli/circle-system:latest .
+                    -t ***/circle-system:latest \
+                    --platform linux/amd64 \
+                    --push \
+                    .
             - name: Publish Image to Docker Hub
               run: docker push tiagosavioli/circle-system:latest
 
