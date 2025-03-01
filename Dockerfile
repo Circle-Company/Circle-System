@@ -6,9 +6,12 @@ WORKDIR /app
 # Copia apenas arquivos essenciais para instalar dependências corretamente
 COPY package*.json ./ 
 COPY tsconfig*.json ./ 
+<<<<<<< HEAD
 
 RUN ls -la /app
 
+=======
+>>>>>>> parent of acd7c9a (fix:import env)
 
 RUN npm install
 RUN npm uninstall sharp
@@ -31,7 +34,7 @@ COPY --from=build /app/build ./build
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/nginx.conf ./nginx.conf
-COPY --from=build /app/.env ./.env
+COPY --from=build /app/.env ./
 
 RUN npm install --only=production
 
