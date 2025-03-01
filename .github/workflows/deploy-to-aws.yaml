@@ -17,7 +17,7 @@ jobs:
               run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
             - name: Build Docker Image with Secrets
               run: |
-                  docker build \
+                  docker buildx build \
                     --build-arg PORT=${{ vars.PORT }} \
                     --build-arg NODE_ENV=${{ vars.NODE_ENV }} \
                     --build-arg API_VERSION=${{ vars.API_VERSION }} \
