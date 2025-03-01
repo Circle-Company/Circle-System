@@ -8,7 +8,7 @@ jobs:
     build:
         name: Build Docker Image
         runs-on: ubuntu-latest
-
+        environment: ENV_FILE
         steps:
             - name: Checkout Source
               uses: actions/checkout@v3
