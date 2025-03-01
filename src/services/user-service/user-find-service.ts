@@ -1,6 +1,11 @@
 import { WTF } from "../../WTF"
 import { InternalServerError, ValidationError } from "../../errors"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
+<<<<<<< Updated upstream
+=======
+import { SearchEngine } from "../../search_engine"
+import { WTF } from "../../WTF"
+>>>>>>> Stashed changes
 import { Relation } from "../../helpers/relation"
 import { default as Follow, default as FollowModel } from "../../models/user/follow-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
@@ -130,6 +135,7 @@ export async function find_user_by_pk({ user_id, user_pk }: { user_id: bigint; u
 export async function find_user_followers({
     user_pk,
     user_id,
+<<<<<<< Updated upstream
     page,
     pageSize,
 }: {
@@ -163,6 +169,30 @@ export async function find_user_followers({
     })
 
     const userFollowersFormatted = userFollowers.map((user: any) => {
+=======
+    username
+}: FindUserByUsernameProps) {
+    if(await FindUserAlreadyExists({ username }) === false) {
+        throw new ValidationError({
+            message: 'this username cannot exists',
+        })
+    } else {
+        const user = await User.findOne({ where: { username }})
+        const user_followed = await Follow.findOne({
+            attributes: ['followed_user_id', 'user_id'],
+            where: { followed_user_id: user.id, user_id}
+        })
+        const statistic = await Statistic.findOne({
+            attributes: ['total_followers_num', 'total_likes_num', 'total_views_num'],
+            where: {user_id: user.id}
+        })
+        const profile_picture = await ProfilePicture.findOne({
+            attributes: ['fullhd_resolution', 'tiny_resolution'],
+            where: {user_id: user.id}
+        })
+           
+     
+>>>>>>> Stashed changes
         return {
             id: user.following.id,
             username: user.following.username,
@@ -170,6 +200,7 @@ export async function find_user_followers({
             profile_picture: user.following.profile_pictures,
             created_at: user.created_at,
         }
+<<<<<<< Updated upstream
     })
 
     const totalPages = count ? Math.ceil(count / pageSize) : 1
@@ -206,6 +237,44 @@ export async function find_user_followers({
                 verifyed: user.verifyed,
                 profile_picture: { tiny_resolution: userData.profile_pictures.tiny_resolution },
                 you_follow: user.you_follow,
+=======
+    }
+}
+export async function find_user_data ({
+    username
+}: FindUserDataProps) {
+    if(await FindUserAlreadyExists({ username }) === false) {
+        throw new ValidationError({
+            message: 'this username cannot exists',
+            statusCode: 200
+        })
+    } else {
+        const user = await User.findOne({ where: { username }})
+        const profile_picture = await ProfilePicture.findOne({
+            where: {user_id: user.id}
+        })
+        
+        return {
+            id: user.id,
+            username: user.username,
+            name: user.name,
+            description: user.description,
+            access_level: user.access_level,
+            verifyed: user.verifyed,
+            deleted: user.deleted,
+            blocked: user.blocked,
+            muted: user.muted,
+            terms_and_conditions_agreed_version: user.terms_and_conditions_agreed_version,
+            terms_and_conditions_agreed_at: user.terms_and_conditions_agreed_at,
+            last_active_at: user.last_active_at,
+            send_notification_emails: user.send_notification_emails,
+            profile_picture: {
+                id: profile_picture.id,
+                fullhd_resolution: profile_picture.fullhd_resolution,
+                tiny_resolution: profile_picture.tiny_resolution,
+                created_at: profile_picture.createdAt,
+                updated_at: profile_picture.updatedAt
+>>>>>>> Stashed changes
             }
         })
     )
@@ -315,3 +384,11 @@ export async function find_session_user_statistics_by_pk({ user_pk }: { user_pk:
         total_views_num: statistic.total_views_num,
     }
 }
+<<<<<<< Updated upstream
+=======
+export async function recommender_users ({
+    user_id
+}: RecommenderUsersProps) {
+    return await WTF({user_id})
+}
+>>>>>>> Stashed changes

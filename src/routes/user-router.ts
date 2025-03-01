@@ -1,7 +1,14 @@
+<<<<<<< Updated upstream
 import { Router } from "express"
 import { RP } from "../config/routes_prefix"
 import { UserController } from "../controllers/user"
 import { CheckUserAccountStatus } from "../middlewares/CheckUserAccountStatus"
+=======
+import { Router } from 'express'
+import { UserController } from '../controllers/user'
+import { RP } from '../config/routes_prefix'
+import { UserAuthenticationValidator } from '../middlewares/UserAuthenticationValidator'
+>>>>>>> Stashed changes
 
 export const router = Router()
 const USER_PROFILE_PREFIX = RP.PROFILE

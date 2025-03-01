@@ -1,4 +1,5 @@
 interface UserObject {
+<<<<<<< Updated upstream
     id: bigint
     username: string
     name: string
@@ -13,6 +14,23 @@ interface UserObject {
         total_followers_num: number
     }
     weight: number
+=======
+	id: number,
+	username: string,
+  name: string,
+	verifyed: false,
+	muted: boolean,
+    blocked: boolean,
+	you_follow: boolean,
+	profile_picture: {
+		tiny_resolution: null | string
+	},
+  statistic: {
+    total_followers_num: number
+  },
+  weight: number,
+  [key: string]: any
+>>>>>>> Stashed changes
 }
 
 type SortCandidatesProps = {

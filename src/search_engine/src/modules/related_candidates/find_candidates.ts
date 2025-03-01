@@ -1,7 +1,13 @@
+<<<<<<< Updated upstream
 import { InternalServerError } from "../../../../errors"
 import Relation from "../../../../models/user/relation-model"
 import User from "../../../../models/user/user-model"
 
+=======
+const Relation = require('../../../../models/user/relation-model.js')
+const User = require('../../../../models/user/user-model.js')
+import { InternalServerError } from "../../../../errors"
+>>>>>>> Stashed changes
 type RelationProps = {
     id: number
     user_id: bigint
@@ -40,7 +46,8 @@ export async function find_candidates({ user_id }: FindCandidatesProps) {
 
         return users_related
     } catch (error) {
-        console.error("Error in find_search_candidates:", error)
-        throw error
+        throw new InternalServerError({
+            message: 'Error in find_search_candidates'
+        })
     }
 }
