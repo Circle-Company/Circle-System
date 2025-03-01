@@ -1,5 +1,5 @@
 import { ValidationError } from "../../errors"
-import Preference from "../../models/preferences/preference-model.js"
+import Preference from "../../models/preference/preference-model"
 
 export async function set_app_language(req: any, res: any) {
     const { user_id, app_language } = req.body

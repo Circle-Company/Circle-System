@@ -15,6 +15,7 @@ jobs:
 
             - name: Login to Docker Hub
               run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
             - name: Build Docker Image
               run: docker build --target build -t tiagosavioli/circle-system:latest .
 
@@ -154,4 +155,3 @@ jobs:
                     nginx:latest
 
                   echo "✅ Deploy concluído com sucesso!"
-                  EOF

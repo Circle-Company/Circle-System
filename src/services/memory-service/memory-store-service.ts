@@ -1,4 +1,5 @@
-import { InternalServerError } from "../../errors"
+import SecurityToolKit from "libs/security-toolkit/src"
+import { InternalServerError, ValidationError } from "../../errors"
 import Memory from "../../models/memories/memory-model"
 import MemoryMoment from "../../models/memories/memory_moments-model"
 import UserStatistic from "../../models/user/statistic-model"
@@ -12,6 +13,16 @@ export async function store_new_memory({ user_id, title }: StoreNewMemoryProps) 
 
         if (!memory) throw new InternalServerError({ message: "Can't possible find this memory." })
 
+        const sanitization = new SecurityToolKit().sanitizerMethods.sanitizeSQLInjection(title)
+
+        if (sanitization.isDangerous) {
+            throw new ValidationError({
+                message:
+                    "Characters that are considered malicious have been identified in the title.",
+                action: 'Please remove characters like "]})*&',
+            })
+        }
+
         await TriggerNotification({
             notification: {
                 type: "NEW-MEMORY",
@@ -23,7 +34,7 @@ export async function store_new_memory({ user_id, title }: StoreNewMemoryProps) 
         })
         return {
             id: memory.id.toString(),
-            title: memory.title,
+            title: sanitization.sanitized,
             user_id: memory.user_id.toString(),
             created_at: memory.created_at,
             updated_at: memory.updated_at,
