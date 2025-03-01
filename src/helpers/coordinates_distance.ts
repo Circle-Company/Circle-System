@@ -1,9 +1,5 @@
 export class Coordinates {
-<<<<<<< Updated upstream
     constructor(public latitude, public longitude) {}
-=======
-  constructor(public latitude: number | null, public longitude: number| null) {}
->>>>>>> Stashed changes
 }
 
 export function haversineDistance(coord1: Coordinates, coord2: Coordinates): number {
