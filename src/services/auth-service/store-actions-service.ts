@@ -4,7 +4,7 @@ import { ContainSpecialCharacters } from "../../helpers/contain-special-characte
 import { DecryptPassword, EncriptedPassword } from "../../helpers/encrypt-decrypt-password"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 import { jwtEncoder } from "../../jwt/encode"
-import Preference from "../../models/preferences/preference-model.js"
+import Preference from "../../models/preference/preference-model"
 import Contact from "../../models/user/contact-model.js"
 import Coordinate from "../../models/user/coordinate-model"
 import ProfilePicture from "../../models/user/profilepicture-model"

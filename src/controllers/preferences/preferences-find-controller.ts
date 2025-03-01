@@ -1,5 +1,5 @@
 import { ValidationError } from "../../errors"
-import Preference from "../../models/preferences/preference-model.js"
+import Preference from "../../models/preference/preference-model"
 
 export async function get_user_preferences(req: any, res: any) {
     const { user_id } = req.params

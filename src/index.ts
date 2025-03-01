@@ -5,7 +5,6 @@ import config from "./config/index"
 import { RP } from "./config/routes_prefix"
 import "./database/index"
 import { UserAuthenticationValidator } from "./middlewares/UserAuthenticationValidator"
-
 import { router as AccountRouter } from "./routes/account-router"
 import { router as AdminRouter } from "./routes/admin-router"
 import { router as AuthRouter } from "./routes/auth-router"

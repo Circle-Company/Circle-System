@@ -17,6 +17,10 @@ module.exports = {
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
             },
+            app_timezone: {
+                type: Sequelize.NUMBER,
+                defaultValue: -3,
+            },
             app_language: {
                 type: Sequelize.STRING,
                 defaultValue: "en",

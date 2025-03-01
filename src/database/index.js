@@ -20,7 +20,7 @@ import Skip from "../models/moments/skip-model.js"
 import View from "../models/moments/view-model.js"
 import Notification from "../models/notification/notification-model"
 import NotificationToken from "../models/notification/notification_token-model"
-import Preference from "../models/preferences/preference-model"
+import Preference from "../models/preference/preference-model"
 import Tag from "../models/tags/tag-model"
 import Block from "../models/user/block-model.js"
 import Contact from "../models/user/contact-model.js"
@@ -48,7 +48,7 @@ const enableLogging = CONFIG.NODE_ENV === "development" ? true : false
 export const connection = new Sequelize({ ...DB_CONFIG, logging: enableLogging })
 try {
     connection.authenticate()
-    console.log("connection has been established successfully.")
+    console.log("✅ MYSQL connection has been established.")
 } catch (err) {
     console.error("unable to connect to database: ", err)
 }
@@ -83,7 +83,7 @@ Skip.init(connection)
 ProfileClick.init(connection)
 MomentInteraction.init(connection)
 NotificationToken.init(connection)
-Preference.init(connection)
+Preference.initialize(connection)
 
 //models associations
 User.associate(connection.models)

@@ -1,4 +1,4 @@
-import Preference from "../models/preferences/preference-model.js"
+import Preference from "../models/preference/preference-model.js"
 import User from "../models/user/user-model.js"
 
 export async function CreateUsersPreferences() {
@@ -6,7 +6,6 @@ export async function CreateUsersPreferences() {
 
     Promise.all(
         allUsers.map(async (user) => {
-            console.log(user)
             // @ts-ignore
             const hasPreference = await Preference.findOne({ where: { user_id: user.id } })
             if (!hasPreference) {

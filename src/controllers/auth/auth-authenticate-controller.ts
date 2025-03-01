@@ -6,7 +6,7 @@ import { jwtEncoder } from "../../jwt/encode"
 
 import config from "../../config"
 import NotificationToken from "../../models/notification/notification_token-model"
-import Preference from "../../models/preferences/preference-model.js"
+import Preferences from "../../models/preference/preference-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
 import Statistic from "../../models/user/statistic-model"
 import User from "../../models/user/user-model"
@@ -37,25 +37,23 @@ export async function authenticate_user(req: Request, res: Response) {
         }
 
         // Busca as informações do usuário relacionadas
-        const [statistic, profile_picture, notification_token, userPreferences] = await Promise.all(
-            [
-                Statistic.findOne({
-                    attributes: ["total_followers_num", "total_likes_num", "total_views_num"],
-                    where: { user_id: user.id.toString() },
-                }),
-                ProfilePicture.findOne({
-                    attributes: ["fullhd_resolution", "tiny_resolution"],
-                    where: { user_id: user.id.toString() },
-                }),
-                // @ts-ignore
-                NotificationToken.findOne({
-                    where: { user_id: user.id.toString() },
-                    attributes: ["token"],
-                }) as any,
-                // @ts-ignore
-                Preference.findOne({ where: { user_id: user.id.toString() } }) as any,
-            ]
-        )
+        const [statistic, profile_picture, notification_token, preferences] = await Promise.all([
+            Statistic.findOne({
+                attributes: ["total_followers_num", "total_likes_num", "total_views_num"],
+                where: { user_id: user.id.toString() },
+            }),
+            ProfilePicture.findOne({
+                attributes: ["fullhd_resolution", "tiny_resolution"],
+                where: { user_id: user.id.toString() },
+            }),
+            // @ts-ignore
+            NotificationToken.findOne({
+                where: { user_id: user.id.toString() },
+                attributes: ["token"],
+            }) as any,
+            // @ts-ignore
+            Preferences.findOne({ where: { user_id: user.id.toString() } }) as any,
+        ])
 
         // Gera um novo token de acesso JWT
         const newAccessToken = await jwtEncoder({
@@ -95,26 +93,26 @@ export async function authenticate_user(req: Request, res: Response) {
                     last_login_at: user.last_login_at,
                 },
                 preferences: {
+                    timezone: preferences?.app_timezone,
                     language: {
-                        appLanguage: userPreferences?.app_language || "en",
-                        translationLanguage: userPreferences?.translation_language || "en",
+                        appLanguage: preferences?.app_language || "en",
+                        translationLanguage: preferences?.translation_language || "en",
                     },
                     content: {
-                        disableAutoplay: userPreferences?.disable_autoplay || false,
-                        disableHaptics: userPreferences?.disable_haptics || false,
-                        disableTranslation: userPreferences?.disable_translation || false,
+                        disableAutoplay: preferences?.disable_autoplay || false,
+                        disableHaptics: preferences?.disable_haptics || false,
+                        disableTranslation: preferences?.disable_translation || false,
                     },
                     pushNotifications: {
                         disableLikeMoment:
-                            userPreferences?.disable_like_moment_push_notification || false,
+                            preferences?.disable_like_moment_push_notification || false,
                         disableNewMemory:
-                            userPreferences?.disable_new_memory_push_notification || false,
+                            preferences?.disable_new_memory_push_notification || false,
                         disableAddToMemory:
-                            userPreferences?.disable_add_to_memory_push_notification || false,
+                            preferences?.disable_add_to_memory_push_notification || false,
                         disableFollowUser:
-                            userPreferences?.disable_follow_user_push_notification || false,
-                        disableViewUser:
-                            userPreferences?.disable_view_user_push_notification || false,
+                            preferences?.disable_follow_user_push_notification || false,
+                        disableViewUser: preferences?.disable_view_user_push_notification || false,
                     },
                 },
             },
