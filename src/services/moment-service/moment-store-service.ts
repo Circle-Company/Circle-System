@@ -1,7 +1,6 @@
-import SecurityToolKit from "libs/security-toolkit/src"
 import { swipeEngineApi } from "../../apis/swipe-engine"
 import CONFIG from "../../config"
-import { InternalServerError, ValidationError } from "../../errors"
+import { InternalServerError } from "../../errors"
 import { Tag } from "../../helpers/tag"
 import Moment from "../../models/moments/moment-model"
 import Metadata from "../../models/moments/moment_metadata-model.js"
@@ -14,6 +13,7 @@ import { upload_image_AWS_S3 } from "../../utils/image/upload"
 import { StoreNewMomentsProps } from "./types"
 
 export async function store_new_moment({ user_id, moment }: StoreNewMomentsProps) {
+    console.log({ user_id, moment })
     let midia_base64
     let fullhd_aws_s3_url, nhd_aws_s3_url
 
@@ -47,21 +47,9 @@ export async function store_new_moment({ user_id, moment }: StoreNewMomentsProps
         fileName: "nhd_" + moment.metadata.file_name,
     })
 
-    const sanitization = new SecurityToolKit().sanitizerMethods.sanitizeSQLInjection(
-        moment.description
-    )
-
-    if (sanitization.isDangerous) {
-        throw new ValidationError({
-            message:
-                "Characters that are considered malicious have been identified in the description.",
-            action: 'Please remove characters like "]})*&',
-        })
-    }
-
     const new_moment = await Moment.create({
         user_id: user_id,
-        description: sanitization.sanitized,
+        description: moment.description,
         visible: true,
         blocked: false,
     })

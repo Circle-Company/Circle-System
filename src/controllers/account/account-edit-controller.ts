@@ -4,7 +4,6 @@ import { ValidationError } from "../../errors"
 import { ContainSpecialCharacters } from "../../helpers/contain-special-characters"
 import { isValidCoordinate } from "../../helpers/coordinate-regex"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
-import Security from "../../libs/security-toolkit/src/index"
 import Coordinate from "../../models/user/coordinate-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
 import User from "../../models/user/user-model"
@@ -15,19 +14,7 @@ import { upload_image_AWS_S3 } from "../../utils/image/upload"
 export async function edit_user_description(req: Request, res: Response) {
     const { user_id, description } = req.body
 
-    const sanitization = new Security().sanitizerMethods.sanitizeSQLInjection(description)
-
-    if (sanitization.isDangerous) {
-        res.status(400).send(
-            new ValidationError({
-                message:
-                    "Characters that are considered malicious have been identified in the description.",
-                action: 'Please remove characters like "]})*&',
-            })
-        )
-    }
-
-    if (sanitization.sanitized.length < 4) {
+    if (description.length < 4) {
         res.status(400).send(
             new ValidationError({
                 message: "The user description must contain at least 4 characters",
@@ -37,7 +24,7 @@ export async function edit_user_description(req: Request, res: Response) {
     } else {
         try {
             await User.update(
-                { description: sanitization.sanitized },
+                { description: description },
                 {
                     where: { id: user_id },
                 }
@@ -58,28 +45,14 @@ export async function edit_user_description(req: Request, res: Response) {
 export async function edit_user_name(req: Request, res: Response) {
     const { user_id, name } = req.body
 
-    const sanitization = new Security().sanitizerMethods.sanitizeSQLInjection(name)
-
-    if (sanitization.isDangerous) {
-        res.status(400).send(
-            new ValidationError({
-                message:
-                    "Characters that are considered malicious have been identified in the user name.",
-                action: 'Please remove characters like "]})*&',
-            })
-        )
-    }
-
-    if (sanitization.sanitized.length < 4) {
+    if (name.length < 4) {
         res.status(400).send(
             new ValidationError({
                 message: "The user name must contain at least 4 characters",
                 action: "try editing the password",
             })
         )
-    } else if (
-        await ContainSpecialCharacters({ text: sanitization.sanitized, allow_space_point: false })
-    ) {
+    } else if (await ContainSpecialCharacters({ text: name, allow_space_point: false })) {
         res.status(400).send(
             new ValidationError({
                 message: "your name cannot contain special characters",
@@ -89,7 +62,7 @@ export async function edit_user_name(req: Request, res: Response) {
     } else {
         try {
             await User.update(
-                { name: sanitization.sanitized },
+                { name: name },
                 {
                     where: { id: user_id },
                 }

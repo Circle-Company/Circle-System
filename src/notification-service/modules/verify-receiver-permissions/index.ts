@@ -1,4 +1,4 @@
-import Preference from "../../../models/preference/preference-model.js"
+import Preference from "../../../models/preferences/preference-model.js"
 import { NotificationProps } from "../../types.js"
 
 type User = {

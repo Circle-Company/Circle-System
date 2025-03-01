@@ -10,7 +10,6 @@ import {
     UnlikeCommentProps,
 } from "./types"
 
-import SecurityToolKit from "libs/security-toolkit/src"
 import { Notification } from "../../helpers/notification"
 import { Relation } from "../../helpers/relation"
 import Comment from "../../models/comments/comment-model.js"
@@ -146,12 +145,11 @@ export async function profile_click_moment({ moment_id, user_id }) {
 }
 export async function comment_on_moment({ moment_id, content, user_id }: CommentOnMomentProps) {
     try {
-        const sanitization = new SecurityToolKit().sanitizerMethods.sanitizeSQLInjection(content)
         // @ts-ignore
         const comment = await Comment.create({
             user_id,
             moment_id,
-            content: sanitization.sanitized,
+            content,
             parent_comment_id: null,
         })
         // @ts-ignore
@@ -179,12 +177,11 @@ export async function reply_comment_on_moment({
     user_id,
 }: ReplyCommentOnMomentProps) {
     try {
-        const sanitization = new SecurityToolKit().sanitizerMethods.sanitizeSQLInjection(content)
         // @ts-ignore
         const comment = await Comment.create({
             user_id,
             moment_id,
-            content: sanitization.sanitized,
+            content,
             parent_comment_id,
         })
         // @ts-ignore
