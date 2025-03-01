@@ -12,9 +12,9 @@ jobs:
         steps:
             - name: Checkout Source
               uses: actions/checkout@v3
-
             - name: Login to Docker Hub
               run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
             - name: Build Docker Image with Secrets
               run: |
                   docker buildx build \
@@ -68,10 +68,11 @@ jobs:
                     --build-arg FIREBASE_AUTH_PROVIDER_CERT_URL=${{ vars.FIREBASE_AUTH_PROVIDER_CERT_URL }} \
                     --build-arg FIREBASE_CLIENT_CERT_URL=${{ secrets.FIREBASE_CLIENT_CERT_URL }} \
                     --build-arg FIREBASE_UNIVERSE_DOMAIN=${{ secrets.FIREBASE_UNIVERSE_DOMAIN }} \
-                    -t ***/circle-system:latest \
                     --platform linux/amd64 \
+                    --tag ***/circle-system:latest \
                     --push \
                     .
+
             - name: Publish Image to Docker Hub
               run: docker push tiagosavioli/circle-system:latest
 
