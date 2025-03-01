@@ -1,4 +1,4 @@
-import SecurityToolKit from "libs/security-toolkit/src"
+import SecurityToolKit from "libs/security-tool/src"
 import { InternalServerError, ValidationError } from "../../errors"
 import Memory from "../../models/memories/memory-model"
 import MemoryMoment from "../../models/memories/memory_moments-model"

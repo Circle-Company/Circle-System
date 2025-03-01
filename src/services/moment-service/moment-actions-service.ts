@@ -10,7 +10,7 @@ import {
     UnlikeCommentProps,
 } from "./types"
 
-import SecurityToolKit from "libs/security-toolkit/src"
+import SecurityToolKit from "libs/security-tool/src"
 import { Notification } from "../../helpers/notification"
 import { Relation } from "../../helpers/relation"
 import Comment from "../../models/comments/comment-model.js"

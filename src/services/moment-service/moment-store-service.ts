@@ -1,4 +1,4 @@
-import SecurityToolKit from "libs/security-toolkit/src"
+import SecurityToolKit from "libs/security-tool/src"
 import { swipeEngineApi } from "../../apis/swipe-engine"
 import CONFIG from "../../config"
 import { InternalServerError, ValidationError } from "../../errors"
