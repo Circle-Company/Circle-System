@@ -29,7 +29,7 @@ jobs:
         environment: ENV_FILE
         steps:
             - name: Checkout Code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Save and Configure SSH Key
               run: |
