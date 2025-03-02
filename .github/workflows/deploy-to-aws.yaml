@@ -39,9 +39,11 @@ jobs:
             - name: Add EC2 to Known Hosts
               run: ssh-keyscan -H ${{ vars.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
-            - name: Deploy Container
+            - name: Conectando Via SSH
+              run: ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i circle-system-key.pem ubuntu@${{ vars.EC2_PUBLIC_IP }}
+
+            - name: Criando arquivo .env
               run: |
-                  ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i circle-system-key.pem ubuntu@${{ vars.EC2_PUBLIC_IP }} << 'EOF'
                   touch .env
                   echo PORT=${{ vars.PORT }} >> .env
                   echo NODE_ENV=${{ vars.NODE_ENV }} >> .env
@@ -86,8 +88,10 @@ jobs:
                   echo FIREBASE_CLIENT_ID=${{ secrets.FIREBASE_CLIENT_ID }} >> .env
                   echo FIREBASE_CLIENT_CERT_URL=${{ secrets.FIREBASE_CLIENT_CERT_URL }} >> .env
                   cat .env
-                  echo "✅ Arquivo .env Criado com Sucesso."
+                  echo "✅ Arquivo .env criado."
 
+            - name: Deploy Container
+              run: |
                   echo "Iniciando Deploy no EC2."
 
                   # Atualiza pacotes e reinicia o Docker
@@ -116,45 +120,45 @@ jobs:
                     --env-file .env \
                     -p 3000:3000 \
                     tiagosavioli/circle-system:latest
-
-                  # Criando configuração do Nginx
-                  cat <<EOT > nginx.conf
-                  worker_processes auto;
-
-                  events {
-                      worker_connections 1024;
-                  }
-
-                  http {
-                      upstream backend {
-                          server circle-system-01:3000;
-                      }
-
-                      server {
-                          listen 80;
-
-                          location / {
-                              proxy_pass http://circle-system-01:3000;
-                              proxy_http_version 1.1;
-                              proxy_set_header Upgrade \$http_upgrade;
-                              proxy_set_header Connection 'upgrade';
-                              proxy_set_header Host \$host;
-                              proxy_cache_bypass \$http_upgrade;
-                          }
-                      }
-                  }
-                  EOT
-
                   echo "✅ Circle System Rodando."
+            - name: Criando configuração Nginx
+              run: |
+                  # Criando configuração do Nginx
+                     cat <<EOT > nginx.conf
+                     worker_processes auto;
 
-            - name: Rodar Container NGINX
+                     events {
+                         worker_connections 1024;
+                     }
+
+                     http {
+                         upstream backend {
+                             server circle-system-01:3000;
+                         }
+
+                         server {
+                             listen 80;
+
+                             location / {
+                                 proxy_pass http://circle-system-01:3000;
+                                 proxy_http_version 1.1;
+                                 proxy_set_header Upgrade \$http_upgrade;
+                                 proxy_set_header Connection 'upgrade';
+                                 proxy_set_header Host \$host;
+                                 proxy_cache_bypass \$http_upgrade;
+                             }
+                         }
+                     }
+                     EOT      
+                   echo "✅ Nginx configurado."
+            - name: Rodar Container Nginx
               run: |
                   docker run -d --name nginx \
-                    --env-file /home/ubuntu/app/.env \
+                    --env-file .env \
                     --restart unless-stopped \
                     --network circle_network \
                     -p 80:80 \
                     -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro \
                     nginx:latest
 
-                  echo "✅ NGINX Rodando."
+                  echo "✅ Nginx Rodando."
