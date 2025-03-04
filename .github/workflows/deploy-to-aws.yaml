@@ -119,8 +119,10 @@ jobs:
                     --network circle_network \
                     --env-file .env \
                     -p 3000:3000 \
+                    -v $(pwd)/.env:/app/.env \
                     tiagosavioli/circle-system:latest
                   echo "✅ Circle System Rodando."
+
             - name: Criando configuração Nginx
               run: |
                   # Criando configuração do Nginx

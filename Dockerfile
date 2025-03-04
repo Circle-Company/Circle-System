@@ -11,6 +11,7 @@ RUN npm install
 RUN npm uninstall sharp
 RUN npm install --platform=linux --arch=x64 sharp
 RUN npm install body-parser
+COPY .env /app/.env
 COPY . .
 
 RUN npm run build
