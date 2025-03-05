@@ -2,11 +2,9 @@ export class Coordinates {
     constructor(public latitude, public longitude) {}
 }
 
-export function haversineDistance(coord1: Coordinates, coord2: Coordinates): number {
-    if (coord1.latitude == null || coord1.longitude == null)
-        throw new Error("coord1 can not be null")
-    else if (coord2.latitude == null || coord2.longitude == null)
-        throw new Error("coord2 can not be null")
+export function haversineDistance(coord1: Coordinates, coord2: Coordinates): number | null {
+    if (coord1.latitude == null || coord1.longitude == null) return null
+    else if (coord2.latitude == null || coord2.longitude == null) return null
     else {
         const R = 6371 // Raio médio da Terra em quilômetros
         const dLat = toRadians(coord2.latitude - coord1.latitude)
