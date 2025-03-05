@@ -36,10 +36,6 @@ const MOMENTS_PREFIX_V2 = RP.API_VERISON + RP.MOMENTS
 const NOTIFICATION_PREFIX = RP.API_VERISON + RP.NOTIFICATION
 const PREFERENCES_PREFIX = RP.API_VERISON + RP.PREFERENCES
 
-if (config.RUN_SCRIPTS_MODE) RunScripts()
-
-async function RunScripts() {}
-
 const app = express()
 
 app.use(bodyParser.urlencoded({ extended: false }))
