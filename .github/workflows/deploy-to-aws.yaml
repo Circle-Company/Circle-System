@@ -44,6 +44,7 @@ jobs:
 
             - name: Criando arquivo .env
               run: |
+                  rm -f .env
                   touch .env
                   echo PORT=${{ vars.PORT }} >> .env
                   echo NODE_ENV=${{ vars.NODE_ENV }} >> .env
@@ -87,7 +88,6 @@ jobs:
                   echo FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }} >> .env
                   echo FIREBASE_CLIENT_ID=${{ secrets.FIREBASE_CLIENT_ID }} >> .env
                   echo FIREBASE_CLIENT_CERT_URL=${{ secrets.FIREBASE_CLIENT_CERT_URL }} >> .env
-                  cat .env
                   echo "✅ Arquivo .env criado."
 
             - name: Deploy Container
