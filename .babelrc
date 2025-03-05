@@ -9,7 +9,8 @@
                     "@/controllers": "./src/controllers",
                     "@/models": "./src/models",
                     "@/routes": "./src/routes",
-                    "@/libs": "./src/libs"
+                    "@/libs": "./src/libs",
+                    "@/swipe-engine": "./src/swipe-engine"
                 }
             }
         ]

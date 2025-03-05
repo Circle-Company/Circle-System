@@ -1,0 +1,72 @@
+{
+        "length": 2,
+        "period": 86400,
+        "data": [
+            {
+                "id": 1,
+                "user_id": 10,
+                "tags": [
+                    {
+                        "id": 1,
+                        "name": "cars"
+                    },
+                    {
+                        "id": 1,
+                        "name": "lamborghini"
+                    },
+                    {
+                        "id": 1,
+                        "name": "race"
+                    }
+                ],
+                "duration": 0,
+                "type": "IMAGE",
+                "language": "pt-br",
+                "interaction": {
+                    "like": false,
+                    "share": false,
+                    "click_into_moment": true,
+                    "watch_time": 1291,
+                    "click_profile": false,
+                    "comment": false,
+                    "like_comment": true,
+                    "pass_to_next": false,
+                    "show_less_often": false,
+                    "report": false
+                }
+            },
+            {
+                "id": 1,
+                "user_id": 5,
+                "tags": [
+                    {
+                        "id": 1,
+                        "name": "cars"
+                    },
+                    {
+                        "id": 1,
+                        "name": "lamborghini"
+                    },
+                    {
+                        "id": 1,
+                        "name": "race"
+                    }
+                ],
+                "duration": 13113,
+                "type": "VIDEO",
+                "language": "pt-br",
+                "interaction": {
+                    "like": true,
+                    "share": false,
+                    "click_into_moment": true,
+                    "watch_time": 1291,
+                    "click_profile": false,
+                    "comment": false,
+                    "like_comment": true,
+                    "pass_to_next": false,
+                    "show_less_often": false,
+                    "report": false    
+                }
+            }
+        ]
+}

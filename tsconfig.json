@@ -28,7 +28,8 @@
             "@/controllers/*": ["controllers/*"],
             "@/models/*": ["models/*"],
             "@/routes/*": ["routes/*"],
-            "@/libs/*": ["libs/*"]
+            "@/libs/*": ["libs/*"],
+            "@/swipe-engine/*": ["swipe-engine/*"]
         }
     }
 }

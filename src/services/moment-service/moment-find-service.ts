@@ -1,5 +1,5 @@
+import { SwipeEngine } from "@/swipe-engine/index"
 import { Op } from "sequelize"
-import { swipeEngineApi } from "../../apis/swipe-engine"
 import { InternalServerError, UnauthorizedError } from "../../errors"
 import { populateMoment } from "../../helpers/populate-moments"
 import Comment from "../../models/comments/comment-model.js"
@@ -29,43 +29,83 @@ export async function find_user_feed_moments({
     user_id,
 }: FindUserFeedMomentsProps) {
     try {
-        return await swipeEngineApi
-            .post("/moments/get/feed", { interaction_queue: { ...interaction_queue, user_id } })
-            .then(async function (response) {
-                return await Promise.all(
-                    response.data.map(async (moment_id) => {
-                        const moment_with_midia: MomentProps = await populateMoment({
-                            moment_id,
-                            statistic: true,
-                            stats: false,
-                            metadata: false,
-                            midia: true,
-                        })
+        const response: any = await SwipeEngine.getMoments({
+            interaction_queue: { ...interaction_queue, user_id },
+        })
 
-                        const moment_user_id = await Moment.findOne({
-                            where: { id: moment_with_midia.id },
-                            attributes: ["user_id"],
-                        })
+        return await Promise.all(
+            response.map(async (moment_id) => {
+                const moment_with_midia: MomentProps = await populateMoment({
+                    moment_id,
+                    statistic: true,
+                    stats: false,
+                    metadata: false,
+                    midia: true,
+                })
 
-                        if (!moment_user_id)
-                            throw new InternalServerError({
-                                message: "Error to find moment owner.",
-                            })
+                const moment_user_id = await Moment.findOne({
+                    where: { id: moment_with_midia.id },
+                    attributes: ["user_id"],
+                })
 
-                        const moment_user_followed = await Follow.findOne({
-                            where: {
-                                user_id,
-                                followed_user_id: moment_user_id.user_id,
-                            },
+                if (!moment_user_id)
+                    throw new InternalServerError({
+                        message: "Error to find moment owner.",
+                    })
+
+                const moment_user_followed = await Follow.findOne({
+                    where: {
+                        user_id,
+                        followed_user_id: moment_user_id.user_id,
+                    },
+                })
+                const moment_liked = await Like.findOne({
+                    where: {
+                        user_id,
+                        liked_moment_id: moment_id,
+                    },
+                })
+                const moment_user = (await User.findOne({
+                    where: { id: moment_user_id.user_id },
+                    attributes: ["id", "username", "verifyed"],
+                    include: [
+                        {
+                            model: ProfilePicture,
+                            as: "profile_pictures",
+                            attributes: ["fullhd_resolution", "tiny_resolution"],
+                        },
+                    ],
+                })) as UserType
+
+                // @ts-ignore
+                const { count, rows: comments } = await Comment.findAndCountAll({
+                    where: { moment_id: moment_with_midia.id },
+                    attributes: ["id", "content", "created_at", "user_id"],
+                })
+
+                const comments_with_likes = await Promise.all(
+                    comments.map(async (comment: any) => {
+                        // @ts-ignore
+                        const statistic = await CommentStatistic.findOne({
+                            where: { comment_id: comment.id },
+                            attributes: ["total_likes_num"],
                         })
-                        const moment_liked = await Like.findOne({
-                            where: {
-                                user_id,
-                                liked_moment_id: moment_id,
-                            },
-                        })
-                        const moment_user = (await User.findOne({
-                            where: { id: moment_user_id.user_id },
+                        return {
+                            ...comment.dataValues,
+                            statistics: statistic,
+                        }
+                    })
+                )
+
+                // Ordenar o array de comentários com base no número de likes (em ordem decrescente)
+                const sortedComments = comments_with_likes
+                    .sort((a, b) => b.statistics.total_likes_num - a.statistics.total_likes_num)
+                    .slice(0, 2)
+
+                const returnsComments = await Promise.all(
+                    sortedComments.map(async (comment: any) => {
+                        const user = (await User.findOne({
+                            where: { id: comment.user_id },
                             attributes: ["id", "username", "verifyed"],
                             include: [
                                 {
@@ -76,96 +116,48 @@ export async function find_user_feed_moments({
                             ],
                         })) as UserType
 
-                        // @ts-ignore
-                        const { count, rows: comments } = await Comment.findAndCountAll({
-                            where: { moment_id: moment_with_midia.id },
-                            attributes: ["id", "content", "created_at", "user_id"],
-                        })
-
-                        const comments_with_likes = await Promise.all(
-                            comments.map(async (comment: any) => {
-                                // @ts-ignore
-                                const statistic = await CommentStatistic.findOne({
-                                    where: { comment_id: comment.id },
-                                    attributes: ["total_likes_num"],
-                                })
-                                return {
-                                    ...comment.dataValues,
-                                    statistics: statistic,
-                                }
+                        if (!user)
+                            throw new InternalServerError({
+                                message: "Error to find comment owner.",
                             })
-                        )
 
-                        // Ordenar o array de comentários com base no número de likes (em ordem decrescente)
-                        const sortedComments = comments_with_likes
-                            .sort(
-                                (a, b) =>
-                                    b.statistics.total_likes_num - a.statistics.total_likes_num
-                            )
-                            .slice(0, 2)
-
-                        const returnsComments = await Promise.all(
-                            sortedComments.map(async (comment: any) => {
-                                const user = (await User.findOne({
-                                    where: { id: comment.user_id },
-                                    attributes: ["id", "username", "verifyed"],
-                                    include: [
-                                        {
-                                            model: ProfilePicture,
-                                            as: "profile_pictures",
-                                            attributes: ["fullhd_resolution", "tiny_resolution"],
-                                        },
-                                    ],
-                                })) as UserType
-
-                                if (!user)
-                                    throw new InternalServerError({
-                                        message: "Error to find comment owner.",
-                                    })
-
-                                delete comment["user_id"]
-
-                                return {
-                                    ...comment,
-                                    user: {
-                                        id: user.id,
-                                        username: user.username,
-                                        verifyed: user.verifyed,
-                                        profile_picture: {
-                                            small_resolution:
-                                                user.profile_pictures.fullhd_resolution,
-                                            tiny_resolution: user.profile_pictures.tiny_resolution,
-                                        },
-                                    },
-                                }
-                            })
-                        )
+                        delete comment["user_id"]
 
                         return {
-                            ...moment_with_midia,
+                            ...comment,
                             user: {
-                                id: moment_user.id,
-                                username: moment_user.username,
-                                verifyed: moment_user.verifyed,
+                                id: user.id,
+                                username: user.username,
+                                verifyed: user.verifyed,
                                 profile_picture: {
-                                    small_resolution:
-                                        moment_user.profile_pictures.fullhd_resolution,
-                                    tiny_resolution: moment_user.profile_pictures.tiny_resolution,
+                                    small_resolution: user.profile_pictures.fullhd_resolution,
+                                    tiny_resolution: user.profile_pictures.tiny_resolution,
                                 },
-                                you_follow: Boolean(moment_user_followed),
                             },
-                            comments: {
-                                count,
-                                comments: returnsComments,
-                            },
-                            is_liked: Boolean(moment_liked),
                         }
                     })
                 )
+
+                return {
+                    ...moment_with_midia,
+                    user: {
+                        id: moment_user.id,
+                        username: moment_user.username,
+                        verifyed: moment_user.verifyed,
+                        profile_picture: {
+                            small_resolution: moment_user.profile_pictures.fullhd_resolution,
+                            tiny_resolution: moment_user.profile_pictures.tiny_resolution,
+                        },
+                        you_follow: Boolean(moment_user_followed),
+                    },
+                    comments: {
+                        count,
+                        comments: returnsComments,
+                    },
+                    is_liked: Boolean(moment_liked),
+                }
             })
-            .catch(function (error) {
-                console.log(error)
-            })
+        )
     } catch (err) {
         throw new InternalServerError({
             message: "error when searching for moments in swipe-engine-api",
