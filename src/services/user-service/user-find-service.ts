@@ -1,4 +1,3 @@
-import { WTF } from "../../WTF"
 import { InternalServerError, ValidationError } from "../../errors"
 import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 import { Relation } from "../../helpers/relation"
@@ -8,6 +7,7 @@ import Statistic from "../../models/user/statistic-model"
 import User from "../../models/user/user-model"
 import { TriggerNotification } from "../../notification-service"
 import { SearchEngine } from "../../search_engine"
+import { WTF } from "../../who-to-follow"
 
 import { usersRankerAlgorithm } from "../../algorithms/users-ranker"
 import {
