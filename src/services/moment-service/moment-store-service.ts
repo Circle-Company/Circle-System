@@ -122,7 +122,7 @@ export async function store_moment_interaction({
                 moment_owner_id: moment.user_id,
             })
             .then(function (response) {
-                return response.data
+                return response
             })
             .catch(function (error) {
                 console.log(error)
