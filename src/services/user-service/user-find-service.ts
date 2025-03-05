@@ -81,7 +81,7 @@ export async function find_user_by_username({ user_id, username }: FindUserByUse
 }
 
 export async function find_user_by_pk({ user_id, user_pk }: { user_id: bigint; user_pk: string }) {
-    const user = await User.findOne({ where: { id: BigInt(user_pk) } })
+    const user = await User.findOne({ where: { id: user_pk } })
     if (!user) throw new InternalServerError({ message: "Can't possible find this user" })
 
     const user_followed = await Follow.findOne({
