@@ -134,14 +134,12 @@ export async function find_user_memories({ user_id, page, pageSize }: FindUserMe
             offset,
         })
         const totalPages = Math.ceil(count / pageSize)
-
         const userStatistic = await UserStatistic.findOne({
             where: { user_id: user_id.toString() },
             attributes: ["total_memories_num"],
+        }).catch((err) => {
+            throw new InternalServerError({ message: err })
         })
-
-        if (!userStatistic)
-            throw new InternalServerError({ message: "Can't possible find user statistic." })
 
         const transformedOutput = await Promise.all(
             memories.map(async (memory) => {
@@ -198,7 +196,7 @@ export async function find_user_memories({ user_id, page, pageSize }: FindUserMe
 
         return {
             memories: filteredOutput,
-            count: userStatistic.total_memories_num,
+            count: userStatistic?.total_memories_num,
             totalPages,
             currentPage: page,
             pageSize,
