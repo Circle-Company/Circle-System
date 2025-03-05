@@ -108,7 +108,7 @@ export async function find_memory_moments_id({ memory_id }: FindMemoryProps) {
 export async function find_memory({ memory_id }: FindMemoryProps) {
     try {
         const memory = await Memory.findOne({
-            where: { id: memory_id.toString() },
+            where: { id: memory_id },
             attributes: ["id", "title"],
         })
 
@@ -125,10 +125,9 @@ export async function find_memory({ memory_id }: FindMemoryProps) {
 
 export async function find_user_memories({ user_id, page, pageSize }: FindUserMemoriesProps) {
     try {
-        console.log()
         const offset = (page - 1) * pageSize
         const { count, rows: memories } = await Memory.findAndCountAll({
-            where: { user_id: user_id.toString() },
+            where: { user_id },
             order: [["updated_at", "DESC"]],
             limit: pageSize,
             offset,
