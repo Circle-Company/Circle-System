@@ -1,4 +1,4 @@
-import { swipeEngineApi } from "../../apis/swipe-engine"
+import { SwipeEngine } from "@/swipe-engine/index"
 import CONFIG from "../../config"
 import { InternalServerError, ValidationError } from "../../errors"
 import { Tag } from "../../helpers/tag"
@@ -114,13 +114,12 @@ export async function store_moment_interaction({
                 message: "This moment has already been previously deleted",
                 action: "Make sure this moment has visible to be interacted.",
             })
-        return await swipeEngineApi
-            .post("/moments/store/interaction", {
-                interaction,
-                user_id,
-                moment_id,
-                moment_owner_id: moment.user_id,
-            })
+        await SwipeEngine.storeMomentInteraction({
+            interaction,
+            user_id,
+            moment_id,
+            moment_owner_id: moment.user_id,
+        })
             .then(function (response) {
                 return response
             })
