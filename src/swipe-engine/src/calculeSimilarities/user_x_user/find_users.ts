@@ -4,9 +4,7 @@ import MomentInteraction from "@/models/moments/moment_interaction-model.js"
 
 export default async function findUsers() {
   // Obtenha os dados de interação dos momentos
-  const usersData = await MomentInteraction.findAll({
-    attributes: ['moment_id', 'user_id', 'positive_interaction_rate']
-});
+    //@ts-ignore
 
 // Encontre o número total de usuários e momentos únicos
 const moments = [...new Set(usersData.map(user => user.moment_id))];

@@ -14,7 +14,7 @@ export async function getFeedCandidates(userId: number) {
             created_at: {
                 [Op.between]: [startDate, endDate],
             },
-        },
+        } as any,
     })
 
     return recentPosts

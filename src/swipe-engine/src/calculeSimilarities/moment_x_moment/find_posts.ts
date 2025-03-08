@@ -4,8 +4,7 @@ import MomentTags from "@/models/moments/moment_tag-model.js"
 
 export default async function findPosts() {
     // Encontrar todos os momentos e suas tags
-    const posts = await Moment.findAll({ attributes: ['id'] })
-    const postTags = await Promise.all(posts.map(async (post) => {
+            //@ts-ignore
         const tags = await MomentTags.findAll({
             attributes: ['tag_id'],
             where: { moment_id: post.id }
