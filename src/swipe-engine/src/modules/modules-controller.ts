@@ -1,14 +1,12 @@
 //@ts-nocheck
 
 import MomentInteraction from "@/models/moments/moment_interaction-model.js"
+import MomentStatistic from "@/models/moments/moment_statistic-model.js"
 import MomentClick from "@/models/moments/profile_click-model.js"
 import MomentShare from "@/models/moments/share-model.js"
 import MomentSkip from "@/models/moments/skip-model.js"
 import MomentView from "@/models/moments/view-model.js"
-
-import MomentStatistic from "@/models/moments/moment_statistic-model.js"
 import UserStatistic from "@/models/user/statistic-model.js"
-
 import { AleatoryMomentFinder } from "./aleatory_moment_finder"
 import calculate_similarities from "./calculate_similarities"
 import cold_start_algorithm from "./cold_start"
