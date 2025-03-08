@@ -6,14 +6,15 @@
             {
                 "root": ["./src"],
                 "alias": {
-                    "@/controllers": "./src/controllers",
-                    "@/models": "./src/models",
-                    "@/routes": "./src/routes",
-                    "@/libs": "./src/libs",
-                    "@/math": "./src/math",
-                    "@/errors": "./src/errors",
-                    "@/swipe-engine": "./src/swipe-engine"
-                }
+                    "@controllers": "./src/controllers",
+                    "@models": "./src/models",
+                    "@routes": "./src/routes",
+                    "@libs": "./src/libs",
+                    "@math": "./src/math",
+                    "@errors": "./src/errors",
+                    "@swipe-engine": "./src/swipe-engine"
+                },
+                "extensions": [".ts", ".js"]
             }
         ]
     ]

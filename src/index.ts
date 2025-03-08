@@ -1,6 +1,7 @@
 const express = require("express")
 const bodyParser = require("body-parser")
 require("express-async-errors")
+import "module-alias/register"
 import config from "./config/index"
 import { RP } from "./config/routes_prefix"
 import "./database/index"

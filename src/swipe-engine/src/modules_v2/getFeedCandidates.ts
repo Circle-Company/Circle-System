@@ -1,4 +1,4 @@
-import MomentModel from "@/models/moments/moment-model"
+import MomentModel from "@models/moments/moment-model"
 import { Op } from "sequelize"
 
 export async function getFeedCandidates(userId: number) {

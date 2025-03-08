@@ -1,5 +1,5 @@
-import { cosineSimilarity } from "@/math/cossineSimilarity"
-import MomentInteraction from "@/models/moments/moment_interaction-model.js"
+import { cosineSimilarity } from "@math/cossineSimilarity"
+import MomentInteraction from "@models/moments/moment_interaction-model.js"
 
 type userDataProps = {
     moment_id: any

@@ -1,5 +1,5 @@
-import { InternalServerError } from "@/errors/index"
-import MomentInteraction from "@/models/moments/moment_interaction-model"
+import { InternalServerError } from "@errors/index"
+import MomentInteraction from "@models/moments/moment_interaction-model"
 import { Request, Response } from "express"
 import { Modules_Controller } from "./src/modules/modules-controller"
 import {

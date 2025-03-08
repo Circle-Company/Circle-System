@@ -1,5 +1,5 @@
-import Preference from "../models/preference/preference-model.js"
-import User from "../models/user/user-model.js"
+import Preference from "@models/preference/preference-model.js"
+import User from "@models/user/user-model.js"
 
 export async function CreateUsersPreferences() {
     const allUsers = await User.findAll({ attributes: ["id"] })

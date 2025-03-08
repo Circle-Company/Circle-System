@@ -1,6 +1,6 @@
 //@ts-nocheck
-import Moment from "@/models/moments/moment-model.js"
-import MomentInteraction from "@/models/moments/moment_interaction-model.js"
+import Moment from "@models/moments/moment-model.js"
+import MomentInteraction from "@models/moments/moment_interaction-model.js"
 import { Op } from "sequelize"
 
 export default async function cold_start_algorithm(): Promise<number[]> {

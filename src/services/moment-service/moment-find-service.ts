@@ -1,4 +1,4 @@
-import { SwipeEngine } from "@/swipe-engine/index"
+import { SwipeEngine } from "@swipe-engine/index"
 import { Op } from "sequelize"
 import { InternalServerError, UnauthorizedError } from "../../errors"
 import { populateMoment } from "../../helpers/populate-moments"

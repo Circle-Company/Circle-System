@@ -1,13 +1,13 @@
 //@ts-nocheck
-import Like from "@/models/moments/like-model"
-import Moment from "@/models/moments/moment-model"
-import Share from "@/models/moments/share-model.js"
-import Skip from "@/models/moments/skip-model.js"
-import View from "@/models/moments/view-model.js"
-import Block from "@/models/user/block-model.js"
-import Follow from "@/models/user/follow-model"
-import Relation from "@/models/user/relation-model"
-import Report from "@/models/user/report-model.js"
+import Like from "@models/moments/like-model"
+import Moment from "@models/moments/moment-model"
+import Share from "@models/moments/share-model.js"
+import Skip from "@models/moments/skip-model.js"
+import View from "@models/moments/view-model.js"
+import Block from "@models/user/block-model.js"
+import Follow from "@models/user/follow-model"
+import Relation from "@models/user/relation-model"
+import Report from "@models/user/report-model.js"
 
 type UserModerationLayerProps = {
     userId: number

@@ -1,5 +1,5 @@
 //@ts-nocheck
-import MomentInteraction from "@/models/moments/moment_interaction-model.js"
+import MomentInteraction from "@models/moments/moment_interaction-model.js"
 
 export async function InteractedMomentsIdsList({ user_id }: { user_id: number }) {
     const interactionsList = await MomentInteraction.findAll({

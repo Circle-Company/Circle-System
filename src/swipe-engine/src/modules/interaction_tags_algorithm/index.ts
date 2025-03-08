@@ -1,6 +1,6 @@
 //@ts-nocheck
-import MomentInteraction from "@/models/moments/moment_interaction-model.js"
-import MomentTag from "@/models/moments/moment_tag-model.js"
+import MomentInteraction from "@models/moments/moment_interaction-model.js"
+import MomentTag from "@models/moments/moment_tag-model.js"
 import { Op } from "sequelize"
 import SecurityLayer from "../security_layer"
 import { InteractionQueueProps } from "../types.js"

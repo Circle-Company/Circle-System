@@ -1,4 +1,4 @@
-import { SwipeEngine } from "@/swipe-engine/index"
+import { SwipeEngine } from "@swipe-engine/index"
 import CONFIG from "../../config"
 import { InternalServerError, ValidationError } from "../../errors"
 import { Tag } from "../../helpers/tag"

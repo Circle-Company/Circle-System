@@ -1,4 +1,4 @@
-import Moment from "@/models/moments/moment-model"
+import Moment from "@models/moments/moment-model"
 import { Op } from "sequelize"
 
 type AleatoryMomentFinderProps = {

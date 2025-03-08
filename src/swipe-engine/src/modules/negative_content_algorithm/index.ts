@@ -1,4 +1,4 @@
-import Interaction from "@/models/moments/moment_interaction-model.js"
+import Interaction from "@models/moments/moment_interaction-model.js"
 import { Op } from "sequelize"
 import { InteractionQueueProps } from "../types"
 
