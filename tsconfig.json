@@ -25,10 +25,13 @@
         "types": ["node", "jest"],
         "paths": {
             "*": ["*"], // Permite importar sem erros
-            "@/controllers/*": ["controllers/*"],
-            "@/models/*": ["models/*"],
-            "@/routes/*": ["routes/*"],
-            "@/libs/*": ["libs/*"]
+            "@controllers/*": ["controllers/*"],
+            "@models/*": ["models/*"],
+            "@routes/*": ["routes/*"],
+            "@libs/*": ["libs/*"],
+            "@math/*": ["math/*"],
+            "@errors/*": ["errors/*"],
+            "@swipe-engine/*": ["swipe-engine/*"]
         }
     }
 }

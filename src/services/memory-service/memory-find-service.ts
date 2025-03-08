@@ -108,7 +108,7 @@ export async function find_memory_moments_id({ memory_id }: FindMemoryProps) {
 export async function find_memory({ memory_id }: FindMemoryProps) {
     try {
         const memory = await Memory.findOne({
-            where: { id: memory_id.toString() },
+            where: { id: memory_id },
             attributes: ["id", "title"],
         })
 
@@ -125,23 +125,20 @@ export async function find_memory({ memory_id }: FindMemoryProps) {
 
 export async function find_user_memories({ user_id, page, pageSize }: FindUserMemoriesProps) {
     try {
-        console.log()
         const offset = (page - 1) * pageSize
         const { count, rows: memories } = await Memory.findAndCountAll({
-            where: { user_id: user_id.toString() },
+            where: { user_id },
             order: [["updated_at", "DESC"]],
             limit: pageSize,
             offset,
         })
         const totalPages = Math.ceil(count / pageSize)
-
         const userStatistic = await UserStatistic.findOne({
             where: { user_id: user_id.toString() },
             attributes: ["total_memories_num"],
+        }).catch((err) => {
+            throw new InternalServerError({ message: err })
         })
-
-        if (!userStatistic)
-            throw new InternalServerError({ message: "Can't possible find user statistic." })
 
         const transformedOutput = await Promise.all(
             memories.map(async (memory) => {
@@ -198,7 +195,7 @@ export async function find_user_memories({ user_id, page, pageSize }: FindUserMe
 
         return {
             memories: filteredOutput,
-            count: userStatistic.total_memories_num,
+            count: userStatistic?.total_memories_num,
             totalPages,
             currentPage: page,
             pageSize,

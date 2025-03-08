@@ -1,6 +1,7 @@
 const express = require("express")
 const bodyParser = require("body-parser")
 require("express-async-errors")
+import "module-alias/register"
 import config from "./config/index"
 import { RP } from "./config/routes_prefix"
 import "./database/index"
@@ -35,10 +36,6 @@ const MOMENT_PREFIX = RP.API_VERISON + RP.MOMENT
 const MOMENTS_PREFIX_V2 = RP.API_VERISON + RP.MOMENTS
 const NOTIFICATION_PREFIX = RP.API_VERISON + RP.NOTIFICATION
 const PREFERENCES_PREFIX = RP.API_VERISON + RP.PREFERENCES
-
-if (config.RUN_SCRIPTS_MODE) RunScripts()
-
-async function RunScripts() {}
 
 const app = express()
 
