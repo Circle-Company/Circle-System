@@ -29,6 +29,8 @@
             "@/models/*": ["models/*"],
             "@/routes/*": ["routes/*"],
             "@/libs/*": ["libs/*"],
+            "@/math/*": ["math/*"],
+            "@/errors/*": ["errors/*"],
             "@/swipe-engine/*": ["swipe-engine/*"]
         }
     }
