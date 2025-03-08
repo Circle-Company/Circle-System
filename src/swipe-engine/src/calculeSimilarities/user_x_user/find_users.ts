@@ -1,10 +1,18 @@
 import { cosineSimilarity } from "@/math/cossineSimilarity"
 import MomentInteraction from "@/models/moments/moment_interaction-model.js"
 
+type userDataProps = {
+    moment_id: any
+    user_id: any
+    positive_interaction_rate: number
+}
 
 export default async function findUsers() {
   // Obtenha os dados de interação dos momentos
     //@ts-ignore
+    const usersData: userDataProps[] = await MomentInteraction.findAll({
+        attributes: ["moment_id", "user_id", "positive_interaction_rate"],
+    })
 
 // Encontre o número total de usuários e momentos únicos
 const moments = [...new Set(usersData.map(user => user.moment_id))];
