@@ -1,5 +1,5 @@
-import sigmoid from "../math/sigmoid"
-const positiveInteractionWeights = require('../data/positive_action_weights.json')
+import { sigmoid } from "@/math/sigmoid"
+const positiveInteractionWeights = require("../data/positive_action_weights.json")
 const negativeInteractionWeights = require("../data/negative_action_weights.json")
 
 export async function positive_interaction_rate(processed_interactions : any) {

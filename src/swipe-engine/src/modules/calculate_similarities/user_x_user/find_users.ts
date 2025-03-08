@@ -1,5 +1,5 @@
+import { cosineSimilarity } from "@/math/cossineSimilarity"
 import MomentInteraction from "@/models/moments/moment_interaction-model.js"
-import { cosineSimilarity } from "../../../math/cossineSimilarity"
 
 export default async function findUsers() {
     // Obtenha os dados de interação dos momentos

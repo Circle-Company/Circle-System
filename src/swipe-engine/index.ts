@@ -1,6 +1,6 @@
+import { InternalServerError } from "@/errors/index"
 import MomentInteraction from "@/models/moments/moment_interaction-model"
 import { Request, Response } from "express"
-import { InternalServerError } from "./src/errors"
 import { Modules_Controller } from "./src/modules/modules-controller"
 import {
     calcule_one_negative_interaction_rate,

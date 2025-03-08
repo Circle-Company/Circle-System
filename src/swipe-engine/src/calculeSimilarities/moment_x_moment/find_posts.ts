@@ -1,6 +1,6 @@
-import Moment from '../../../models/moments/moment-model.js'
-import MomentTags from '../../../models/moments/moment_tag-model.js'
-import { cosineSimilarity } from '../../../math/cossineSimilarity'
+import { cosineSimilarity } from "@/math/cossineSimilarity"
+import Moment from "@/models/moments/moment-model"
+import MomentTags from "@/models/moments/moment_tag-model.js"
 
 export default async function findPosts() {
     // Encontrar todos os momentos e suas tags
