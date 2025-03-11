@@ -15,9 +15,12 @@ export async function jwtEncoder({
 }: //ipAddress,
 JwtEncoderProps): Promise<string> {
     // Obtendo o usuário do banco de dados
-    const user = await UserModel.findByPk(BigInt(userId))
+    const user = await UserModel.findByPk(userId)
     if (!user) {
-        throw new Error("User not found")
+        throw new ValidationError({
+            message: "User not found",
+            action: "Check if User is passed correctly",
+        })
     }
     if (user.username !== username)
         throw new ValidationError({
@@ -49,7 +52,7 @@ JwtEncoderProps): Promise<string> {
     // Configurações de assinatura do token
     const options: jwt.SignOptions = {
         algorithm: "HS256", // Algoritmo de assinatura seguro
-        expiresIn: CONFIG.JWT_EXPIRES, // Tempo de expiração do token
+        expiresIn: Number(CONFIG.JWT_EXPIRES), // Tempo de expiração do token
         issuer: CONFIG.JWT_ISSUER, // Emissor do token
         audience: CONFIG.JWT_AUDIENCE, // Audiência do token
     }
