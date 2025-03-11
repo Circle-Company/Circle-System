@@ -23,7 +23,7 @@ export async function find_user_by_pk(req: Request, res: Response) {
 
 export async function find_session_user_by_pk(req: Request, res: Response) {
     const { user_pk } = req.params
-    const user = await UserService.UserFind.FindSessionByPk({ user_pk: BigInt(user_pk) })
+    const user = await UserService.UserFind.FindSessionByPk({ user_pk })
     return res.status(200).json(user)
 }
 
