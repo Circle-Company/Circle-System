@@ -275,14 +275,14 @@ export async function recommender_users({ user_id }: RecommenderUsersProps) {
     return await WTF({ user_id })
 }
 
-export async function find_session_user_by_pk({ user_pk }: { user_pk: bigint }) {
+export async function find_session_user_by_pk({ user_pk }: { user_pk: string }) {
     const user = await User.findOne({ where: { id: user_pk } })
 
     if (!user) throw new InternalServerError({ message: "Can't possible find this user" })
 
     const profile_picture = await ProfilePicture.findOne({
         attributes: ["fullhd_resolution", "tiny_resolution"],
-        where: { user_id: BigInt(user.id) },
+        where: { user_id: user.id },
     })
 
     if (!profile_picture)
