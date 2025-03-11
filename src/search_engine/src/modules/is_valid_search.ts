@@ -1,5 +1,6 @@
+import rules from "../database/rules.json"
+
 export function isValidSearch(search_term: string): { isValid: boolean; message?: string } {
-    const rules = require("../database/rules.json")
     try {
         // Verifica se o parâmetro é uma string
         if (typeof search_term !== "string") {
