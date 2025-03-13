@@ -58,7 +58,7 @@ export async function authenticate_user(req: Request, res: Response) {
         // Gera um novo token de acesso JWT
         const newAccessToken = await jwtEncoder({
             username: user.username,
-            userId: user.id,
+            userId: user.id.toString(),
         })
         if (!newAccessToken) throw new Error("Authoprization token is Missing.")
 

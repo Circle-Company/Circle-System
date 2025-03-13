@@ -81,7 +81,7 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
             }),
             jwtEncoder({
                 username: newUser.username,
-                userId: newUser.id,
+                userId: newUser.id.toString(),
             }),
         ])
 
