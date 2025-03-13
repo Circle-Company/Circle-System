@@ -39,10 +39,10 @@ jobs:
             - name: Add EC2 to Known Hosts
               run: ssh-keyscan -H ${{ vars.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
-            - name: Connectiong with SSH
+            - name: Connecting Using SSH
               run: ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i circle-system-key.pem ubuntu@${{ vars.EC2_PUBLIC_IP }}
 
-            - name: Creating .env file
+            - name: Creating .env File
               run: |
                   rm -f .env
                   touch .env
@@ -142,7 +142,7 @@ jobs:
                           listen 80;
 
                           location / {
-                              proxy_pass http://backend; # Alterado para usar o upstream corretamente
+                              proxy_pass http://backend;  
                               proxy_http_version 1.1;
                               proxy_set_header Upgrade \$http_upgrade;
                               proxy_set_header Connection 'upgrade';
