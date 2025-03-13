@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express"
-import jwt from "jsonwebtoken"
+import jwt from "jwt-simple"
 import CONFIG from "../config"
 import { UnauthorizedError } from "../errors"
 
@@ -34,24 +34,32 @@ export async function UserAuthenticationValidator(
         )
     }
 
-    // Verifica e decodifica o token JWT
-    jwt.verify(token, CONFIG.JWT_SECRET, (err: any, decoded: any) => {
-        if (err) {
+    try {
+        // Decodifica o token sem ignorar a verificação da assinatura
+        const decoded = jwt.decode(token, CONFIG.JWT_SECRET, false, "HS256")
+
+        // Verifica se o token está expirado
+        if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
             return next(
                 new UnauthorizedError({
-                    message: `Access denied: Token verification failed. Reason: ${err.message}.`,
-                    action: "Please provide a valid token or login again to obtain a new one.",
+                    message: "Access denied: Token has expired.",
+                    action: "Please login again to obtain a new token.",
                 })
             )
         }
 
         // Adiciona informações ao objeto 'req' após validação do token
-        if (decoded) {
-            req.user_id = decoded.sub // O 'sub' representa o 'userId'
-            req.username = decoded.username // Nome de usuário incluído no payload
-        }
+        req.user_id = decoded.sub // O 'sub' representa o 'userId'
+        req.username = decoded.username // Nome de usuário incluído no payload
 
         // Passa para o próximo middleware ou rota
         next()
-    })
+    } catch (err: any) {
+        return next(
+            new UnauthorizedError({
+                message: `Access denied: Token verification failed. Reason: ${err.message}.`,
+                action: "Please provide a valid token or login again to obtain a new one.",
+            })
+        )
+    }
 }

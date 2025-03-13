@@ -1,11 +1,11 @@
-import jwt from "jsonwebtoken"
+import jwt from "jwt-simple"
 import { ValidationError } from "../errors"
 import UserModel from "../models/user/user-model"
 import CONFIG from "./../config"
 
 type JwtEncoderProps = {
     username: string
-    userId: bigint
+    userId: string
     //ipAddress: string
 }
 
@@ -41,22 +41,15 @@ JwtEncoderProps): Promise<string> {
         })
     }
 */
-    // Definindo o payload de forma segura, incluindo apenas o necessário
     const payload = {
-        sub: String(userId), // Subject, geralmente o ID do usuário
+        sub: String(userId), // ID do usuário
         username: username, // Nome de usuário
-        //ip: ipAddress,
         iat: Math.floor(Date.now() / 1000), // Timestamp de emissão
+        exp: Math.floor(Date.now() / 1000) + Number(CONFIG.JWT_EXPIRES), // Expiração
+        iss: CONFIG.JWT_ISSUER, // Emissor
+        aud: CONFIG.JWT_AUDIENCE, // Audiência
     }
 
-    // Configurações de assinatura do token
-    const options: jwt.SignOptions = {
-        algorithm: "HS256", // Algoritmo de assinatura seguro
-        expiresIn: Number(CONFIG.JWT_EXPIRES), // Tempo de expiração do token
-        issuer: CONFIG.JWT_ISSUER, // Emissor do token
-        audience: CONFIG.JWT_AUDIENCE, // Audiência do token
-    }
-
-    // Geração do token com assinatura segura
-    return jwt.sign(payload, CONFIG.JWT_SECRET, options)
+    // Geração do token com assinatura segura usando HS256
+    return jwt.encode(payload, CONFIG.JWT_SECRET, "HS256")
 }
