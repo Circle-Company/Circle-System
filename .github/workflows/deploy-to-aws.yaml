@@ -153,14 +153,12 @@ jobs:
                   }
                   EOT      
                   echo "✅ Nginx configurado."
-
-            - name: Remove Old Nginx Container
+            - name: Run Nginx Container
               run: |
+                  # Remover container antigo se existir
                   docker stop nginx || true
                   docker rm -f nginx || true
 
-            - name: Rodar Container Nginx
-              run: |
                   # Criar rede Docker se não existir
                   if ! docker network inspect circle_network >/dev/null 2>&1; then
                       docker network create circle_network
