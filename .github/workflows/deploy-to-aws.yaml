@@ -39,10 +39,10 @@ jobs:
             - name: Add EC2 to Known Hosts
               run: ssh-keyscan -H ${{ vars.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
-            - name: Conectando Via SSH
+            - name: Connectiong with SSH
               run: ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i circle-system-key.pem ubuntu@${{ vars.EC2_PUBLIC_IP }}
 
-            - name: Criando arquivo .env
+            - name: Creating .env file
               run: |
                   rm -f .env
                   touch .env
@@ -123,7 +123,7 @@ jobs:
                     tiagosavioli/circle-system:latest
                   echo "✅ Circle System Rodando."
 
-            - name: Criando configuração Nginx
+            - name: Creating Nginx Settings
               run: |
                   # Criando configuração do Nginx
                   cat <<EOT > nginx.conf
@@ -153,12 +153,14 @@ jobs:
                   }
                   EOT      
                   echo "✅ Nginx configurado."
-            - name: Rodar Container Nginx
+
+            - name: Remove Old Nginx Container
               run: |
-                  # Remover container antigo se existir
                   docker stop nginx || true
                   docker rm -f nginx || true
 
+            - name: Rodar Container Nginx
+              run: |
                   # Criar rede Docker se não existir
                   if ! docker network inspect circle_network >/dev/null 2>&1; then
                       docker network create circle_network
@@ -176,3 +178,8 @@ jobs:
                     nginx:latest
 
                   echo "✅ Nginx Rodando."
+            - name: Reload Nginx
+              run: |
+                  docker ps -a | grep nginx | awk '{print $1}' | xargs docker rm -f
+                  docker image rm nginx:latest
+                  docker run -d --name nginx --restart unless-stopped --network circle_network -p 80:80 -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro nginx:latest
