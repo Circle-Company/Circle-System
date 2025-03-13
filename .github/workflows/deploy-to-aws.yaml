@@ -176,8 +176,3 @@ jobs:
                     nginx:latest
 
                   echo "✅ Nginx Rodando."
-            - name: Reload Nginx
-              run: |
-                  docker ps -a | grep nginx | awk '{print $1}' | xargs docker rm -f
-                  docker image rm nginx:latest
-                  docker run -d --name nginx --restart unless-stopped --network circle_network -p 80:80 -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro nginx:latest
