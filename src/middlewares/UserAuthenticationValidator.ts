@@ -9,8 +9,7 @@ export async function UserAuthenticationValidator(
     res: Response,
     next: NextFunction
 ): Promise<void> {
-    const authHeader: any = req.headers.authorization_token
-
+    const authHeader: any = req.headers.authorization
     // Verifica se o cabeçalho de autorização está presente
     if (!authHeader) {
         return next(
