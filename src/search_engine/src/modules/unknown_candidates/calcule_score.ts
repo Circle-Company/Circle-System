@@ -1,3 +1,5 @@
+import weights from "../../database/unknown_candidates_weights.json"
+
 interface UserObject {
     id: bigint
     username: string
@@ -16,12 +18,9 @@ interface UserObject {
         total_followers_num: number
     }
 }
-type SortCandidatesProps = {
-    candidates_with_interactions: UserObject[]
-}
+
 export function calcule_score({ candidates_with_interactions }: any) {
     return candidates_with_interactions.map((candidate: any) => {
-        const weights = require("../../database/unknown_candidates_weights.json")
         let totalScore = 0
 
         for (const criterion in weights) {

@@ -1,5 +1,7 @@
+import interactionWeights from "../../../data/positive_action_weights.json"
+
 type updateUserEmbeddingProps = {
-    userEmbedding: number[],
+    userEmbedding: number[]
     postVector: number[]
     interactionType: string
 }
@@ -10,15 +12,13 @@ export async function updateUserEmbedding({
     postVector,
     interactionType,
 }: updateUserEmbeddingProps) {
-    const interactionWeights = require("../../../data/positive_action_weights.json");
-    const weight = interactionWeights[interactionType]; // Obter o peso da interação
+    const weight = interactionWeights[interactionType] // Obter o peso da interação
     for (let i = 0; i < userEmbedding.length; i++) {
-        userEmbedding[i] =
-            userEmbedding[i] * (1 - weight) + postVector[i] * weight;
+        userEmbedding[i] = userEmbedding[i] * (1 - weight) + postVector[i] * weight
     }
-    return userEmbedding;
+    return userEmbedding
 }
 
 export async function getUserEmbedding(userId: number): Promise<number[]> {
-    return [];
+    return []
 }

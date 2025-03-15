@@ -1,3 +1,5 @@
+import weights from "./weights.json"
+
 export interface UserObject {
     [key: string]: any // Permite qualquer outra propriedade
     id: any
@@ -18,7 +20,6 @@ type SortCandidatesProps = {
 }
 export function calcule_score({ candidates }: SortCandidatesProps) {
     return candidates.map((candidate) => {
-        const weights = require("./weights.json")
         let totalScore = 0
 
         for (const criterion in weights) {

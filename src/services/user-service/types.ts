@@ -8,8 +8,8 @@ export type FindUserDataProps = {
 }
 
 export type UserSearchProps = {
-    username_to_search: string
-    user_id: bigint
+    userId: bigint
+    searchTerm: string
 }
 
 export type RecommenderUsersProps = {

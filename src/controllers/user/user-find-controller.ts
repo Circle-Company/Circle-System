@@ -65,12 +65,18 @@ export async function find_user_data(req: Request, res: Response, next: NextFunc
 }
 
 export async function search_user(req: Request, res: Response) {
-    const { username_to_search, user_id } = req.body
-    console.log({ username_to_search, user_id })
+    const { searchTerm } = req.body
+
+    // Verifica se user_id está presente
+    if (!req.user_id) {
+        throw new UnauthorizedError({
+            message: "User ID is missing. You must be authenticated to access this resource.",
+        })
+    }
 
     const search_result = await UserService.UserFind.SearchUser({
-        user_id: BigInt(user_id),
-        username_to_search,
+        searchTerm,
+        userId: BigInt(req.user_id),
     })
     res.status(200).json(search_result)
 }

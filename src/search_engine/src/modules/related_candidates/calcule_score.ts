@@ -1,3 +1,5 @@
+import weights from "../../database/related_candidates_weights.json"
+
 interface UserObject {
     id: bigint
     username: string
@@ -20,7 +22,6 @@ type SortCandidatesProps = {
 }
 export function calcule_score({ candidates_with_informations }: SortCandidatesProps) {
     return candidates_with_informations.map((candidate) => {
-        const weights = require("../../database/related_candidates_weights.json")
         let totalScore = candidate.weight
 
         for (const criterion in weights) {

@@ -1,5 +1,5 @@
+import Security from "../../../security-tool/src"
 import rules from "../database/rules.json"
-
 export function isValidSearch(search_term: string): { isValid: boolean; message?: string } {
     try {
         // Verifica se o parâmetro é uma string
@@ -23,22 +23,13 @@ export function isValidSearch(search_term: string): { isValid: boolean; message?
             }
         }
 
-        // Definindo uma lista de caracteres permitidos (somente letras, números e espaços)
-        const allowedCharactersRegex = /^[a-zA-Z0-9\s]+$/
-        if (!allowedCharactersRegex.test(search_term)) {
+        const sanitization = new Security().sanitizerMethods.sanitizeSQLInjection(search_term)
+
+        if (sanitization.isDangerous) {
             return {
                 isValid: false,
                 message:
-                    "Search term contains invalid characters. Only letters, numbers, and spaces are allowed.",
-            }
-        }
-
-        // Prevenção contra SQL Injection: Verificação de padrões comuns de injeção
-        const sqlInjectionRegex = /['"%;()<>]/ // Caracteres comuns usados em injeções SQL
-        if (sqlInjectionRegex.test(search_term)) {
-            return {
-                isValid: false,
-                message: "Search term contains forbidden characters (' \" % ; ( ) < >).",
+                    "Characters that are considered malicious have been identified in the SearchTerm.",
             }
         }
 

@@ -268,8 +268,8 @@ export async function find_user_data({ username, user_id }: FindUserDataProps) {
         }
     }
 }
-export async function search_user({ username_to_search, user_id }: UserSearchProps) {
-    return await SearchEngine({ search_term: username_to_search, user_id })
+export async function search_user({ searchTerm, userId }: UserSearchProps) {
+    return await SearchEngine({ searchTerm, userId })
 }
 export async function recommender_users({ user_id }: RecommenderUsersProps) {
     return await WTF({ user_id })

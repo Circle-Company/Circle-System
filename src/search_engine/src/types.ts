@@ -66,7 +66,31 @@ export type UserProps = {
     }
 }
 
+export type ReturnUserProps = {
+    id: bigint
+    username: string
+    verifyed: boolean
+    name: null | string
+    profile_picture: {
+        tiny_resolution: null | string
+    }
+    statistics: {
+        total_followers_num: number
+    }
+    you_follow: boolean
+}
+
 export type FindSearchCandidatesProps = {
     search_term: string
     user_id: bigint
+}
+
+export type SearchEngineProps = {
+    searchTerm: string
+    userId: bigint
+}
+
+export type SearchMixerProps = {
+    user_id: bigint
+    search_term: string
 }
