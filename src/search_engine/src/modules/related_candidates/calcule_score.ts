@@ -38,7 +38,7 @@ export function calcule_score({ candidates_with_informations }: SortCandidatesPr
             you_follow: candidate.you_follow,
             profile_picture: candidate.profile_picture,
             statistic: {
-                total_followers_num: candidate.statistic.total_followers_num,
+                total_followers_num: candidate?.statistic?.total_followers_num,
             },
             score: totalScore,
         }
