@@ -15,8 +15,8 @@ import { router as MomentRouter } from "./routes/moment-router"
 import { router as MomentRouterV2 } from "./routes/moment-router-v2"
 import { router as NotificationRouter } from "./routes/notification-router"
 import { router as PreferencesRouter } from "./routes/preferences-router"
+import { router as ReportRouter } from "./routes/report-router"
 import { router as UserRouter } from "./routes/user-router"
-
 declare module "express-serve-static-core" {
     interface Request {
         user_id?: bigint
@@ -36,16 +36,18 @@ const MOMENT_PREFIX = RP.API_VERISON + RP.MOMENT
 const MOMENTS_PREFIX_V2 = RP.API_VERISON + RP.MOMENTS
 const NOTIFICATION_PREFIX = RP.API_VERISON + RP.NOTIFICATION
 const PREFERENCES_PREFIX = RP.API_VERISON + RP.PREFERENCES
+const REPORT_PREFIX = RP.API_VERISON + RP.REPORT
 
 const app = express()
 
 app.use(bodyParser.urlencoded({ extended: false }))
+app.use(express.static("public"))
 app.use(bodyParser.json({ limit: "50mb" }))
 
 app.use(AUTH_PREFIX, AuthRouter)
 app.use(ADMIN_PREFIX, AdminRouter)
 app.use(MODERATOR_PREFIX, ModeratorRouter)
-
+app.use(REPORT_PREFIX, ReportRouter)
 app.use(USER_PREFIX, UserAuthenticationValidator, UserRouter)
 app.use(ACC_PREFIX, UserAuthenticationValidator, AccountRouter)
 app.use(MEMORY_PREFIX, UserAuthenticationValidator, MemoryRouter)
