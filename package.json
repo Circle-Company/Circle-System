@@ -81,6 +81,7 @@
         "@libs": "./build/libs",
         "@math": "./build/math",
         "@errors": "./build/errors",
-        "@swipe-engine": "./build/swipe-engine"
+        "@swipe-engine": "./build/swipe-engine",
+        "@pages": "./build/pages"
     }
 }

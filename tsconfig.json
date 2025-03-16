@@ -31,7 +31,8 @@
             "@libs/*": ["libs/*"],
             "@math/*": ["math/*"],
             "@errors/*": ["errors/*"],
-            "@swipe-engine/*": ["swipe-engine/*"]
+            "@swipe-engine/*": ["swipe-engine/*"],
+            "@pages/*": ["pages/*"]
         }
     }
 }

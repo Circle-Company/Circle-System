@@ -14,6 +14,7 @@ export const RP = {
     MEMORY: "/memory",
     MEMORIES: "/memories",
     PROFILE: "/profile",
+    REPORT: "/report",
     NOTIFICATION: "/notification",
     NOTIFICATIONS: "/notifications",
     PUSH_NOTIFICATION: "/push-notification",

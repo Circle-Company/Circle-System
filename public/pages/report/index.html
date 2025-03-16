@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Reportar Conteúdo</title>
+        <!-- Importando a fonte Poppins do Google Fonts -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            /* Reset básico */
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                font-family: "Poppins", sans-serif;
+                background: linear-gradient(135deg, #e0eafc, #cfdef3);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #333;
+            }
+            .container {
+                background: #fff;
+                padding: 2.5rem;
+                border-radius: 12px;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+                width: 90%;
+                max-width: 420px;
+                animation: fadeIn 0.6s ease-in-out;
+            }
+            h1 {
+                text-align: center;
+                margin-bottom: 1.5rem;
+                font-size: 1.75rem;
+                color: #333;
+            }
+            label {
+                display: block;
+                margin-bottom: 0.5rem;
+                font-weight: 600;
+                color: #555;
+            }
+            .input-container {
+                position: relative;
+                margin-bottom: 1.2rem;
+            }
+            /* Estilização do símbolo "@" */
+            .input-container .at-symbol {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 1.1rem;
+                color: #888;
+            }
+            input[type="text"],
+            select,
+            textarea {
+                width: 100%;
+                padding: 0.75rem 0.75rem;
+                padding-left: 2.8rem; /* espaço para o símbolo */
+                margin-bottom: 1rem;
+                border: 1px solid #ccc;
+                border-radius: 6px;
+                font-size: 1rem;
+                transition: border-color 0.3s, box-shadow 0.3s;
+            }
+            input[type="text"]:focus,
+            select:focus,
+            textarea:focus {
+                border-color: #007bff;
+                box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+                outline: none;
+            }
+            textarea {
+                resize: vertical;
+                min-height: 100px;
+            }
+            button {
+                width: 100%;
+                padding: 0.85rem;
+                border: none;
+                border-radius: 6px;
+                background-color: #007bff;
+                color: #fff;
+                font-size: 1.1rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background-color 0.3s, transform 0.3s;
+            }
+            button:hover {
+                background-color: #0056b3;
+                transform: translateY(-2px);
+            }
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Reportar Conta</h1>
+            <form id="reportForm">
+                <div class="input-container">
+                    <label for="username">Nome de Usuário:</label>
+                    <span class="at-symbol">@</span>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="@username de quem deseja reportar"
+                        required
+                    />
+                </div>
+                <div>
+                    <label for="reason">Motivo da Denúncia:</label>
+                    <select id="reason" name="reason" required>
+                        <option value="">Selecione um motivo</option>
+                        <option value="abuso" title="Comportamento abusivo ou agressivo">
+                            Abuso
+                        </option>
+                        <option value="violencia" title="Conteúdo que incita ou exibe violência">
+                            Violência
+                        </option>
+                        <option value="spam" title="Publicidades indesejadas ou repetitivas">
+                            Spam
+                        </option>
+                        <option
+                            value="discurso"
+                            title="Linguagem ofensiva, racista ou discriminatória"
+                        >
+                            Discurso de Ódio
+                        </option>
+                        <option
+                            value="informacao"
+                            title="Notícias ou informações falsas e enganosas"
+                        >
+                            Informação Falsa
+                        </option>
+                        <option
+                            value="conteudo-improprio"
+                            title="Material inapropriado para a plataforma"
+                        >
+                            Conteúdo Inapropriado
+                        </option>
+                        <option
+                            value="plagio"
+                            title="Uso não autorizado de conteúdo protegido por direitos autorais"
+                        >
+                            Plágio
+                        </option>
+                        <option value="outro" title="Outro motivo, não listado acima">Outro</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="details">Detalhes (opcional):</label>
+                    <textarea
+                        id="details"
+                        name="details"
+                        placeholder="Forneça mais informações, se desejar"
+                    ></textarea>
+                </div>
+                <button type="submit">Enviar Denúncia</button>
+            </form>
+        </div>
+
+        <script>
+            document
+                .getElementById("reportForm")
+                .addEventListener("submit", async function (event) {
+                    event.preventDefault()
+                    const username = document.getElementById("username").value
+                    const reason = document.getElementById("reason").value
+                    const details = document.getElementById("details").value
+                    const data = { username, reason, details }
+                    try {
+                        const response = await fetch("http://circlecompany.com.br/report/account", {
+                            // Substitua pela URL real da sua API
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(data),
+                        })
+                        if (!response.ok) throw new Error("Erro ao enviar denúncia")
+                        const result = await response.json()
+                        alert("Denúncia enviada com sucesso!")
+                        document.getElementById("reportForm").reset()
+                    } catch (error) {
+                        console.error("Erro:", error)
+                        alert("Ocorreu um erro ao enviar a denúncia.")
+                    }
+                })
+        </script>
+    </body>
+</html>

@@ -12,7 +12,8 @@
                     "@libs": "./src/libs",
                     "@math": "./src/math",
                     "@errors": "./src/errors",
-                    "@swipe-engine": "./src/swipe-engine"
+                    "@swipe-engine": "./src/swipe-engine",
+                    "@pages": "./src/pages"
                 },
                 "extensions": [".ts", ".js"]
             }
