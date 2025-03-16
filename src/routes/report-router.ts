@@ -1,6 +1,6 @@
-import { RP } from "config/routes_prefix"
-import { ReportController } from "controllers/report"
+import { ReportController } from "@controllers/report"
 import { Router } from "express"
+import { RP } from "../config/routes_prefix"
 
 const PAGE_PREFIX = "/page"
 
