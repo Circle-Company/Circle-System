@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express"
 import { InternalServerError, ValidationError } from "../../errors"
 import { DecryptPassword } from "../../helpers/encrypt-decrypt-password"
-import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 import { jwtEncoder } from "../../jwt/encode"
 
 import config from "../../config"
@@ -15,16 +14,13 @@ export async function authenticate_user(req: Request, res: Response) {
     const { username, password } = req.body
 
     try {
-        // Verifica se o usuário existe
-        const userExists = await FindUserAlreadyExists({ username })
-        if (!userExists) {
-            throw new ValidationError({ message: "This username does not exist" })
-        }
-
         // Busca o usuário no banco de dados
         const user = await User.findOne({ where: { username } })
         if (!user) {
-            throw new ValidationError({ message: "User not found" })
+            throw new ValidationError({
+                message: "Username not found in the system",
+                action: "Please, check if you typed username correctly.",
+            })
         }
 
         // Verifica se a senha está correta
@@ -33,7 +29,10 @@ export async function authenticate_user(req: Request, res: Response) {
             password2: user.encrypted_password,
         })
         if (!passwordMatches) {
-            throw new ValidationError({ message: "Incorrect password" })
+            throw new ValidationError({
+                message: "Incorrect Password.",
+                action: "Please, check if the password is correct.",
+            })
         }
 
         // Busca as informações do usuário relacionadas
@@ -60,7 +59,7 @@ export async function authenticate_user(req: Request, res: Response) {
             username: user.username,
             userId: user.id.toString(),
         })
-        if (!newAccessToken) throw new Error("Authoprization token is Missing.")
+        if (!newAccessToken) throw new Error("Authorization token is Missing.")
 
         // Monta a resposta com todas as informações do usuário
         return res.status(200).json({
@@ -118,11 +117,9 @@ export async function authenticate_user(req: Request, res: Response) {
             },
         })
     } catch (err: unknown) {
-        console.error("Error during user authentication:", err)
-
         // Verifica o tipo de erro e retorna a resposta apropriada
         if (err instanceof ValidationError) {
-            return res.status(400).json({ error: err.message })
+            throw new ValidationError({ message: err.message })
         } else {
             // Caso um erro interno inesperado ocorra
             throw new InternalServerError({
