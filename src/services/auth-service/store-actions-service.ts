@@ -63,7 +63,6 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
             // @ts-ignore
             Preference.create({
                 user_id: newUser.id,
-                app_timezone: -3,
                 app_language: "pt",
                 translation_language: "pt",
             }),
