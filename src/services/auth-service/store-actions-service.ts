@@ -16,10 +16,12 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
     if (username.length < 4 && username.length > 20) {
         throw new ValidationError({
             message: "Your username must contain 4 to 20 characters.",
+            action: "Please, add more charcters.",
         })
     } else if (username == password) {
         throw new ValidationError({
             message: "The username and password cannot be the same.",
+            action: "For your account securty, please try another password.",
         })
     } else if (await ContainSpecialCharacters({ text: username })) {
         throw new ValidationError({
@@ -28,6 +30,7 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
     } else if ((await FindUserAlreadyExists({ username: username.toLowerCase() })) === true) {
         throw new ValidationError({
             message: "This username already exists.",
+            action: "Please try another username.",
         })
     } else if (password.length < 4) {
         throw new ValidationError({
