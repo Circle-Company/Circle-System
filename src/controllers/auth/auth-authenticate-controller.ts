@@ -39,11 +39,11 @@ export async function authenticate_user(req: Request, res: Response) {
         const [statistic, profile_picture, notification_token, preferences] = await Promise.all([
             Statistic.findOne({
                 attributes: ["total_followers_num", "total_likes_num", "total_views_num"],
-                where: { user_id: user.id.toString() },
+                where: { user_id: user.id },
             }),
             ProfilePicture.findOne({
                 attributes: ["fullhd_resolution", "tiny_resolution"],
-                where: { user_id: user.id.toString() },
+                where: { user_id: user.id },
             }),
             // @ts-ignore
             NotificationToken.findOne({
@@ -51,7 +51,7 @@ export async function authenticate_user(req: Request, res: Response) {
                 attributes: ["token"],
             }) as any,
             // @ts-ignore
-            Preferences.findOne({ where: { user_id: user.id.toString() } }) as any,
+            Preferences.findOne({ where: { user_id: user.id } }) as any,
         ])
 
         // Gera um novo token de acesso JWT
@@ -92,10 +92,10 @@ export async function authenticate_user(req: Request, res: Response) {
                     last_login_at: user.last_login_at,
                 },
                 preferences: {
-                    timezone: preferences?.app_timezone,
+                    timezone: -3,
                     language: {
-                        appLanguage: preferences?.app_language || "en",
-                        translationLanguage: preferences?.translation_language || "en",
+                        appLanguage: preferences?.app_language || "pt",
+                        translationLanguage: preferences?.translation_language || "pt",
                     },
                     content: {
                         disableAutoplay: preferences?.disable_autoplay || false,
