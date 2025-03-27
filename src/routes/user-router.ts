@@ -20,7 +20,6 @@ router.post("/session/statistics/pk/:user_pk", UserController.FindSessionUserSta
 
 router.post("/search", UserController.SearchUser)
 router.post("/recommendations", UserController.RecommenderUsers)
-router.get("/most-famous", UserController.FindMostFollowedUsers)
 
 router.post("/block", UserController.BlockUser)
 router.post("/unlock", UserController.UnlockUser)

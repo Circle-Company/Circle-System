@@ -6,7 +6,6 @@ import {
     unlock_user,
 } from "./user-actions-controller"
 import {
-    find_most_followed_users,
     find_session_user_by_pk,
     find_session_user_statistics_by_pk,
     find_user_by_pk,
@@ -26,7 +25,6 @@ export const UserController = {
     FindSessionUserByPk: find_session_user_by_pk,
     FindSessionUserStatisticsByPk: find_session_user_statistics_by_pk,
     RecommenderUsers: recommender_users,
-    FindMostFollowedUsers: find_most_followed_users,
     FindUserFollowers: find_user_followers,
     BlockUser: block_user,
     UnlockUser: unlock_user,
