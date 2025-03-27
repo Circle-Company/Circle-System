@@ -10,12 +10,12 @@ import User from "./user-model" // Certifique-se de que o modelo User está corr
 
 class Statistic extends Model<InferAttributes<Statistic>, InferCreationAttributes<Statistic>> {
     declare readonly id?: number
-    declare total_followers_num: number
-    declare total_likes_num: number
-    declare total_views_num: number
-    declare total_profile_views_num: number
-    declare total_moments_num: number
-    declare total_memories_num: number
+    declare total_followers_num?: number
+    declare total_likes_num?: number
+    declare total_views_num?: number
+    declare total_profile_views_num?: number
+    declare total_moments_num?: number
+    declare total_memories_num?: number
     declare user_id: bigint
 
     // Associations
@@ -34,26 +34,32 @@ class Statistic extends Model<InferAttributes<Statistic>, InferCreationAttribute
                 total_followers_num: {
                     type: DataTypes.INTEGER,
                     allowNull: false,
+                    defaultValue: 0,
                 },
                 total_likes_num: {
                     type: DataTypes.INTEGER,
                     allowNull: false,
+                    defaultValue: 0,
                 },
                 total_views_num: {
                     type: DataTypes.INTEGER,
                     allowNull: false,
+                    defaultValue: 0,
                 },
                 total_profile_views_num: {
                     type: DataTypes.INTEGER,
                     allowNull: false,
+                    defaultValue: 0,
                 },
                 total_moments_num: {
                     type: DataTypes.INTEGER,
                     allowNull: false,
+                    defaultValue: 0,
                 },
                 total_memories_num: {
                     type: DataTypes.INTEGER,
                     allowNull: false,
+                    defaultValue: 0,
                 },
                 user_id: {
                     type: DataTypes.BIGINT,

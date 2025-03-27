@@ -33,6 +33,7 @@ class Preference extends Model {
                 app_language: {
                     type: DataTypes.STRING,
                     allowNull: false,
+                    defaultValue: "pt",
                 },
                 disable_autoplay: {
                     type: DataTypes.BOOLEAN,
@@ -51,7 +52,8 @@ class Preference extends Model {
                 },
                 translation_language: {
                     type: DataTypes.STRING,
-                    allowNull: true,
+                    allowNull: false,
+                    defaultValue: "pt",
                 },
                 disable_like_moment_push_notification: {
                     type: DataTypes.BOOLEAN,
