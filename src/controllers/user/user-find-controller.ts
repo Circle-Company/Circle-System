@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from "express"
-import { MFU } from "../../MFU"
 import { InternalServerError, UnauthorizedError, ValidationError } from "../../errors"
 import { UserService } from "../../services/user-service"
 
@@ -100,17 +99,4 @@ export async function find_user_followers(req: Request, res: Response) {
         pageSize,
     })
     res.status(200).json(result)
-}
-
-export async function find_most_followed_users(req: Request, res: Response) {
-    try {
-        const page = parseInt(req.query.page as string, 10) || 1
-        const pageSize = parseInt(req.query.pageSize as string, 10) || 10
-        const ranking = await MFU({ page, pageSize })
-
-        res.status(200).json(ranking)
-    } catch (error) {
-        console.error(error)
-        res.status(500).json({ error: "Erro ao obter os usuários mais seguidos." })
-    }
 }

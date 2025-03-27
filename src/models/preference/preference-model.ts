@@ -5,8 +5,7 @@ import SnowflakeID from "snowflake-id"
 const snowflake = new SnowflakeID()
 
 class Preference extends Model {
-    public readonly id!: bigint
-    public app_timezone!: number
+    public readonly id!: number
     public app_language!: string
     public disable_autoplay!: boolean
     public disable_haptics!: boolean
@@ -26,19 +25,15 @@ class Preference extends Model {
         return Preference.init(
             {
                 id: {
-                    type: DataTypes.BIGINT,
-                    primaryKey: true,
-                    autoIncrement: false,
-                    allowNull: false,
-                    defaultValue: () => snowflake.generate(),
-                },
-                app_timezone: {
                     type: DataTypes.INTEGER,
+                    primaryKey: true,
+                    autoIncrement: true,
                     allowNull: false,
                 },
                 app_language: {
                     type: DataTypes.STRING,
                     allowNull: false,
+                    defaultValue: "pt",
                 },
                 disable_autoplay: {
                     type: DataTypes.BOOLEAN,
@@ -57,7 +52,8 @@ class Preference extends Model {
                 },
                 translation_language: {
                     type: DataTypes.STRING,
-                    allowNull: true,
+                    allowNull: false,
+                    defaultValue: "pt",
                 },
                 disable_like_moment_push_notification: {
                     type: DataTypes.BOOLEAN,

@@ -9,39 +9,39 @@ interface UserAttributes {
     encrypted_password: string
     old_encrypted_password?: string | null
     description?: string | null
-    access_level: number
-    verifyed: boolean
-    deleted: boolean
-    blocked: boolean
-    muted: boolean
+    access_level?: number
+    verifyed?: boolean
+    deleted?: boolean
+    blocked?: boolean
+    muted?: boolean
     terms_and_conditions_agreed_version?: string | null
     terms_and_conditions_agreed_at?: Date | string | null
     last_active_at?: Date | string | null
     last_login_at?: Date | string | null
     last_failed_login_at?: Date | string | null
     last_password_updated_at?: Date | string | null
-    send_notification_emails: boolean
+    send_notification_emails?: boolean
 }
 
 export default class User extends Model<UserAttributes> implements UserAttributes {
     public readonly id!: bigint
     public username!: string
-    public name!: string | null
+    public name?: string | null
     public encrypted_password!: string
-    public old_encrypted_password!: string | null
-    public description!: string | null
-    public access_level!: number
-    public verifyed!: boolean
-    public deleted!: boolean
-    public blocked!: boolean
-    public muted!: boolean
+    public old_encrypted_password?: string | null
+    public description?: string | null
+    public access_level?: number
+    public verifyed?: boolean
+    public deleted?: boolean
+    public blocked?: boolean
+    public muted?: boolean
     public terms_and_conditions_agreed_version!: string | null
     public terms_and_conditions_agreed_at!: Date | string | null
     public last_active_at!: Date | string | null
     public last_login_at!: Date | string | null
     public last_failed_login_at!: Date | string | null
     public last_password_updated_at!: Date | string | null
-    public send_notification_emails!: boolean
+    public send_notification_emails?: boolean
     static initialize(sequelize: Sequelize) {
         User.init(
             {
@@ -59,6 +59,7 @@ export default class User extends Model<UserAttributes> implements UserAttribute
                 name: {
                     type: DataTypes.STRING(50),
                     allowNull: true,
+                    defaultValue: null,
                 },
                 encrypted_password: {
                     type: DataTypes.STRING(100),
@@ -67,46 +68,57 @@ export default class User extends Model<UserAttributes> implements UserAttribute
                 old_encrypted_password: {
                     type: DataTypes.STRING(100),
                     allowNull: true,
+                    defaultValue: null,
                 },
                 description: {
                     type: DataTypes.STRING(300),
                     allowNull: true,
+                    defaultValue: null,
                 },
                 access_level: {
                     type: DataTypes.INTEGER,
                     allowNull: false,
+                    defaultValue: 0,
                 },
                 verifyed: {
                     type: DataTypes.BOOLEAN,
                     allowNull: false,
+                    defaultValue: false,
                 },
                 deleted: {
                     type: DataTypes.BOOLEAN,
                     allowNull: false,
+                    defaultValue: false,
                 },
                 blocked: {
                     type: DataTypes.BOOLEAN,
                     allowNull: false,
+                    defaultValue: false,
                 },
                 muted: {
                     type: DataTypes.BOOLEAN,
                     allowNull: false,
+                    defaultValue: false,
                 },
                 terms_and_conditions_agreed_version: {
                     type: DataTypes.STRING(10),
                     allowNull: true,
+                    defaultValue: "1.0.0",
                 },
                 terms_and_conditions_agreed_at: {
                     type: DataTypes.DATE,
                     allowNull: true,
+                    defaultValue: new Date(),
                 },
                 last_active_at: {
                     type: DataTypes.DATE,
                     allowNull: true,
+                    defaultValue: new Date(),
                 },
                 last_login_at: {
                     type: DataTypes.DATE,
                     allowNull: true,
+                    defaultValue: new Date(),
                 },
                 last_failed_login_at: {
                     type: DataTypes.DATE,
@@ -115,10 +127,12 @@ export default class User extends Model<UserAttributes> implements UserAttribute
                 last_password_updated_at: {
                     type: DataTypes.DATE,
                     allowNull: true,
+                    defaultValue: new Date(),
                 },
                 send_notification_emails: {
                     type: DataTypes.BOOLEAN,
                     allowNull: false,
+                    defaultValue: true,
                 },
             },
             {

@@ -5,25 +5,25 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     return queryInterface.createTable('reports', {
       id: {
-        type: Sequelize.INTEGER(),
+        type: Sequelize.BIGINT(),
         primaryKey: true,
         autoIncrement: true,
         allowNull: false
       },
       user_id: {
-        type: Sequelize.INTEGER(),
+        type: Sequelize.BIGINT(),
         allowNull: false,
         references: {model: 'users', key: 'id'},
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'  
       },
       reported_content_id: {
-        type: Sequelize.INTEGER(),
+        type: Sequelize.BIGINT(),
         allowNull: false,
       },
       reported_content_type: {
         type: Sequelize.STRING(),
-        allowNull: false
+        allowNull: false,
       },
       report_type: {
         type: Sequelize.STRING(),

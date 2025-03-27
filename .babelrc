@@ -12,6 +12,8 @@
                     "@libs": "./src/libs",
                     "@math": "./src/math",
                     "@errors": "./src/errors",
+                    "@config": "./src/config",
+                    "@services": "./src/services",
                     "@swipe-engine": "./src/swipe-engine",
                     "@pages": "./src/pages"
                 },

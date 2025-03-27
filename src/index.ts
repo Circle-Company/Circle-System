@@ -1,6 +1,6 @@
-const express = require("express")
-const bodyParser = require("body-parser")
-require("express-async-errors")
+import bodyParser from "body-parser"
+import express from "express"
+import "express-async-errors"
 import "module-alias/register"
 import config from "./config/index"
 import { RP } from "./config/routes_prefix"
@@ -41,7 +41,6 @@ const REPORT_PREFIX = RP.API_VERISON + RP.REPORT
 const app = express()
 
 app.use(bodyParser.urlencoded({ extended: false }))
-app.use(express.static("public"))
 app.use(bodyParser.json({ limit: "50mb" }))
 
 app.use(AUTH_PREFIX, AuthRouter)
