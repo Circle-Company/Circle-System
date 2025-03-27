@@ -1,9 +1,8 @@
 import { NextFunction, Request, Response } from "express"
+import config from "../../config"
 import { InternalServerError, ValidationError } from "../../errors"
 import { DecryptPassword } from "../../helpers/encrypt-decrypt-password"
 import { jwtEncoder } from "../../jwt/encode"
-
-import config from "../../config"
 import NotificationToken from "../../models/notification/notification_token-model"
 import Preferences from "../../models/preference/preference-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
@@ -45,12 +44,11 @@ export async function authenticate_user(req: Request, res: Response) {
                 attributes: ["fullhd_resolution", "tiny_resolution"],
                 where: { user_id: user.id },
             }),
-            // @ts-ignore
+            //@ts-ignore
             NotificationToken.findOne({
                 where: { user_id: user.id.toString() },
                 attributes: ["token"],
             }) as any,
-            // @ts-ignore
             Preferences.findOne({ where: { user_id: user.id } }) as any,
         ])
 
@@ -119,6 +117,7 @@ export async function authenticate_user(req: Request, res: Response) {
     } catch (err: unknown) {
         // Verifica o tipo de erro e retorna a resposta apropriada
         if (err instanceof ValidationError) {
+            res.status(err.statusCode).json(err)
             throw new ValidationError({ message: err.message })
         } else {
             // Caso um erro interno inesperado ocorra
@@ -165,11 +164,7 @@ export async function refresh_token(req: Request, res: Response, next: NextFunct
         if (err instanceof ValidationError) {
             return res.status(err.statusCode).json(err)
         } else {
-            // Em caso de erro interno, retorna um status 500
-            throw new InternalServerError({
-                message: "An unexpected error occurred while refreshing the token.",
-                statusCode: 500,
-            })
+            return res.status(500).json(err)
         }
     }
 }

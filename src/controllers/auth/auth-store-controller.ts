@@ -2,7 +2,7 @@ import { Request, Response } from "express"
 import { StatusCodes } from "http-status-codes"
 import { Twilio } from "twilio"
 import CONFIG from "../../config"
-import { InternalServerError, ValidationError } from "../../errors"
+import { ValidationError } from "../../errors"
 import { isValidPhoneNumber } from "../../helpers/is_valid_phone_number"
 import { AuthService } from "../../services/auth-service"
 let OTP: number | null
@@ -17,7 +17,7 @@ export async function store_new_user(req: Request, res: Response) {
         })
         return res.status(200).json(user)
     } catch (err: any) {
-        throw new InternalServerError({ message: err.message })
+        res.status(err.statusCode).json(err)
     }
 }
 
