@@ -1,8 +1,8 @@
-import { Username } from "classes/username"
+import SecurityToolKit from "security-toolkit"
+import { Username } from "../../classes/username"
 import config from "../../config"
 import { InternalServerError, ValidationError } from "../../errors"
 import { DecryptPassword, EncriptedPassword } from "../../helpers/encrypt-decrypt-password"
-import { useUsernameValidator } from "../../helpers/usernameValidator"
 import { jwtEncoder } from "../../jwt/encode"
 import Preference from "../../models/preference/preference-model"
 import Contact from "../../models/user/contact-model.js"
@@ -10,7 +10,6 @@ import Coordinate from "../../models/user/coordinate-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
 import Statistic from "../../models/user/statistic-model"
 import User from "../../models/user/user-model"
-import SecurityToolKit from "../../security-tool/src"
 import { StoreNewUserProps } from "./types"
 
 export async function store_new_user({ username, password }: StoreNewUserProps) {

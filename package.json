@@ -66,6 +66,7 @@
         "babel-jest": "^29.7.0",
         "eslint-plugin-jest": "^28.8.0",
         "jest": "^29.7.0",
+        "security-toolkit": "^1.1.8",
         "sequelize-cli": "^6.6.2",
         "supertest": "^7.0.0",
         "ts-jest": "^29.2.5",
