@@ -1,3 +1,4 @@
+import { Username } from "classes/username"
 import config from "../../config"
 import { InternalServerError, ValidationError } from "../../errors"
 import { DecryptPassword, EncriptedPassword } from "../../helpers/encrypt-decrypt-password"
@@ -13,7 +14,7 @@ import SecurityToolKit from "../../security-tool/src"
 import { StoreNewUserProps } from "./types"
 
 export async function store_new_user({ username, password }: StoreNewUserProps) {
-    const validUsername = await useUsernameValidator(username)
+    const validUsername = await new Username(username).validate()
     const passwordResult = new SecurityToolKit().checkersMethods.validatePassword({
         password,
         validation: {
@@ -31,7 +32,7 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
         })
     } else {
         const newUser = await User.create({
-            username: validUsername.toLowerCase(),
+            username: validUsername,
             encrypted_password: await EncriptedPassword({ password }),
         })
         if (!newUser)
