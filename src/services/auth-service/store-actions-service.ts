@@ -52,13 +52,15 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
 
         const newAccessToken = await jwtEncoder({
             username: newUser.username,
-            userId: newUser.id.toString(),
+            userId: user_id.toString(),
         })
+
+        const userIdString = user_id.toString()
 
         return {
             session: {
                 user: {
-                    id: newUser.id,
+                    id: userIdString,
                     username: newUser.username,
                     name: null,
                     description: null,
