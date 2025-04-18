@@ -14,12 +14,12 @@ vi.mock("security-toolkit", () => ({
 }))
 
 // Mock do jwtEncoder
-vi.mock("../../../jwt/encode", () => ({
+vi.mock("../../jwt/encode", () => ({
     jwtEncoder: vi.fn().mockResolvedValue("mock-jwt-token"),
 }))
 
 // Mock da classe Username (simplificado)
-vi.mock("../../../classes/username", () => ({
+vi.mock("../../classes/username", () => ({
     Username: class MockUsername {
         private value: string
         constructor(username: string) {
@@ -41,7 +41,7 @@ vi.mock("../../../classes/username", () => ({
 }))
 
 // Mock dos helpers de senha
-vi.mock("../../../helpers/encrypt-decrypt-password", () => ({
+vi.mock("../../helpers/encrypt-decrypt-password", () => ({
     EncriptedPassword: vi.fn().mockResolvedValue("hashed_password"),
     DecryptPassword: vi.fn().mockResolvedValue(true), // Mock padrão para senha correta
 }))
