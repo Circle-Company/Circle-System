@@ -1,5 +1,5 @@
-import Preference from "../../../models/preference/preference-model.js"
-import { NotificationProps } from "../../types.js"
+import Preference from "../../../models/preference/preference-model"
+import { NotificationProps } from "../../types"
 
 type User = {
     id: bigint
