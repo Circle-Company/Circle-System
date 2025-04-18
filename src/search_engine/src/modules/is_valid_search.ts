@@ -1,4 +1,4 @@
-import Security from "../../../security-tool/src"
+import Security from "security-toolkit"
 import rules from "../database/rules.json"
 export function isValidSearch(search_term: string): { isValid: boolean; message?: string } {
     try {

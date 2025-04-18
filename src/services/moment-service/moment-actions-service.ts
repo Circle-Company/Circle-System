@@ -10,6 +10,7 @@ import {
     UnlikeCommentProps,
 } from "./types"
 
+import SecurityToolKit from "security-toolkit"
 import { Notification } from "../../helpers/notification"
 import { Relation } from "../../helpers/relation"
 import Comment from "../../models/comments/comment-model.js"
@@ -25,7 +26,6 @@ import Share from "../../models/moments/share-model.js"
 import Skip from "../../models/moments/skip-model.js"
 import View from "../../models/moments/view-model.js"
 import UserStatistic from "../../models/user/statistic-model"
-import SecurityToolKit from "../../security-tool/src"
 
 export async function like_moment({ moment_id, user_id }) {
     try {
