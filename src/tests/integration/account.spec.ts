@@ -2,6 +2,7 @@ import { router } from "@routes/account-router"
 import express from "express"
 import request from "supertest"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { verifyAndRepairUserPreferences } from "../../helpers/user/verify-preferences"
 import { testBearerToken } from "../app-test"
 
 // Mock dos modelos com vi.mock
@@ -15,9 +16,17 @@ describe("GET /account/list/followings", () => {
     app.use(express.json())
 
     // Mock do middleware de autenticação
-    app.use((req, res, next) => {
+    app.use(async (req, res, next) => {
         if (req.headers.authorization === testBearerToken) {
             req.user_id = BigInt(1) // Simula um ID de usuário autenticado
+
+            // Verifica e repara as preferências do usuário antes de continuar
+            try {
+                await verifyAndRepairUserPreferences(req.user_id)
+            } catch (error) {
+                console.error("Error verifying preferences:", error)
+            }
+
             next()
         } else {
             res.status(401).json({ message: "token is missing" })
