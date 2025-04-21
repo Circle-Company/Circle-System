@@ -1,8 +1,8 @@
 # 🔍 Circle Search Engine
 
-Motor de busca inteligente do Circle, projetado para fornecer resultados relevantes e personalizados baseados em múltiplos critérios e interações do usuário.
+Motor de busca de usuários do Circle App, projetado para fornecer resultados relevantes e personalizados baseados em múltiplos critérios e interações do usuário.
 
-## 🎯 Objetivo
+### Objetivo
 
 O Search Engine foi desenvolvido para oferecer uma experiência de busca otimizada, combinando resultados de diferentes fontes e aplicando algoritmos de classificação personalizados. O sistema prioriza:
 
@@ -11,7 +11,7 @@ O Search Engine foi desenvolvido para oferecer uma experiência de busca otimiza
 -   Performance e escalabilidade
 -   Segurança e filtragem de conteúdo
 
-## 🏗️ Arquitetura
+## Arquitetura
 
 ### Componentes Principais
 
@@ -29,7 +29,7 @@ search_engine/
 └── tests/                      # Testes unitários e de integração
 ```
 
-### 🔄 Fluxo de Processamento
+### Fluxo de Processamento
 
 1. **Validação da Busca**
 
@@ -72,7 +72,7 @@ search_engine/
     - Ordena por relevância
     - Aplica filtros de segurança
 
-## 🎯 Algoritmos de Pontuação
+## Algoritmos de Pontuação
 
 ### Candidatos Relacionados
 
@@ -88,7 +88,7 @@ search_engine/
 -   Status de verificação
 -   Atividade na plataforma
 
-## ⚙️ Configurações
+## Configurações
 
 ```json
 {
@@ -98,7 +98,7 @@ search_engine/
 }
 ```
 
-## 🔒 Filtros de Segurança
+## Filtros de Segurança
 
 O módulo implementa diversos filtros de segurança:
 
@@ -107,7 +107,7 @@ O módulo implementa diversos filtros de segurança:
 -   Validação de permissões
 -   Sanitização de dados
 
-## 📊 Tipos de Retorno
+## Tipos de Retorno
 
 ```typescript
 type ReturnUserProps = {
@@ -125,7 +125,7 @@ type ReturnUserProps = {
 }
 ```
 
-## 🧪 Testes
+## Testes
 
 O módulo possui cobertura completa de testes:
 
@@ -141,12 +141,12 @@ npm run test:search-engine
 -   Ordenação de candidatos
 -   Remoção de duplicações
 
-## 📈 Performance
+## Performance
 
 -   Otimização de consultas SQL
 -   Índices otimizados
 
-## 🔄 Integração
+## Integração
 
 ```typescript
 import { SearchEngine } from "./search_engine"
@@ -157,7 +157,7 @@ const results = await SearchEngine({
 })
 ```
 
-## 🚀 Escalabilidade
+## Escalabilidade
 
 O módulo foi projetado para escalar:
 
@@ -166,7 +166,7 @@ O módulo foi projetado para escalar:
 -   Cache distribuído
 -   Otimização de consultas
 
-## 🤝 Contribuindo
+## Contribuindo
 
 1. Entenda a arquitetura
 2. Siga os padrões de código
@@ -175,4 +175,4 @@ O módulo foi projetado para escalar:
 
 ---
 
-📌 **Nota**: Este módulo é somente parte do Circle System e deve ser mantido em sincronia com as atualizações do sistema principal.
+**Nota**: Este módulo é somente parte do Circle System e deve ser mantido em sincronia com as atualizações do sistema principal.
