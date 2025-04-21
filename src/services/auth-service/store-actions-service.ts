@@ -41,14 +41,53 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
 
         const user_id = newUser.id
 
-        await Promise.all([
-            ProfilePicture.create({ user_id }),
-            Coordinate.create({ user_id }),
-            Preference.create({ user_id }),
-            Statistic.create({ user_id }),
-            //@ts-ignore
-            Contact.create({ user_id: Number(user_id) }),
-        ])
+        try {
+            // Criação de todos os registros relacionados em paralelo com tratamento de erros
+            const [profilePicture, coordinate, preference, statistic, contact] = await Promise.all([
+                ProfilePicture.create({ user_id }).catch((error) => {
+                    console.error("Erro ao criar ProfilePicture:", error)
+                    throw new InternalServerError({
+                        message: "Failed to create user profile preferences.",
+                    })
+                }),
+                Coordinate.create({ user_id }).catch((error) => {
+                    console.error("Erro ao criar Coordinate:", error)
+                    throw new InternalServerError({
+                        message: "Failed to create user coordinates.",
+                    })
+                }),
+                Preference.create({ user_id }).catch((error) => {
+                    console.error("Erro ao criar Preference:", error)
+                    throw new InternalServerError({
+                        message: "Failed to create user preferences.",
+                    })
+                }),
+                Statistic.create({ user_id }).catch((error) => {
+                    console.error("Erro ao criar Statistic:", error)
+                    throw new InternalServerError({
+                        message: "Failed to create user statistics.",
+                    })
+                }),
+                //@ts-ignore
+                Contact.create({ user_id: Number(user_id) }).catch((error) => {
+                    console.error("Erro ao criar Contact:", error)
+                    throw new InternalServerError({ message: "Failed to create user contact." })
+                }),
+            ])
+
+            console.log(
+                `Usuário criado com sucesso. ID: ${user_id}, Preferências criadas: ${
+                    preference ? "Sim" : "Não"
+                }`
+            )
+        } catch (error) {
+            console.error("Error during user associated data creation:", error)
+            // Se falhou em criar os dados associados, excluir usuário para evitar dados inconsistentes
+            await User.destroy({ where: { id: user_id } })
+            throw new InternalServerError({
+                message: "Failed to set up your account. Please try again.",
+            })
+        }
 
         const newAccessToken = await jwtEncoder({
             username: newUser.username,
