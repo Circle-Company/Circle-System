@@ -9,7 +9,7 @@ import { PostEmbeddingService } from "../embeddings/PostEmbeddingService"
 import { UserEmbeddingService } from "../embeddings/UserEmbeddingService"
 import { InteractionStrength, InteractionType, UserInteraction } from "../types"
 import { Logger } from "../utils/logger"
-import { normalizeVector } from "../utils/normalization"
+import { normalizeVector } from "../utils/vector-operations"
 
 export class FeedbackProcessor {
     private readonly userEmbeddingService: UserEmbeddingService
@@ -186,7 +186,7 @@ export class FeedbackProcessor {
         }
 
         // Calcular ajustes de embedding para cada interação
-        let embeddingUpdates = new Float32Array(userEmbedding.dimensions)
+        let embeddingUpdates = new Array(userEmbedding.vector.dimension).fill(0)
 
         for (const interaction of interactions) {
             try {
@@ -211,7 +211,7 @@ export class FeedbackProcessor {
                     // Ajustar o embedding do usuário na direção do embedding do item
                     // Para interações positivas: aproximar o usuário do item
                     // Para interações negativas: afastar o usuário do item
-                    embeddingUpdates[i] += entityEmbedding.vector[i] * strength
+                    embeddingUpdates[i] += entityEmbedding.vector.values[i] * strength
                 }
             } catch (error) {
                 this.logger.error("Erro ao processar interação individual", {
@@ -223,21 +223,24 @@ export class FeedbackProcessor {
         }
 
         // Normalizar o vetor de atualização
-        embeddingUpdates = normalizeVector(embeddingUpdates)
+        const normalizedUpdates = normalizeVector(embeddingUpdates)
 
         // Aplicar as atualizações ao embedding do usuário, com taxa de aprendizado
         const learningRate = 0.05
-        const newUserVector = new Float32Array(userEmbedding.dimensions)
+        const newUserVector = new Array(userEmbedding.vector.dimension).fill(0)
 
         for (let i = 0; i < newUserVector.length; i++) {
-            newUserVector[i] = userEmbedding.vector[i] + embeddingUpdates[i] * learningRate
+            newUserVector[i] = userEmbedding.vector.values[i] + normalizedUpdates[i] * learningRate
         }
 
         // Normalizar o vetor final
         const normalizedUserVector = normalizeVector(newUserVector)
 
         // Salvar o embedding atualizado
-        await this.userEmbeddingService.updateUserEmbedding(userId, normalizedUserVector)
+        await this.userEmbeddingService.updateEmbedding(
+            userEmbedding.vector.values,
+            interactions[interactions.length - 1] // Última interação
+        )
     }
 
     /**
@@ -268,7 +271,7 @@ export class FeedbackProcessor {
 
                 // Aqui usamos uma abordagem diferente: o embedding do post é influenciado
                 // pelos embeddings dos usuários que interagiram com ele
-                let embeddingUpdates = new Float32Array(postEmbedding.dimensions)
+                let embeddingUpdates = new Array(postEmbedding.vector.dimension).fill(0)
                 let totalWeight = 0
 
                 for (const interaction of interactions) {
@@ -284,7 +287,7 @@ export class FeedbackProcessor {
                     const weight = Math.abs(strength) // Usando valor absoluto para o peso
 
                     for (let i = 0; i < embeddingUpdates.length; i++) {
-                        embeddingUpdates[i] += userEmbedding.vector[i] * weight
+                        embeddingUpdates[i] += userEmbedding.vector.values[i] * weight
                     }
 
                     totalWeight += weight
@@ -297,25 +300,24 @@ export class FeedbackProcessor {
                     }
 
                     // Normalizar o vetor
-                    embeddingUpdates = normalizeVector(embeddingUpdates)
+                    const normalizedUpdates = normalizeVector(embeddingUpdates)
 
                     // Aplicar atualização ao embedding do post (taxa de aprendizado menor para posts)
                     const learningRate = 0.02
-                    const newPostVector = new Float32Array(postEmbedding.dimensions)
+                    const newPostVector = new Array(postEmbedding.vector.dimension).fill(0)
 
                     for (let i = 0; i < newPostVector.length; i++) {
                         newPostVector[i] =
-                            postEmbedding.vector[i] + embeddingUpdates[i] * learningRate
+                            postEmbedding.vector.values[i] + normalizedUpdates[i] * learningRate
                     }
 
                     // Normalizar o vetor final
                     const normalizedPostVector = normalizeVector(newPostVector)
 
                     // Salvar o embedding atualizado
-                    await this.postEmbeddingService.updatePostEmbedding(
-                        postId,
-                        normalizedPostVector
-                    )
+                    await this.postEmbeddingService.updateEmbedding(postEmbedding.vector.values, {
+                        lastInteraction: new Date(),
+                    })
                 }
             } catch (error) {
                 this.logger.error("Erro ao atualizar embedding do post", {
@@ -379,22 +381,25 @@ export class FeedbackProcessor {
                     }
 
                     // Atualizar embedding do post similar na direção do post original
-                    const newVector = new Float32Array(similarPostEmbedding.dimensions)
+                    const newVector = new Array(similarPostEmbedding.vector.dimension).fill(0)
 
                     for (let i = 0; i < newVector.length; i++) {
                         // Pequeno ajuste na direção do post que recebeu interações
                         newVector[i] =
-                            similarPostEmbedding.vector[i] +
-                            (postEmbedding.vector[i] - similarPostEmbedding.vector[i]) *
+                            similarPostEmbedding.vector.values[i] +
+                            (postEmbedding.vector.values[i] -
+                                similarPostEmbedding.vector.values[i]) *
                                 networkLearningRate *
                                 similarPost.similarity
                     }
 
                     // Normalizar e salvar
                     const normalizedVector = normalizeVector(newVector)
-                    await this.postEmbeddingService.updatePostEmbedding(
-                        similarPost.id,
-                        normalizedVector
+                    await this.postEmbeddingService.updateEmbedding(
+                        similarPostEmbedding.vector.values,
+                        {
+                            lastInteraction: new Date(),
+                        }
                     )
                 }
             } catch (error) {
@@ -428,20 +433,22 @@ export class FeedbackProcessor {
             const learningRate = 0.1 // Taxa maior para atualizações individuais de alta prioridade
 
             // Criar novo vetor de usuário
-            const newUserVector = new Float32Array(userEmbedding.dimensions)
+            const newUserVector = new Array(userEmbedding.vector.dimension).fill(0)
 
             // Atualizar embedding do usuário na direção do item (ou na direção oposta para interações negativas)
             for (let i = 0; i < newUserVector.length; i++) {
                 newUserVector[i] =
-                    userEmbedding.vector[i] +
-                    (entityEmbedding.vector[i] - userEmbedding.vector[i]) * strength * learningRate
+                    userEmbedding.vector.values[i] +
+                    (entityEmbedding.vector.values[i] - userEmbedding.vector.values[i]) *
+                        strength *
+                        learningRate
             }
 
             // Normalizar e salvar
             const normalizedUserVector = normalizeVector(newUserVector)
-            await this.userEmbeddingService.updateUserEmbedding(
-                interaction.userId,
-                normalizedUserVector
+            await this.userEmbeddingService.updateEmbedding(
+                userEmbedding.vector.values,
+                interaction
             )
         } catch (error) {
             this.logger.error("Erro ao atualizar embeddings", {
