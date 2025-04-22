@@ -90,9 +90,11 @@ export interface PostEmbeddingProps {
  * Representa uma interação do usuário
  */
 export interface UserInteraction {
-    type: string // 'view', 'like', 'comment', etc.
-    entityId: string | bigint
+    id: string
+    userId: bigint
+    entityId: bigint
     entityType: EntityType
+    type: InteractionType
     timestamp: Date
     metadata?: Record<string, any>
 }
@@ -435,4 +437,33 @@ export interface RecommendationOptions {
 
     /** Filtros específicos a serem aplicados */
     filters?: Record<string, any>
+}
+
+/**
+ * Tipos de interação que um usuário pode ter com um item
+ */
+export type InteractionType =
+    | "view"
+    | "short_view"
+    | "long_view"
+    | "like"
+    | "dislike"
+    | "share"
+    | "comment"
+    | "save"
+    | "not_interested"
+    | "report"
+
+/**
+ * Níveis de força para interações
+ */
+export enum InteractionStrength {
+    VERY_NEGATIVE = -1.0,
+    NEGATIVE = -0.5,
+    NEUTRAL = 0.0,
+    VERY_LOW = 0.05,
+    LOW = 0.1,
+    MEDIUM = 0.3,
+    HIGH = 0.5,
+    VERY_HIGH = 0.8,
 }
