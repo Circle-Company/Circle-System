@@ -467,3 +467,49 @@ export enum InteractionStrength {
     HIGH = 0.5,
     VERY_HIGH = 0.8,
 }
+
+/**
+ * Interface que define métricas para o sistema de recomendação
+ */
+export interface RecommendationMetrics {
+    /** Taxa de cliques */
+    ctr: number
+    /** Taxa de engajamento geral */
+    engagementRate: number
+    /** Tempo médio gasto com as recomendações */
+    averageTimeSpent: number
+    /** Percentual de recomendações que receberam interação */
+    interactionRate: number
+    /** Diversidade das recomendações */
+    diversity: number
+    /** Novidade das recomendações */
+    novelty: number
+    /** Precisão das recomendações */
+    precision?: number
+    /** Recall das recomendações */
+    recall?: number
+    /** Cobertura do catálogo */
+    catalogCoverage?: number
+    /** Métricas personalizadas adicionais */
+    custom?: Record<string, number>
+}
+
+/**
+ * Interface para representar uma recomendação
+ */
+export interface Recommendation {
+    /** ID da entidade recomendada */
+    entityId: string | bigint
+    /** Tipo da entidade recomendada */
+    entityType: EntityType
+    /** Pontuação de relevância */
+    score: number
+    /** Timestamp da recomendação */
+    timestamp: Date
+    /** Origem da recomendação */
+    source: string
+    /** Motivos para a recomendação */
+    reasons?: RecommendationReason[]
+    /** Metadados adicionais */
+    metadata?: Record<string, any>
+}
