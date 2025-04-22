@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { getEngagementEmbedding } from "../engagement"; // Correct the path to where your function is
+import { describe, expect, it } from "vitest"
+import { getEngagementEmbedding } from "../engagement" // Correct the path to where your function is
 
 describe("getEngagementEmbedding", () => {
     it("should correctly calculate the engagement embedding based on statistics and metadata", () => {
@@ -21,10 +21,10 @@ describe("getEngagementEmbedding", () => {
                 totalDuration: 600000, // milliseconds (10 minutes or 600 seconds)
                 createdAt: "2024-09-28T12:00:00Z",
             },
-        };
+        }
 
         // Call the function we want to test
-        const result = getEngagementEmbedding(exampleData);
+        const result = getEngagementEmbedding(exampleData)
 
         // Define the expected values for the embedding
         const expectedEmbedding = [
@@ -38,11 +38,11 @@ describe("getEngagementEmbedding", () => {
             Math.log1p(20), // normalizedSkips
             Math.log1p(2), // normalizedShowLessOften
             Math.log1p(1), // normalizedReports
-        ];
+        ]
 
         // Check if the result matches the expected embedding
-        expect(result).toEqual(expectedEmbedding);
-    });
+        expect(result).toEqual(expectedEmbedding)
+    })
 
     it("should return 0 for normalizedWatchTime when totalDuration is 0", () => {
         const exampleData = {
@@ -62,14 +62,14 @@ describe("getEngagementEmbedding", () => {
                 totalDuration: 0, // Total duration zero
                 createdAt: "2024-09-28T12:00:00Z",
             },
-        };
+        }
 
         // Call the function we want to test
-        const result = getEngagementEmbedding(exampleData);
+        const result = getEngagementEmbedding(exampleData)
 
         // Verify if normalizedWatchTime is 0
-        expect(result[3]).toBe(0); // Index 3 is normalizedWatchTime
-    });
+        expect(result[3]).toBe(0) // Index 3 is normalizedWatchTime
+    })
 
     it("should handle cases where statistics are null or absent", () => {
         const exampleData = {
@@ -89,10 +89,10 @@ describe("getEngagementEmbedding", () => {
                 totalDuration: 600000, // milliseconds
                 createdAt: "2024-09-28T12:00:00Z",
             },
-        };
+        }
 
         // Call the function we want to test
-        const result = getEngagementEmbedding(exampleData);
+        const result = getEngagementEmbedding(exampleData)
 
         // Define the expected values for the embedding
         const expectedEmbedding = [
@@ -106,9 +106,9 @@ describe("getEngagementEmbedding", () => {
             Math.log1p(0), // normalizedSkips
             Math.log1p(0), // normalizedShowLessOften
             Math.log1p(0), // normalizedReports
-        ];
+        ]
 
         // Check if the result matches the expected embedding
-        expect(result).toEqual(expectedEmbedding);
-    });
-});
+        expect(result).toEqual(expectedEmbedding)
+    })
+})

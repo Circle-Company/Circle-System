@@ -2,7 +2,7 @@ import { Request, Response } from "express"
 import { StatusCodes } from "http-status-codes"
 import { Twilio } from "twilio"
 import CONFIG from "../../config"
-import { ValidationError } from "../../errors"
+import { InternalServerError, ValidationError } from "../../errors"
 import { isValidPhoneNumber } from "../../helpers/is_valid_phone_number"
 import { AuthService } from "../../services/auth-service"
 let OTP: number | null
@@ -17,7 +17,16 @@ export async function store_new_user(req: Request, res: Response) {
         })
         return res.status(200).json(user)
     } catch (err: any) {
-        res.status(err.statusCode).json(err)
+        if (err instanceof ValidationError) {
+            return res.status(400).json({
+                message: err.message,
+                action: err.action,
+                key: err.key,
+            })
+        }
+        return res.status(500).json({
+            message: err.message || "An unexpected error occurred",
+        })
     }
 }
 
@@ -81,6 +90,27 @@ export async function verify_code(req: Request, res: Response) {
 
 export async function change_password(req: Request, res: Response) {
     const { password_input, user_id } = req.body
-    const result = await AuthService.Store.ChangePassword({ password_input, user_id })
-    res.status(StatusCodes.ACCEPTED).json(result)
+    try {
+        await AuthService.Store.ChangePassword({ password_input, user_id })
+        return res.status(StatusCodes.NO_CONTENT).send()
+    } catch (err: any) {
+        if (err instanceof ValidationError) {
+            return res.status(err.statusCode || 400).json({
+                message: err.message,
+                action: err.action,
+                key: err.key,
+            })
+        } else if (err instanceof InternalServerError) {
+            return res.status(err.statusCode || 500).json({
+                message: err.message,
+                action: err.action,
+                errorId: err.errorId,
+            })
+        } else {
+            console.error("[auth-store-controller:change_password] Unhandled Error:", err)
+            return res.status(500).json({
+                message: "An unexpected server error occurred while changing password.",
+            })
+        }
+    }
 }

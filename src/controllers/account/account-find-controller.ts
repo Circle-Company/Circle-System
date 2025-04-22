@@ -5,7 +5,7 @@ import ProfilePicture from "../../models/user/profilepicture-model"
 import Statistic from "../../models/user/statistic-model"
 import User from "../../models/user/user-model"
 
-export async function findAccountFollowings(req: Request, res: Response): Promise<void> {
+export async function findAccountFollowings(req: Request, res: Response) {
     try {
         if (!req.user_id) {
             throw new ValidationError({
@@ -47,14 +47,17 @@ export async function findAccountFollowings(req: Request, res: Response): Promis
             offset,
         })
 
-        const filteredList: any = followingUsers.map((item: any) => {
+        // Converter IDs para string antes de retornar
+        const filteredList = followingUsers.map((item: any) => {
+            // Verificar se item.followers existe e tem id
+            const followerId = item?.followers?.id
             return {
-                id: item.followers.id,
-                username: item.followers.username,
-                verifyed: item.followers.verifyed,
-                profile_picture: item.followers.profile_pictures,
-                statistic: item.followers.statistics,
-                followed_at: item.created_at,
+                id: followerId ? followerId.toString() : null, // Converter para string
+                username: item?.followers?.username,
+                verifyed: item?.followers?.verifyed,
+                profile_picture: item?.followers?.profile_pictures,
+                statistic: item?.followers?.statistics,
+                followed_at: item?.created_at,
             }
         })
 
@@ -70,11 +73,24 @@ export async function findAccountFollowings(req: Request, res: Response): Promis
                 pageSize: limit,
             },
         })
-    } catch (error) {
+    } catch (error: any) {
+        // Tipo 'any' para acessar propriedades como 'statusCode'
         console.error("Error fetching following users:", error)
 
         if (error instanceof ValidationError) {
-            res.status(400).json(error)
+            // Erro de validação conhecido (ex: user_id faltando)
+            return res.status(error.statusCode || 400).json({
+                message: error.message,
+                action: error.action,
+                key: error.key,
+            })
+        } else {
+            // Outros erros (ex: erro de banco de dados)
+            return res.status(500).json({
+                message: "An internal server error occurred while fetching followings.",
+                // Opcional: Adicionar error ID para rastreamento
+                // errorId: (error instanceof BaseError) ? error.errorId : undefined
+            })
         }
     }
 }

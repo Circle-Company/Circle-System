@@ -1,8 +1,8 @@
-import { Username } from "classes/username"
+import SecurityToolKit from "security-toolkit"
+import { Username } from "../../classes/username"
 import config from "../../config"
 import { InternalServerError, ValidationError } from "../../errors"
 import { DecryptPassword, EncriptedPassword } from "../../helpers/encrypt-decrypt-password"
-import { useUsernameValidator } from "../../helpers/usernameValidator"
 import { jwtEncoder } from "../../jwt/encode"
 import Preference from "../../models/preference/preference-model"
 import Contact from "../../models/user/contact-model.js"
@@ -10,7 +10,6 @@ import Coordinate from "../../models/user/coordinate-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
 import Statistic from "../../models/user/statistic-model"
 import User from "../../models/user/user-model"
-import SecurityToolKit from "../../security-tool/src"
 import { StoreNewUserProps } from "./types"
 
 export async function store_new_user({ username, password }: StoreNewUserProps) {
@@ -42,24 +41,65 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
 
         const user_id = newUser.id
 
-        await Promise.all([
-            ProfilePicture.create({ user_id }),
-            Coordinate.create({ user_id }),
-            Preference.create({ user_id }),
-            Statistic.create({ user_id }),
-            //@ts-ignore
-            Contact.create({ user_id: Number(user_id) }),
-        ])
+        try {
+            // Criação de todos os registros relacionados em paralelo com tratamento de erros
+            const [profilePicture, coordinate, preference, statistic, contact] = await Promise.all([
+                ProfilePicture.create({ user_id }).catch((error) => {
+                    console.error("Erro ao criar ProfilePicture:", error)
+                    throw new InternalServerError({
+                        message: "Failed to create user profile preferences.",
+                    })
+                }),
+                Coordinate.create({ user_id }).catch((error) => {
+                    console.error("Erro ao criar Coordinate:", error)
+                    throw new InternalServerError({
+                        message: "Failed to create user coordinates.",
+                    })
+                }),
+                Preference.create({ user_id }).catch((error) => {
+                    console.error("Erro ao criar Preference:", error)
+                    throw new InternalServerError({
+                        message: "Failed to create user preferences.",
+                    })
+                }),
+                Statistic.create({ user_id }).catch((error) => {
+                    console.error("Erro ao criar Statistic:", error)
+                    throw new InternalServerError({
+                        message: "Failed to create user statistics.",
+                    })
+                }),
+                //@ts-ignore
+                Contact.create({ user_id: Number(user_id) }).catch((error) => {
+                    console.error("Erro ao criar Contact:", error)
+                    throw new InternalServerError({ message: "Failed to create user contact." })
+                }),
+            ])
+
+            console.log(
+                `Usuário criado com sucesso. ID: ${user_id}, Preferências criadas: ${
+                    preference ? "Sim" : "Não"
+                }`
+            )
+        } catch (error) {
+            console.error("Error during user associated data creation:", error)
+            // Se falhou em criar os dados associados, excluir usuário para evitar dados inconsistentes
+            await User.destroy({ where: { id: user_id } })
+            throw new InternalServerError({
+                message: "Failed to set up your account. Please try again.",
+            })
+        }
 
         const newAccessToken = await jwtEncoder({
             username: newUser.username,
-            userId: newUser.id.toString(),
+            userId: user_id.toString(),
         })
+
+        const userIdString = user_id.toString()
 
         return {
             session: {
                 user: {
-                    id: newUser.id,
+                    id: userIdString,
                     username: newUser.username,
                     name: null,
                     description: null,

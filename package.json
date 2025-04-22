@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "test": "jest",
+        "test": "vitest",
         "start": "node -r module-alias/register ./build/index.js",
         "start:dev": "tsx ./src/index.ts",
         "start:dev:watch": "tsx watch ./src/index.ts",
@@ -45,6 +45,7 @@
         "nodemon": "^3.0.2",
         "reflect-metadata": "^0.2.1",
         "request": "^2.88.2",
+        "security-toolkit": "^1.1.8",
         "sequelize": "^6.7.0",
         "sharp": "^0.33.5",
         "snowflake-id": "^1.1.0",
@@ -72,6 +73,7 @@
         "tsup": "^8.0.1",
         "tsx": "^4.7.0",
         "typescript": "^5.3.3",
+        "vite-tsconfig-paths": "^5.1.4",
         "vitest": "^1.1.1"
     },
     "_moduleAliases": {

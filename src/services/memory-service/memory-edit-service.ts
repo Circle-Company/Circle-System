@@ -1,5 +1,5 @@
+import SecurityToolKit from "security-toolkit"
 import { InternalServerError, UnauthorizedError, ValidationError } from "../../errors"
-import SecurityToolKit from "../../security-tool/src"
 import Memory from "../../models/memories/memory-model"
 import { EditMemoryTitleProps } from "./types"
 

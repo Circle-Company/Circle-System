@@ -18,7 +18,6 @@ export async function authenticate_user(req: Request, res: Response) {
         if (!user) {
             throw new ValidationError({
                 message: "Username not found in the system",
-                action: "Please, check if you typed username correctly.",
             })
         }
 
@@ -30,7 +29,6 @@ export async function authenticate_user(req: Request, res: Response) {
         if (!passwordMatches) {
             throw new ValidationError({
                 message: "Incorrect Password.",
-                action: "Please, check if the password is correct.",
             })
         }
 
@@ -60,10 +58,11 @@ export async function authenticate_user(req: Request, res: Response) {
         if (!newAccessToken) throw new Error("Authorization token is Missing.")
 
         // Monta a resposta com todas as informações do usuário
-        return res.status(200).json({
+        const userIdString = user.id.toString()
+        const sessionData = {
             session: {
                 user: {
-                    id: user.id,
+                    id: userIdString,
                     name: user.name ? user.name : null,
                     description: user.description,
                     username: user.username,
@@ -113,17 +112,27 @@ export async function authenticate_user(req: Request, res: Response) {
                     },
                 },
             },
-        })
+        }
+        return res.status(200).json(sessionData)
     } catch (err: unknown) {
-        // Verifica o tipo de erro e retorna a resposta apropriada
+        // GARANTIR QUE TODOS OS CAMINHOS RETORNEM RESPOSTA HTTP
         if (err instanceof ValidationError) {
-            res.status(err.statusCode).json(err)
-            throw new ValidationError({ message: err.message })
+            return res.status(err.statusCode || 400).json({
+                message: err.message,
+                action: err.action,
+                key: err.key,
+            })
+        } else if (err instanceof InternalServerError) {
+            return res.status(err.statusCode || 500).json({
+                message: err.message,
+                action: err.action,
+                errorId: err.errorId,
+            })
         } else {
-            // Caso um erro interno inesperado ocorra
-            throw new InternalServerError({
-                message: "An unexpected error occurred during authentication.",
-                action: "Verify that the username and password are correct",
+            console.error("[auth-authenticate-controller] Unhandled Error:", err)
+            // Retornar um erro genérico 500
+            return res.status(500).json({
+                message: "An unexpected server error occurred during authentication.",
             })
         }
     }
