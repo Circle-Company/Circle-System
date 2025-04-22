@@ -11,6 +11,7 @@ import { BaseEmbeddingService } from "./BaseEmbeddingService"
 // Definição das interfaces para repositórios
 export interface IPostRepository {
     findById(postId: bigint): Promise<any>
+    findRecentPostIds(limit: number): Promise<bigint[]>
     // outros métodos do repositório
 }
 
@@ -373,5 +374,84 @@ export class PostEmbeddingService extends BaseEmbeddingService<
         }
 
         return Math.abs(hash) / 2147483647 // Normalize to 0-1
+    }
+
+    /**
+     * Encontra posts similares com base em um post de referência
+     * @param postId ID do post de referência
+     * @param limit Número máximo de posts a retornar
+     * @param minSimilarity Similaridade mínima (0-1)
+     * @returns Lista de posts similares com valores de similaridade
+     */
+    public async findSimilarPosts(
+        postId: bigint,
+        limit: number = 10,
+        minSimilarity: number = 0.7
+    ): Promise<Array<{ id: bigint; similarity: number }>> {
+        try {
+            // 1. Obter embedding do post de referência
+            const referenceEmbedding = await this.getPostEmbedding(postId)
+
+            if (!referenceEmbedding) {
+                throw new Error(`Post não encontrado: ${postId}`)
+            }
+
+            // 2. Em uma implementação real, usaríamos um serviço de busca vetorial
+            // Como simplificação, vamos buscar os últimos N posts e calcular similaridade
+            const recentPostIds = await this.postRepository.findRecentPostIds(limit * 10)
+
+            // Filtrar o próprio post
+            const candidateIds = recentPostIds.filter((id) => id !== postId)
+
+            // 3. Calcular similaridades
+            const similarities: Array<{ id: bigint; similarity: number }> = []
+
+            for (const candidateId of candidateIds) {
+                const candidateEmbedding = await this.getPostEmbedding(candidateId)
+
+                if (!candidateEmbedding) continue
+
+                // Calcular similaridade de cosseno
+                const similarity = this.calculateCosineSimilarity(
+                    referenceEmbedding.vector.values,
+                    candidateEmbedding.vector.values
+                )
+
+                if (similarity >= minSimilarity) {
+                    similarities.push({ id: candidateId, similarity })
+                }
+            }
+
+            // 4. Ordenar e limitar resultados
+            return similarities.sort((a, b) => b.similarity - a.similarity).slice(0, limit)
+        } catch (error: any) {
+            this.logger.error(`Erro ao buscar posts similares: ${error.message}`)
+            return []
+        }
+    }
+
+    /**
+     * Calcula a similaridade de cosseno entre dois vetores
+     */
+    private calculateCosineSimilarity(a: number[], b: number[]): number {
+        if (a.length !== b.length) {
+            throw new Error("Vetores com dimensões diferentes")
+        }
+
+        let dotProduct = 0
+        let normA = 0
+        let normB = 0
+
+        for (let i = 0; i < a.length; i++) {
+            dotProduct += a[i] * b[i]
+            normA += a[i] * a[i]
+            normB += b[i] * b[i]
+        }
+
+        if (normA === 0 || normB === 0) {
+            return 0
+        }
+
+        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB))
     }
 }
