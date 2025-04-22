@@ -1,7 +1,6 @@
 import bodyParser from "body-parser"
 import express from "express"
 import "express-async-errors"
-import config from "../config/index"
 import { RP } from "../config/routes_prefix"
 import { UserAuthenticationValidator } from "../middlewares/UserAuthenticationValidator"
 
@@ -52,10 +51,6 @@ app.use(MOMENT_PREFIX, UserAuthenticationValidator, MomentRouter)
 app.use(MOMENTS_PREFIX_V2, UserAuthenticationValidator, MomentRouterV2)
 app.use(NOTIFICATION_PREFIX, UserAuthenticationValidator, NotificationRouter)
 app.use(PREFERENCES_PREFIX, UserAuthenticationValidator, PreferencesRouter)
-
-app.listen(config.PORT, () =>
-    console.log("🚀 circle-system (server) - running on port: " + config.PORT)
-)
 
 export const testBearerToken =
     "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MjgxNDIwMDYyODk0ODU0MTQ0IiwidXNlcm5hbWUiOiJ0aWFnby5zYXZpb2xpIiwiaWF0IjoxNzM2MTkwNDg2LCJleHAiOjE3MzYxOTQwODYsImF1ZCI6IkNpcmNsZUFwcCIsImlzcyI6IkNpcmNsZUNvbXBhbnkifQ.SNOjvLXmswXiBTIzwkCuG0rCKGd8ajvLV_VhaNyOXfE"
