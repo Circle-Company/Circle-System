@@ -1,13 +1,15 @@
 import express from "express"
 import request from "supertest"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { SearchEngine } from "../../search_engine"
 import { testBearerToken } from "../app-test"
 
 // Mock de toda a funcionalidade do SearchEngine para isolamento dos testes
-vi.mock("../../search_engine", () => ({
-    SearchEngine: vi.fn(),
-}))
+vi.mock("../../search_engine", () => {
+    return {
+        SearchEngine: vi.fn(() => Promise.resolve([])),
+    }
+})
 
 // Mock dos modelos necessários
 vi.mock("../../models/user/user-model", () => ({
@@ -25,11 +27,10 @@ vi.mock("../../models/user/relation-model", () => ({
 
 // Cria um route handler separado para teste
 const router = express.Router()
+
 router.get("/search", async (req, res) => {
     try {
-        // @ts-ignore
         const searchTerm = req.query.q as string
-        // @ts-ignore
         const userId = req.user_id as bigint
 
         if (!searchTerm) {
@@ -71,53 +72,61 @@ describe("Search Engine API Integration", () => {
     app.use("/v1", router)
 
     const SEARCH_PATH = "/v1/search"
-    const mockSearchResults = [
+    const mockSearchResults: any = [
         {
-            id: BigInt(2),
-            username: "user2",
-            verifyed: true,
-            name: "User Two",
-            profile_picture: { tiny_resolution: "url/to/picture2" },
-            statistics: { total_followers_num: 10 },
+            id: 2,
+            username: "usuario2",
+            verifyed: false,
+            name: "Usuário 2",
+            profile_picture: {
+                tiny_resolution: "https://example.com/profile2.jpg",
+            },
+            statistics: {
+                total_followers_num: 10,
+            },
             you_follow: false,
         },
         {
-            id: BigInt(3),
-            username: "user3",
+            id: 3,
+            username: "usuario3",
             verifyed: false,
-            name: "User Three",
-            profile_picture: { tiny_resolution: "url/to/picture3" },
-            statistics: { total_followers_num: 5 },
+            name: "Usuário 3",
+            profile_picture: {
+                tiny_resolution: "https://example.com/profile3.jpg",
+            },
+            statistics: {
+                total_followers_num: 5,
+            },
             you_follow: true,
         },
     ]
 
     beforeEach(() => {
         // Reset mocks
-        vi.resetAllMocks()
-
-        // Setup default mock behavior
-        vi.mocked(SearchEngine).mockResolvedValue(mockSearchResults)
-    })
-
-    afterEach(() => {
         vi.clearAllMocks()
+
+        // Configurar o mock de SearchEngine de forma explícita
+        vi.mocked(SearchEngine).mockImplementation(() => {
+            return Promise.resolve([...mockSearchResults]) // Retornar cópia para evitar mutações
+        })
     })
 
     it("Should return search results for valid query", async () => {
         const response = await request(app)
             .get(SEARCH_PATH)
             .set("authorization", testBearerToken)
-            .query({ q: "testquery" })
+            .query({ q: "user" })
 
+        // Validar que o SearchEngine foi chamado com os parâmetros corretos
+        expect(SearchEngine).toHaveBeenCalledWith({
+            userId: BigInt(1),
+            searchTerm: "user",
+        })
+
+        // Verificar os resultados da resposta
         expect(response.status).toBe(200)
         expect(response.body.results).toHaveLength(2)
         expect(response.body.count).toBe(2)
-
-        expect(vi.mocked(SearchEngine)).toHaveBeenCalledWith({
-            userId: BigInt(1),
-            searchTerm: "testquery",
-        })
     })
 
     it("Should return 400 if search term is missing", async () => {
@@ -135,7 +144,7 @@ describe("Search Engine API Integration", () => {
     })
 
     it("Should return validation error if search term is invalid", async () => {
-        // Mock SearchEngine to throw validation error
+        // Mock SearchEngine para lançar erro de validação
         vi.mocked(SearchEngine).mockRejectedValueOnce(new Error("Invalid search term"))
 
         const response = await request(app)
@@ -148,7 +157,7 @@ describe("Search Engine API Integration", () => {
     })
 
     it("Should properly handle empty search results", async () => {
-        // Mock SearchEngine to return empty results
+        // Mock SearchEngine para retornar resultados vazios
         vi.mocked(SearchEngine).mockResolvedValueOnce([])
 
         const response = await request(app)
