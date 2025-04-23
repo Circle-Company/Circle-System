@@ -68,13 +68,7 @@ src/
 │   │   ├── ClusterRecalculator.ts
 │   │   └── SystemWideUpdater.ts
 │   ├── real-time/
-│   │   ├── RealtimeService.ts
 │   │   ├── FeedGenerator.ts
-│   │   └── InteractionHandler.ts
-│   └── analytics/
-│       ├── ClusterAnalytics.ts
-│       ├── UserBehaviorAnalytics.ts
-│       └── SystemPerformanceTracker.ts
 ├── api/
 │   ├── controllers/
 │   │   ├── FeedController.ts
