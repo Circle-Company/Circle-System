@@ -64,10 +64,25 @@ export class ClusterMatcher {
      * @returns Lista de resultados de correspondência ordenados por relevância
      */
     public findRelevantClusters(
-        userEmbedding: UserEmbedding,
-        userProfile?: UserProfile,
+        userEmbedding: UserEmbedding | null,
+        userProfile?: UserProfile | null,
         context?: RecommendationContext
     ): MatchResult[] {
+        // Se userEmbedding for null, retornar alguns clusters padrão ou baseados apenas no contexto/perfil
+        if (!userEmbedding) {
+            this.logger.info(
+                "UserEmbedding não fornecido, usando lógica alternativa de recomendação"
+            )
+
+            // Se tivermos perfil do usuário, podemos tentar usar apenas isso
+            if (userProfile) {
+                return this.findClustersByUserProfile(userProfile, context)
+            }
+
+            // Caso contrário, retornamos clusters mais populares ou uma seleção aleatória
+            return this.getDefaultClusters()
+        }
+
         const normalizedUserEmbedding = normalizeVector(userEmbedding.vector)
 
         // Calcular similaridade com cada cluster
@@ -97,6 +112,169 @@ export class ClusterMatcher {
             .filter((match) => match.similarity >= this._minMatchThreshold)
             .sort((a, b) => b.similarity - a.similarity)
             .slice(0, this._maxClusters)
+    }
+
+    /**
+     * Encontra clusters baseados apenas no perfil do usuário quando embedding não está disponível
+     * @param userProfile Perfil do usuário
+     * @param context Contexto opcional da recomendação
+     * @returns Lista de resultados de correspondência
+     */
+    private findClustersByUserProfile(
+        userProfile: UserProfile,
+        context?: RecommendationContext
+    ): MatchResult[] {
+        // Calcular similaridade apenas com base no perfil e contexto
+        const matches = this._clusters.map((cluster) => {
+            let similarity = 0.5 // Base de similaridade neutra
+
+            // Aumentar similaridade com base em interesses compartilhados
+            if (userProfile.interests && cluster.topics) {
+                const sharedInterests = userProfile.interests.filter((interest) =>
+                    cluster.topics?.includes(interest)
+                )
+
+                // Adicionar até 0.3 à similaridade com base em interesses compartilhados
+                similarity += Math.min(0.3, sharedInterests.length * 0.1)
+            }
+
+            // Considerar fatores contextuais se disponíveis
+            if (context) {
+                const contextualBoost = this.calculateContextualBoost(userProfile, context, cluster)
+                similarity += contextualBoost * this._contextWeight
+            }
+
+            return {
+                clusterId: cluster.id,
+                clusterName: cluster.name,
+                similarity,
+                cluster,
+            } as MatchResult
+        })
+
+        // Filtrar, ordenar e limitar os resultados
+        return matches
+            .filter((match) => match.similarity >= this._minMatchThreshold)
+            .sort((a, b) => b.similarity - a.similarity)
+            .slice(0, this._maxClusters)
+    }
+
+    /**
+     * Retorna clusters padrão quando não há informações suficientes para recomendação personalizada.
+     * Utiliza a propriedade size e densidade para selecionar clusters diversificados.
+     * @returns Lista de resultados de correspondência com clusters padrão
+     */
+    private getDefaultClusters(): MatchResult[] {
+        // Se não houver clusters, retornar um array vazio
+        if (!this._clusters || this._clusters.length === 0) {
+            this.logger.warn("Nenhum cluster disponível para recomendação padrão")
+            return []
+        }
+
+        // Agrupar clusters por tamanho
+        const smallClusters: ClusterInfo[] = []
+        const mediumClusters: ClusterInfo[] = []
+        const largeClusters: ClusterInfo[] = []
+
+        // Definir limiares de tamanho
+        const totalMembers = this._clusters.reduce((sum, c) => sum + (c.size || 0), 0)
+        const avgSize = totalMembers / this._clusters.length
+
+        const smallThreshold = avgSize * 0.5
+        const largeThreshold = avgSize * 1.5
+
+        // Classificar clusters por tamanho
+        this._clusters.forEach((cluster) => {
+            const size = cluster.size || 0
+
+            if (size < smallThreshold) {
+                smallClusters.push(cluster)
+            } else if (size > largeThreshold) {
+                largeClusters.push(cluster)
+            } else {
+                mediumClusters.push(cluster)
+            }
+        })
+
+        this.logger.debug(
+            `Clusters classificados por tamanho: ${smallClusters.length} pequenos, ${mediumClusters.length} médios, ${largeClusters.length} grandes`
+        )
+
+        // Estratégia de diversificação:
+        // 60% dos resultados de clusters grandes (populares)
+        // 30% dos resultados de clusters médios
+        // 10% dos resultados de clusters pequenos (nicho)
+        const largeCount = Math.ceil(this._maxClusters * 0.6)
+        const mediumCount = Math.ceil(this._maxClusters * 0.3)
+        const smallCount = this._maxClusters - largeCount - mediumCount
+
+        // Selecionar clusters de cada categoria, priorizando densidade dentro de cada grupo
+        const selectedLarge = this.selectTopClusters(largeClusters, largeCount)
+        const selectedMedium = this.selectTopClusters(mediumClusters, mediumCount)
+        const selectedSmall = this.selectTopClusters(smallClusters, smallCount)
+
+        // Combinar e converter para o formato MatchResult
+        const combinedClusters = [...selectedLarge, ...selectedMedium, ...selectedSmall].map(
+            (cluster) => ({
+                clusterId: cluster.id,
+                clusterName: cluster.name,
+                similarity: 0.5, // Valor neutro de similaridade
+                cluster,
+            })
+        )
+
+        // Se não conseguimos clusters suficientes com a estratégia de diversificação,
+        // complementar com os clusters ordenados por tamanho
+        if (combinedClusters.length < this._maxClusters) {
+            this.logger.debug(
+                `Estratégia de diversificação não obteve clusters suficientes (${combinedClusters.length}/${this._maxClusters}), complementando...`
+            )
+
+            const remainingCount = this._maxClusters - combinedClusters.length
+            const remainingClusters = this._clusters
+                .filter((cluster) => !combinedClusters.some((c) => c.clusterId === cluster.id))
+                .sort((a, b) => (b.size || 0) - (a.size || 0))
+                .slice(0, remainingCount)
+                .map((cluster) => ({
+                    clusterId: cluster.id,
+                    clusterName: cluster.name,
+                    similarity: 0.5,
+                    cluster,
+                }))
+
+            return [...combinedClusters, ...remainingClusters]
+        }
+
+        return combinedClusters
+    }
+
+    /**
+     * Seleciona os top clusters de uma lista, priorizando densidade e tamanho
+     * @param clusters Lista de clusters para selecionar
+     * @param count Número de clusters a selecionar
+     * @returns Lista dos top clusters selecionados
+     */
+    private selectTopClusters(clusters: ClusterInfo[], count: number): ClusterInfo[] {
+        if (clusters.length <= count) {
+            return [...clusters] // Retornar todos se não tivermos clusters suficientes
+        }
+
+        // Ordenar por uma combinação de tamanho e densidade
+        return [...clusters]
+            .sort((a, b) => {
+                // Se temos informação de densidade, usar como critério principal
+                const densityA = a.density !== undefined ? a.density : 0
+                const densityB = b.density !== undefined ? b.density : 0
+
+                // Se as densidades forem significativamente diferentes, ordenar por densidade
+                if (Math.abs(densityA - densityB) > 0.1) {
+                    return densityB - densityA
+                }
+
+                // Caso contrário, ordenar por tamanho
+                return (b.size || 0) - (a.size || 0)
+            })
+            .slice(0, count)
     }
 
     /**
@@ -197,5 +375,107 @@ export class ClusterMatcher {
         }
 
         return false
+    }
+
+    /**
+     * Retorna estatísticas sobre os clusters disponíveis no sistema
+     * @returns Objeto com estatísticas dos clusters
+     */
+    public getClusterStats(): Record<string, any> {
+        if (!this._clusters || this._clusters.length === 0) {
+            return {
+                count: 0,
+                isEmpty: true,
+                message: "Nenhum cluster disponível",
+            }
+        }
+
+        // Estatísticas básicas
+        const sizes = this._clusters.map((c) => c.size || 0)
+        const densities = this._clusters
+            .filter((c) => c.density !== undefined)
+            .map((c) => c.density as number)
+
+        // Calcular distribuição de tamanho
+        const totalSize = sizes.reduce((sum, size) => sum + size, 0)
+        const avgSize = totalSize / sizes.length
+        const maxSize = Math.max(...sizes)
+        const minSize = Math.min(...sizes)
+
+        // Estatísticas de densidade, se disponíveis
+        let densityStats = {}
+        if (densities.length > 0) {
+            const avgDensity = densities.reduce((sum, d) => sum + d, 0) / densities.length
+            const maxDensity = Math.max(...densities)
+            const minDensity = Math.min(...densities)
+
+            densityStats = {
+                avgDensity,
+                maxDensity,
+                minDensity,
+                hasDensityInfo: true,
+            }
+        } else {
+            densityStats = {
+                hasDensityInfo: false,
+                message: "Informações de densidade não disponíveis",
+            }
+        }
+
+        // Distribuição de tamanhos
+        const sizeDistribution = {
+            small: sizes.filter((s) => s < avgSize * 0.5).length,
+            medium: sizes.filter((s) => s >= avgSize * 0.5 && s <= avgSize * 1.5).length,
+            large: sizes.filter((s) => s > avgSize * 1.5).length,
+        }
+
+        // Informações de tópicos
+        const allTopics = new Set<string>()
+        this._clusters.forEach((cluster) => {
+            if (cluster.topics && Array.isArray(cluster.topics)) {
+                cluster.topics.forEach((topic) => allTopics.add(topic))
+            }
+        })
+
+        // Clusters com propriedades específicas
+        const withLocations = this._clusters.filter(
+            (c) => this.getPreferredLocations(c) !== undefined
+        ).length
+        const withLanguages = this._clusters.filter(
+            (c) => this.getClusterLanguages(c) !== undefined
+        ).length
+        const withActiveTime = this._clusters.filter((c) => c.activeTimeOfDay !== undefined).length
+
+        return {
+            count: this._clusters.length,
+            totalMembers: totalSize,
+            sizeStats: {
+                avgSize,
+                maxSize,
+                minSize,
+                sizeDistribution,
+            },
+            densityStats,
+            topicStats: {
+                uniqueTopicsCount: allTopics.size,
+                topicsPerCluster:
+                    this._clusters.reduce((sum, c) => sum + (c.topics?.length || 0), 0) /
+                    this._clusters.length,
+            },
+            propertiesStats: {
+                withLocations,
+                withLanguages,
+                withActiveTime,
+            },
+        }
+    }
+
+    /**
+     * Atualiza a lista de clusters disponíveis
+     * @param clusters Nova lista de clusters
+     */
+    public updateClusters(clusters: ClusterInfo[]): void {
+        this._clusters = clusters
+        this.logger.info(`Clusters atualizados: ${clusters.length} clusters disponíveis`)
     }
 }
