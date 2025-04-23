@@ -8,8 +8,13 @@
         "start": "node -r module-alias/register ./build/index.js",
         "start:dev": "tsx ./src/index.ts",
         "start:dev:watch": "tsx watch ./src/index.ts",
+        "start:with-clusters": "RUN_CLUSTER_TESTS=true tsx ./src/index.ts",
+        "start:with-recommendations": "RUN_RECOMMENDATION_SYSTEM=true tsx ./src/index.ts",
+        "start:full": "RUN_CLUSTER_TESTS=true RUN_RECOMMENDATION_SYSTEM=true tsx ./src/index.ts",
         "migrate:up": "npx sequelize-cli db:migrate",
-        "build": "npx tsc --build --force"
+        "build": "npx tsc --build --force",
+        "test:simclusters": "npx tsc src/swipe-engine/v2/examples/simcluster-test-runner.ts",
+        "recommendation": "tsx src/swipe-engine/v2/run-recommendation-system.ts"
     },
     "author": "",
     "license": "ISC",
