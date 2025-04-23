@@ -48,7 +48,9 @@ Algoritmos para agrupar embeddings similares em clusters:
 -   `ClusteringFactory`: Fábrica para instanciar diferentes algoritmos de clustering
 -   `HierarchicalClustering`: Implementação de clustering hierárquico aglomerativo
 -   `KMeansClustering`: Implementação do algoritmo K-means
--   `DBSCANClustering`: Implementação do algoritmo DBSCAN
+-   `DBSCANClustering`: Implementação do algoritmo DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
+-   `performClustering`: Função auxiliar para executar clustering facilmente
+-   `trainClusteringModel`: Função para treinar o modelo com dados existentes
 
 ### 3. Recommendation
 
@@ -118,3 +120,72 @@ O SwipeEngine v2 foi projetado para ser extensível:
 -   [ ] API de feedback para aprendizado contínuo
 -   [ ] Dashboards de monitoramento
 -   [ ] Testes A/B para otimização das recomendações
+
+## Testando o ClusterMatcher
+
+O módulo `ClusterMatcher` é um componente fundamental do sistema de recomendação, responsável por encontrar clusters relevantes para um usuário com base em seu embedding, perfil e contexto.
+
+### Executando os Testes
+
+Os testes do ClusterMatcher utilizam Vitest e podem ser executados com o seguinte comando:
+
+```bash
+npm test -- src/swipe-engine/v2/core/recommendation/__tests__/ClusterMatcher.test.ts
+```
+
+ou com watch mode para desenvolvimento:
+
+```bash
+npm test -- --watch src/swipe-engine/v2/core/recommendation/__tests__/ClusterMatcher.test.ts
+```
+
+### Exemplo de Demonstração
+
+Um exemplo de demonstração foi criado para ilustrar o uso do ClusterMatcher em diferentes cenários:
+
+```bash
+# Compilar o TypeScript
+npm run build
+
+# Executar o exemplo
+node build/swipe-engine/v2/examples/cluster-matcher-demo.js
+```
+
+Alternativamente, use ts-node para executar o exemplo diretamente:
+
+```bash
+npx ts-node src/swipe-engine/v2/examples/cluster-matcher-demo.ts
+```
+
+### Características do ClusterMatcher
+
+O ClusterMatcher implementa várias estratégias de recomendação:
+
+1. **Recomendação baseada em embeddings** - Utiliza similaridade de cosseno entre embeddings
+2. **Recomendação baseada em perfil** - Quando embeddings não estão disponíveis
+3. **Recomendação padrão diversificada** - Utilizando a propriedade `size` dos clusters
+
+A estratégia de diversificação implementada distribui as recomendações entre:
+
+-   60% clusters grandes (populares)
+-   30% clusters médios
+-   10% clusters pequenos (de nicho)
+
+Isso assegura que mesmo os usuários novos ou sem perfil recebam recomendações variadas.
+
+## Ferramenta de Teste SimCluster
+
+Para facilitar os testes do sistema, foi criada uma ferramenta completa chamada `SimCluster Test Runner`. Ela permite:
+
+-   Gerar embeddings simulados de usuários e posts
+-   Construir SimClusters usando DBSCAN
+-   Salvar os resultados em arquivos JSON para reuso
+-   Testar o algoritmo de recomendação com dados realistas
+
+Para executar a ferramenta de teste:
+
+```bash
+npm run test:simclusters
+```
+
+Mais detalhes podem ser encontrados em [`/examples/README.md`](/src/swipe-engine/v2/examples/README.md).
