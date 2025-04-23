@@ -18,35 +18,27 @@ export function extractVectorValues(vec: number[] | EmbeddingVector): number[] {
 
 /**
  * Calcula a similaridade de cosseno entre dois vetores
- * @param vecA Primeiro vetor
- * @param vecB Segundo vetor
- * @returns Valor de similaridade entre 0 e 1
+ * @param a Primeiro vetor
+ * @param b Segundo vetor
+ * @returns Similaridade de cosseno (entre -1 e 1)
  */
-export function cosineSimilarity(
-    vecA: number[] | EmbeddingVector,
-    vecB: number[] | EmbeddingVector
-): number {
-    const valuesA = extractVectorValues(vecA)
-    const valuesB = extractVectorValues(vecB)
-
-    if (valuesA.length !== valuesB.length) {
-        throw new Error(
-            `Dimensões dos vetores incompatíveis: ${valuesA.length} vs ${valuesB.length}`
-        )
+export function cosineSimilarity(a: number[], b: number[]): number {
+    if (a.length !== b.length) {
+        throw new Error(`Vetores com dimensões diferentes: ${a.length} e ${b.length}`)
     }
 
     let dotProduct = 0
     let normA = 0
     let normB = 0
 
-    for (let i = 0; i < valuesA.length; i++) {
-        dotProduct += valuesA[i] * valuesB[i]
-        normA += valuesA[i] * valuesA[i]
-        normB += valuesB[i] * valuesB[i]
+    for (let i = 0; i < a.length; i++) {
+        dotProduct += a[i] * b[i]
+        normA += a[i] * a[i]
+        normB += b[i] * b[i]
     }
 
     if (normA === 0 || normB === 0) {
-        return 0
+        return 0 // Evitar divisão por zero
     }
 
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB))
@@ -54,26 +46,18 @@ export function cosineSimilarity(
 
 /**
  * Calcula a distância euclidiana entre dois vetores
- * @param vecA Primeiro vetor
- * @param vecB Segundo vetor
- * @returns Valor da distância euclidiana
+ * @param a Primeiro vetor
+ * @param b Segundo vetor
+ * @returns Distância euclidiana
  */
-export function euclideanDistance(
-    vecA: number[] | EmbeddingVector,
-    vecB: number[] | EmbeddingVector
-): number {
-    const valuesA = extractVectorValues(vecA)
-    const valuesB = extractVectorValues(vecB)
-
-    if (valuesA.length !== valuesB.length) {
-        throw new Error(
-            `Dimensões dos vetores incompatíveis: ${valuesA.length} vs ${valuesB.length}`
-        )
+export function euclideanDistance(a: number[], b: number[]): number {
+    if (a.length !== b.length) {
+        throw new Error(`Vetores com dimensões diferentes: ${a.length} e ${b.length}`)
     }
 
     let sum = 0
-    for (let i = 0; i < valuesA.length; i++) {
-        const diff = valuesA[i] - valuesB[i]
+    for (let i = 0; i < a.length; i++) {
+        const diff = a[i] - b[i]
         sum += diff * diff
     }
 
@@ -81,16 +65,18 @@ export function euclideanDistance(
 }
 
 /**
- * Normaliza um vetor (escala para norma unitária)
- * @param vec Vetor a ser normalizado
- * @returns Vetor normalizado com a mesma direção mas magnitude 1
+ * Normaliza um vetor para ter magnitude 1 (normalização L2)
+ * @param vector Vetor a ser normalizado
+ * @returns Vetor normalizado
  */
-export function normalizeVector(vec: number[] | EmbeddingVector): number[] {
-    const values = extractVectorValues(vec)
-    const norm = euclideanNorm(values)
+export function normalizeVector(vector: number[] | EmbeddingVector): number[] {
+    // Se for um EmbeddingVector, extrair o array de valores
+    const values = Array.isArray(vector) ? vector : vector.values
+
+    const norm = Math.sqrt(values.reduce((sum, val) => sum + val * val, 0))
 
     if (norm === 0) {
-        return Array(values.length).fill(0)
+        return [...values] // Retornar cópia para evitar mutação
     }
 
     return values.map((val) => val / norm)
@@ -240,25 +226,17 @@ export function subtractVectors(
 }
 
 /**
- * Soma dois vetores
- * @param vecA Primeiro vetor
- * @param vecB Segundo vetor
- * @returns Vetor resultante da soma
+ * Adiciona dois vetores
+ * @param a Primeiro vetor
+ * @param b Segundo vetor
+ * @returns Novo vetor como soma de a e b
  */
-export function addVectors(
-    vecA: number[] | EmbeddingVector,
-    vecB: number[] | EmbeddingVector
-): number[] {
-    const valuesA = extractVectorValues(vecA)
-    const valuesB = extractVectorValues(vecB)
-
-    if (valuesA.length !== valuesB.length) {
-        throw new Error(
-            `Dimensões dos vetores incompatíveis: ${valuesA.length} vs ${valuesB.length}`
-        )
+export function addVectors(a: number[], b: number[]): number[] {
+    if (a.length !== b.length) {
+        throw new Error(`Vetores com dimensões diferentes: ${a.length} e ${b.length}`)
     }
 
-    return valuesA.map((val, i) => val + valuesB[i])
+    return a.map((val, i) => val + b[i])
 }
 
 /**
@@ -335,4 +313,20 @@ export function createEmbeddingVector(values: number[]): EmbeddingVector {
         createdAt: new Date(),
         updatedAt: new Date(),
     }
+}
+
+/**
+ * Cria um vetor aleatório com valores entre 0 e 1
+ * @param dimension Dimensão do vetor
+ * @param seed Valor para inicializar a geração pseudoaleatória (opcional)
+ * @returns Vetor aleatório normalizado
+ */
+export function createRandomVector(dimension: number, seed?: number): number[] {
+    // Função simples de geração pseudoaleatória com seed
+    const rand = seed ? (x: number) => Math.sin(x * (seed % 100)) * 0.5 + 0.5 : () => Math.random()
+
+    const vector = Array(dimension)
+        .fill(0)
+        .map((_, i) => rand(i))
+    return normalizeVector(vector)
 }
