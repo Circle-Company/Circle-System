@@ -1,60 +1,50 @@
-# Resumo da Implementação do KMeans como Algoritmo Único
+# Resumo da Implementação do DBSCAN como Algoritmo Único
 
-## Alterações Realizadas
+## Mudanças Principais
 
 1. **Simplificação da Arquitetura**
 
-    - Removida a `ClusteringFactory` e o sistema de registro de algoritmos
-    - Eliminadas as implementações alternativas (`SimpleKMeans`, `DBSCANClustering`)
-    - Removidos os arquivos base (`BaseClusteringAlgorithm`, `ClusteringAlgorithm`)
-    - Criado um arquivo `index.ts` que exporta diretamente o `KMeansClustering`
+    - Feita a transição completa para o algoritmo DBSCAN
+    - Eliminado o algoritmo KMeansClustering
+    - Criado um arquivo `index.ts` que exporta diretamente o `DBSCANClustering`
 
-2. **Aprimoramento do KMeansClustering**
+2. **Aprimoramento do DBSCANClustering**
 
-    - Corrigidos erros de tipos e incompatibilidades com interfaces
-    - Adaptada a classe para funcionar como implementação independente
-    - Melhoradas as métricas de qualidade dos clusters
-    - Adicionada validação melhor para parâmetros
+    - Implementação completa e otimizada do algoritmo DBSCAN
+    - Suporte a diferentes métricas de distância (euclidiana, cosseno, manhattan)
+    - Adição de parâmetros específicos do DBSCAN (`epsilon`, `minPoints`)
+    - Tratamento inteligente de pontos de ruído (outliers)
+    - Cálculo de métricas de densidade para os clusters
 
-3. **Integração com o RecommendationEngine**
+3. **Simplificação das Interfaces**
+    - Interface única para interação: DBSCANClustering
+    - Funções de utilidade para facilitar o uso: `performClustering` e `trainClusteringModel`
+    - Atualizado para usar diretamente o `DBSCANClustering` sem factory completa
 
-    - Atualizado para usar diretamente o `KMeansClustering` sem factory
-    - Simplificado o construtor para receber apenas o serviço de embedding
-    - Adaptada a lógica de clustering no método `findRelevantClusters`
+## Benefícios da Abordagem
 
-4. **Atualização do Ponto de Entrada Principal**
-    - Simplificadas as exportações para componentes essenciais
-    - Adaptada a função `createSwipeEngine` para a nova arquitetura
-    - Atualizada a documentação para refletir as mudanças
+1. **Simplicidade**: Uma única implementação para clustering, facilitando manutenção e uso
+2. **Descoberta Automática**: DBSCAN descobre automaticamente o número de clusters
+3. **Identificação de Outliers**: Pontos isolados são identificados como ruído
+4. **Foco**: Concentração na otimização do algoritmo principal (DBSCAN)
 
-## Vantagens da Nova Abordagem
-
-1. **Simplicidade**: Código mais direto e fácil de entender
-2. **Manutenção**: Menos arquivos e abstrações para manter
-3. **Performance**: Eliminação de indireções desnecessárias
-4. **Foco**: Concentração na otimização do algoritmo principal (KMeans)
-
-## Uso da Implementação
+## Exemplos de Uso
 
 ```typescript
-// Obter instância diretamente
-import { KMeansClustering } from "../clustering"
-const kmeans = new KMeansClustering()
+import { performClustering } from "../clustering"
 
-// Ou usar a instância padrão
-import { defaultClusteringAlgorithm } from "../clustering"
+// Uso direto da função de utilidade
+const result = await performClustering(embeddings, entities, {
+    epsilon: 0.3,
+    minPoints: 5,
+})
 
-// Ou via helper
-import { getClusteringAlgorithm } from "../clustering"
-const kmeans = getClusteringAlgorithm()
-
-// Realizar clustering
-const clusters = await kmeans.cluster(embeddings, entities, config)
+// Resultado contém clusters e atribuições
+console.log(`Encontrados ${result.clusters.length} clusters`)
 ```
 
 ## Próximos Passos
 
-1. **Otimizações de performance** para o algoritmo KMeans
-2. **Testes de escala** com grandes volumes de dados
-3. **Melhorias nas métricas** de qualidade dos clusters
-4. **Integração com serviços de armazenamento** para persistência dos clusters
+1. **Otimizações de performance** para o algoritmo DBSCAN
+2. **Implementação de Índices Espaciais** para acelerar o processamento com grandes volumes de dados
+3. **Paralelização** de operações de clustering para processamento distribuído

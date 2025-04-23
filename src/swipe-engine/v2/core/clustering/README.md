@@ -1,97 +1,99 @@
-# Clustering no Swipe Engine
+# Módulo de Clustering
 
-Este módulo implementa o algoritmo de clustering K-means para o Swipe Engine, usado para agrupar entidades (usuários ou posts) com base em seus embeddings.
+Este módulo contém a implementação do algoritmo DBSCAN (Density-Based Spatial Clustering of Applications with Noise) utilizado pelo SwipeEngine para agrupar entidades similares em clusters.
 
-## Algoritmo Implementado
+## Componentes Principais
 
-### KMeansClustering
+### DBSCANClustering
 
-A implementação do algoritmo K-means é eficiente e otimizada para trabalhar com embeddings de alta dimensionalidade. O algoritmo agrupa entidades em clusters onde cada entidade pertence ao cluster cujo centroide é o mais próximo.
+Implementação do algoritmo DBSCAN para clustering baseado em densidade. Este algoritmo tem as seguintes vantagens:
 
-**Características:**
+-   **Não requer número predefinido de clusters**: Descobre automaticamente o número adequado de clusters
+-   **Identifica outliers**: Pontos isolados são identificados como ruído
+-   **Encontra clusters de formato arbitrário**: Não assume clusters esféricos como o K-Means
+-   **Robustez**: Menos sensível a outliers e ruídos nos dados
 
--   Inicialização de centroides com método aleatório ou k-means++
--   Métrica de distância configurável (euclidiana, cosseno ou manhattan)
--   Detecção automática de convergência
--   Cálculo de métricas de qualidade para clusters
+## Como Usar
 
-## Como Utilizar
+### Importação
 
 ```typescript
-import { KMeansClustering } from "../clustering";
+import { DBSCANClustering, DBSCANConfig, performClustering } from "../clustering"
 
-// Criar instância do algoritmo
-const kmeans = new KMeansClustering();
+// Criar uma instância
+const dbscan = new DBSCANClustering()
 
-// Embeddings e entidades para clustering
-const embeddings: number[][] = [...]; // Matriz de vetores de embedding
-const entities = [...]; // Array de entidades (usuários ou posts)
-
-// Configuração do clustering
-const config = {
-  numClusters: 10,
-  maxIterations: 100,
-  distanceFunction: "euclidean"
-};
-
-// Realizar clustering
-const clusters = await kmeans.cluster(embeddings, entities, config);
-
-// Acessar os resultados
-for (const cluster of clusters) {
-  console.log(`Cluster ${cluster.id} contém ${cluster.size} membros`);
-  console.log(`Centroide: ${cluster.centroid}`);
-  console.log(`Métricas: Coesão ${cluster.metrics.cohesion}`);
-}
+// Ou usar a função utilitária
+const result = await performClustering(embeddings, entities, config)
 ```
 
-## API
+### Clusterização de Embeddings
 
-### `cluster(embeddings, entities, config)`
+```typescript
+// Dados para clustering
+const embeddings = [
+    [0.1, 0.2, 0.3, 0.4], // Embedding 1
+    [0.2, 0.3, 0.4, 0.5], // Embedding 2
+    // ...
+]
 
-Realiza o clustering dos embeddings e retorna um array de clusters.
+const entities = [
+    { id: "user1", type: "user" },
+    { id: "user2", type: "user" },
+    // ...
+]
 
-**Parâmetros:**
+// Configuração específica para o DBSCAN
+const config: DBSCANConfig = {
+    epsilon: 0.3, // Raio da vizinhança
+    minPoints: 5, // Pontos mínimos para formar um cluster
+    distanceFunction: "cosine", // Função de distância
+}
 
--   `embeddings: number[][]`: Matriz de embeddings, onde cada linha é um vetor
--   `entities: Entity[]`: Array de entidades correspondentes aos embeddings
--   `config: ClusterConfig`: Configuração do algoritmo
+// Executar clustering
+const result = await dbscan.cluster(embeddings, entities, config)
 
-**Retorno:**
+// Resultado contém clusters e atribuições
+console.log(`Encontrados ${result.clusters.length} clusters`)
+```
 
--   `Promise<Cluster[]>`: Array de clusters formados
+### Treinamento com Dados Existentes
 
-### `train(data, config)`
+```typescript
+// Dados de treinamento
+const trainingData = {
+    ids: ["user1", "user2", "user3", "user4"],
+    vectors: [
+        [0.1, 0.2, 0.3],
+        [0.2, 0.3, 0.4],
+        [0.9, 0.8, 0.7],
+        [0.8, 0.7, 0.6],
+    ],
+}
 
-Treina o algoritmo com dados fornecidos e retorna informações detalhadas sobre o processo de clustering.
-
-**Parâmetros:**
-
--   `data: ClusteringTrainingData`: Dados de treinamento
--   `config?: Partial<ClusteringConfig>`: Configuração opcional
-
-**Retorno:**
-
--   `Promise<ClusteringResult>`: Resultado detalhado do clustering
+// Treinar o modelo
+const result = await dbscan.train(trainingData, config)
+```
 
 ## Configuração
 
-O algoritmo KMeans aceita várias opções de configuração:
+O algoritmo DBSCAN aceita várias opções de configuração:
 
-```typescript
-interface ClusterConfig {
-    numClusters?: number // Número de clusters (padrão: 10)
-    maxIterations?: number // Máximo de iterações (padrão: 100)
-    distanceFunction?: "cosine" | "euclidean" | "manhattan" // (padrão: "euclidean")
-}
-```
+| Parâmetro        | Descrição                                                                     | Valor Padrão       |
+| ---------------- | ----------------------------------------------------------------------------- | ------------------ |
+| epsilon          | Raio da vizinhança (distância máxima para pontos serem considerados vizinhos) | 0.3                |
+| minPoints        | Número mínimo de pontos para formar um cluster                                | 5                  |
+| distanceFunction | Função de distância ("euclidean", "cosine", "manhattan")                      | "cosine"           |
+| noiseHandling    | Como tratar pontos de ruído ("separate-cluster", "ignore")                    | "separate-cluster" |
 
-## Implementação
+## Métricas
 
-A implementação segue estas etapas:
+O resultado do clustering inclui várias métricas úteis:
 
-1. **Inicialização**: Centroides iniciais são escolhidos (aleatoriamente ou via k-means++)
-2. **Atribuição**: Cada entidade é associada ao centroide mais próximo
-3. **Atualização**: Centroides são recalculados como a média dos pontos em cada cluster
-4. **Convergência**: Repete os passos 2-3 até convergir ou atingir o número máximo de iterações
-5. **Formação de Clusters**: Os clusters finais são formados e suas métricas calculadas
+-   **Coesão**: Quão próximos estão os pontos dentro de cada cluster
+-   **Densidade**: Concentração de pontos dentro de cada cluster
+-   **Qualidade**: Pontuação geral da qualidade do clustering (0-1)
+
+## Extensão
+
+A classe `DBSCANClustering` pode ser estendida para implementar variantes do algoritmo ou otimizações específicas para casos de uso particulares.
