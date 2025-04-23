@@ -1,278 +1,214 @@
 /**
- * Motor principal de recomendação
+ * Motor de recomendação do SwipeEngine
+ *
+ * Conecta os serviços de embedding, clustering e geração de recomendações.
  */
-
-import { KMeansClustering } from "../clustering/KMeansClustering"
+import {
+    DBSCANClustering,
+    DBSCANConfig,
+    getClusteringAlgorithm,
+    performClustering,
+} from "../clustering"
 import { UserEmbeddingService } from "../embeddings/UserEmbeddingService"
-import { Entity, RecommendationResult, RecommendedItem } from "../types"
+import {
+    ClusterInfo,
+    MatchResult,
+    Recommendation,
+    RecommendationContext,
+    RecommendationOptions,
+    UserEmbedding,
+    UserProfile,
+} from "../types"
+import { getLogger } from "../utils/logger"
+import { ClusterMatcher } from "./ClusterMatcher"
+// Importações opcionais - substituir por implementações ou comentar se não for criar
+// import { CandidateSelector } from "./CandidateSelector"
+// import { RankingService } from "./RankingService"
+
+// Classes simples para evitar erros de lint
+class CandidateSelector {
+    async selectCandidates(clusters: MatchResult[], options: any) {
+        return [] // Implementação mínima
+    }
+}
+
+class RankingService {
+    async rankCandidates(candidates: any[], options: any) {
+        return [] // Implementação mínima
+    }
+}
 
 export class RecommendationEngine {
-    private userEmbeddingService: UserEmbeddingService
-    private clusteringAlgorithm: KMeansClustering
+    private clusteringAlgorithm: DBSCANClustering
+    private userEmbeddingService: UserEmbeddingService | null = null
+    private clusterMatcher: ClusterMatcher
+    private candidateSelector: CandidateSelector
+    private rankingService: RankingService
+    private readonly logger = getLogger("RecommendationEngine")
 
-    // Cache para resultados de recomendação recentes
-    private recommendationCache: Map<
-        string,
-        {
-            result: RecommendationResult
-            timestamp: number
+    /**
+     * Cria uma nova instância do motor de recomendação
+     */
+    constructor(config?: any) {
+        // Inicializar componentes
+        this.clusteringAlgorithm = getClusteringAlgorithm()
+        this.clusterMatcher = new ClusterMatcher(config?.clusters || [], {
+            minMatchThreshold: 0.2,
+            contextWeight: 0.3,
+            interestWeight: 0.3,
+            embeddingWeight: 0.4,
+        })
+        this.candidateSelector = new CandidateSelector()
+        this.rankingService = new RankingService()
+
+        // Configurar componentes com base no config, se fornecido
+        if (config?.userEmbeddingService) {
+            this.userEmbeddingService = config.userEmbeddingService
         }
-    > = new Map()
 
-    // Tempo de vida do cache em milissegundos (15 minutos)
-    private cacheTTL: number = 15 * 60 * 1000
-
-    constructor(userEmbeddingService: UserEmbeddingService) {
-        this.userEmbeddingService = userEmbeddingService
-        this.clusteringAlgorithm = new KMeansClustering()
+        this.logger.info("Motor de recomendação inicializado com DBSCAN")
     }
 
     /**
      * Gera recomendações para um usuário
+     *
      * @param userId ID do usuário
-     * @param count Número de recomendações a retornar
-     * @param options Opções adicionais para personalizar as recomendações
+     * @param limit Número máximo de recomendações
+     * @param options Opções adicionais
      */
     public async getRecommendations(
-        userId: bigint,
-        count: number = 10,
+        userId: string | bigint,
+        limit: number = 10,
         options: RecommendationOptions = {}
-    ): Promise<RecommendationResult> {
-        // 1. Verificar cache (se não foi solicitado para ignorar)
-        if (!options.skipCache) {
-            const cachedResult = this.getCachedRecommendations(userId, count)
-            if (cachedResult) {
-                return cachedResult
-            }
-        }
-
+    ): Promise<Recommendation[]> {
         try {
-            // 2. Obter embedding do usuário
-            const userEmbedding = await this.userEmbeddingService.getUserEmbedding(userId)
+            // 1. Obter embedding do usuário (se serviço disponível)
+            let userEmbedding: UserEmbedding | null = null
+            let userProfile: UserProfile | null = null
 
-            // 3. Encontrar clusters relevantes para o usuário
-            const relevantClusters = await this.findRelevantClusters(userId, userEmbedding)
-
-            // 4. Extrair candidatos dos clusters
-            const candidates = await this.extractCandidates(userId, relevantClusters, options)
-
-            // 5. Aplicar filtros de segurança, de conteúdo, etc.
-            const filteredCandidates = await this.applySafetyFilters(userId, candidates)
-
-            // 6. Ranquear candidatos
-            const rankedCandidates = await this.rankCandidates(
-                userId,
-                filteredCandidates,
-                userEmbedding
-            )
-
-            // 7. Aplicar diversificação
-            const diversifiedCandidates = this.diversifyCandidates(
-                rankedCandidates,
-                options.diversityLevel || 0.3
-            )
-
-            // 8. Limitar ao número solicitado
-            const selectedItems = diversifiedCandidates.slice(0, count)
-
-            // 9. Construir o resultado
-            const result: RecommendationResult = {
-                items: selectedItems,
-                metadata: {
-                    generatedAt: new Date(),
-                    strategy: options.strategy || "default",
-                    diversity: this.calculateDiversity(selectedItems),
-                    freshness: this.calculateFreshness(selectedItems),
-                },
+            if (this.userEmbeddingService) {
+                userEmbedding = await this.userEmbeddingService.getUserEmbedding(BigInt(userId))
             }
 
-            // 10. Armazenar no cache (se não for uma solicitação para ignorar o cache)
-            if (!options.skipCache) {
-                this.cacheRecommendations(userId, count, result)
-            }
+            // 2. Obter clusters que correspondem ao perfil do usuário
+            // TODO: Implementar obtenção de clusters do repositório
+            const clusters = await this.getOrCreateClusters()
 
-            return result
-        } catch (error) {
-            console.error(`Erro ao gerar recomendações para o usuário ${userId}:`, error)
-            // Em caso de erro, retornar recomendações de fallback
-            return this.getFallbackRecommendations(count)
+            this.clusterMatcher = new ClusterMatcher(clusters)
+            // Usando tipo condicional para lidar com valores nulos
+            const matchingClusters = await this.findRelevantClusters(
+                userEmbedding,
+                userProfile,
+                options.context
+            )
+
+            // 3. Selecionar candidatos a partir dos clusters
+            const candidates = await this.candidateSelector.selectCandidates(matchingClusters, {
+                limit: limit * 3, // Obter mais candidatos do que o necessário para ranking
+                excludeIds: options.excludeIds,
+                userId: String(userId),
+            })
+
+            // 4. Ranquear candidatos
+            const recommendations = await this.rankingService.rankCandidates(candidates, {
+                userEmbedding,
+                userProfile,
+                limit,
+                diversityLevel: options.diversity || 0.3,
+                noveltyLevel: options.novelty || 0.2,
+                context: options.context,
+            })
+
+            return recommendations
+        } catch (error: any) {
+            this.logger.error(
+                `Erro ao gerar recomendações para usuário ${userId}: ${error.message}`
+            )
+            return []
         }
     }
 
     /**
-     * Encontra clusters relevantes para o usuário
+     * Encontra clusters relevantes para um usuário
      */
-    private async findRelevantClusters(userId: bigint, userEmbedding: number[]) {
-        // Esta é uma implementação simplificada
-        // Em uma implementação real, usaríamos o algoritmo de clustering para agrupar entidades
-
-        console.log(`Buscando clusters para o usuário ${userId}`)
-
-        // Placeholder: em uma implementação real, recuperaríamos embeddings e entidades
-        // de um repositório e usaríamos o algoritmo de clustering para agrupá-los
-
-        // Usar diretamente o KMeansClustering em vez da factory
-        // Em uma implementação real, teríamos dados reais para clusterizar
-        // const clusters = await this.clusteringAlgorithm.cluster(embeddings, entities, {
-        //     numClusters: 10,
-        //     maxIterations: 100,
-        //     distanceFunction: "euclidean"
-        // });
-
-        // Aqui simularemos alguns clusters para exemplo
-        return []
+    private async findRelevantClusters(
+        userEmbedding: UserEmbedding | null,
+        userProfile: UserProfile | null,
+        context?: RecommendationContext
+    ): Promise<MatchResult[]> {
+        // Implementação modificada para aceitar valores nulos
+        return this.clusterMatcher.findRelevantClusters(userEmbedding, userProfile, context)
     }
 
     /**
-     * Extrai candidatos a recomendação dos clusters relevantes
+     * Obtém clusters existentes ou cria novos se não existirem
+     * @returns Lista de clusters
      */
-    private async extractCandidates(
-        userId: bigint,
-        clusters: any[],
-        options: RecommendationOptions
-    ): Promise<Entity[]> {
-        // Implementação simplificada para exemplo
-        console.log(`Extraindo candidatos para o usuário ${userId} de ${clusters.length} clusters`)
-
-        // Em uma implementação real, extrairíamos itens dos clusters mais relevantes
-        // aplicando diversos critérios de seleção
-        return []
+    private async getOrCreateClusters(): Promise<ClusterInfo[]> {
+        // TODO: Implementar lógica para obter clusters de um repositório
+        // Por enquanto, retornamos clusters de exemplo (isso seria substituído por dados reais)
+        return this.createSampleClusters()
     }
 
     /**
-     * Aplica filtros de segurança e conteúdo nos candidatos
+     * Cria clusters de exemplo para demonstração
+     * @returns Lista de clusters de exemplo
      */
-    private async applySafetyFilters(userId: bigint, candidates: Entity[]): Promise<Entity[]> {
-        // Implementação simplificada
-        console.log(`Aplicando filtros de segurança para ${candidates.length} candidatos`)
-
-        // Em uma implementação real, removeríamos conteúdo bloqueado,
-        // conteúdo impróprio, ou conteúdo já visualizado pelo usuário
-        return candidates
-    }
-
-    /**
-     * Ranqueia os candidatos com base na relevância para o usuário
-     */
-    private async rankCandidates(
-        userId: bigint,
-        candidates: Entity[],
-        userEmbedding: number[]
-    ): Promise<RecommendedItem[]> {
-        // Implementação simplificada
-        console.log(`Ranqueando ${candidates.length} candidatos para o usuário ${userId}`)
-
-        // Em uma implementação real, calcularíamos scores para cada candidato
-        // baseado em múltiplos fatores, incluindo similaridade com o embedding do usuário
-
-        // Simulação de itens ranqueados
-        return candidates.map((candidate, index) => ({
-            id: candidate.id,
-            type: candidate.type,
-            score: 1.0 - index * 0.01, // Score simulado decrescente
-            reasons: [
-                {
-                    type: "similar-interest",
-                    strength: 0.9,
-                    explanation: "Baseado nos seus interesses",
+    private createSampleClusters(): ClusterInfo[] {
+        return [
+            {
+                id: "cluster-1",
+                name: "Tecnologia e Programação",
+                centroid: {
+                    dimension: 16,
+                    values: new Array(16).fill(0).map((_, i) => (i % 2 === 0 ? 0.1 : -0.1)),
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 },
-            ],
-        }))
-    }
-
-    /**
-     * Diversifica a lista de candidatos para evitar monotonia
-     */
-    private diversifyCandidates(
-        candidates: RecommendedItem[],
-        diversityLevel: number
-    ): RecommendedItem[] {
-        // Implementação simplificada
-        console.log(`Diversificando ${candidates.length} candidatos com nível ${diversityLevel}`)
-
-        // Em uma implementação real, reordenaremos itens para garantir
-        // diversidade de tipos, tópicos, criadores, etc.
-        return [...candidates]
-    }
-
-    /**
-     * Calcula o valor de diversidade de uma lista de itens
-     */
-    private calculateDiversity(items: RecommendedItem[]): number {
-        // Implementação simplificada
-        // Em uma implementação real, calcularíamos a diversidade baseada
-        // em vários fatores como variedade de tipos, tópicos, criadores, etc.
-        return 0.7 // Valor simulado
-    }
-
-    /**
-     * Calcula o valor de recência média dos itens
-     */
-    private calculateFreshness(items: RecommendedItem[]): number {
-        // Implementação simplificada
-        // Em uma implementação real, calcularíamos a recência média
-        // baseada nas datas de criação dos itens
-        return 0.8 // Valor simulado
-    }
-
-    /**
-     * Obtém recomendações do cache se disponíveis e válidas
-     */
-    private getCachedRecommendations(userId: bigint, count: number): RecommendationResult | null {
-        const cacheKey = `${userId.toString()}_${count}`
-        const cached = this.recommendationCache.get(cacheKey)
-
-        if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
-            console.log(`Usando recomendações em cache para o usuário ${userId}`)
-            return cached.result
-        }
-
-        return null
-    }
-
-    /**
-     * Armazena recomendações no cache
-     */
-    private cacheRecommendations(
-        userId: bigint,
-        count: number,
-        result: RecommendationResult
-    ): void {
-        const cacheKey = `${userId.toString()}_${count}`
-        this.recommendationCache.set(cacheKey, {
-            result,
-            timestamp: Date.now(),
-        })
-    }
-
-    /**
-     * Fornece recomendações de fallback em caso de erro
-     */
-    private getFallbackRecommendations(count: number): RecommendationResult {
-        console.log(`Gerando recomendações de fallback (${count} itens)`)
-
-        // Em uma implementação real, recuperaríamos itens populares ou em destaque
-        // como fallback quando ocorrer um erro
-
-        return {
-            items: [],
-            metadata: {
-                generatedAt: new Date(),
-                strategy: "fallback",
-                diversity: 0,
-                freshness: 0,
+                topics: ["tecnologia", "programação", "desenvolvimento", "software"],
+                size: 100,
+                density: 0.8,
             },
-        }
+            {
+                id: "cluster-2",
+                name: "Esportes e Fitness",
+                centroid: {
+                    dimension: 16,
+                    values: new Array(16).fill(0).map((_, i) => (i % 3 === 0 ? 0.15 : -0.05)),
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+                topics: ["esportes", "fitness", "saúde", "bem-estar"],
+                size: 150,
+                density: 0.7,
+            },
+            {
+                id: "cluster-3",
+                name: "Arte e Cultura",
+                centroid: {
+                    dimension: 16,
+                    values: new Array(16).fill(0).map((_, i) => (i % 4 === 0 ? 0.2 : -0.1)),
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+                topics: ["arte", "cultura", "música", "cinema"],
+                size: 120,
+                density: 0.65,
+            },
+        ]
     }
-}
 
-/**
- * Opções para personalizar as recomendações
- */
-export interface RecommendationOptions {
-    skipCache?: boolean
-    strategy?: string
-    diversityLevel?: number
-    contentFilter?: string[]
-    excludeIds?: (string | bigint)[]
+    /**
+     * Executa clustering com os dados fornecidos
+     */
+    public async runClustering(embeddings: number[][], entityIds: string[], config?: DBSCANConfig) {
+        // Converter IDs para entidades
+        const entities = entityIds.map((id) => ({
+            id,
+            type: "user" as const, // Temporário, deveria ser determinado pelo tipo de entidade
+        }))
+
+        // Usar função de utilidade para executar o clustering
+        return performClustering(embeddings, entities, config)
+    }
 }
