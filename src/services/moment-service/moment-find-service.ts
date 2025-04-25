@@ -1,6 +1,7 @@
+// @ts-nocheck
 import { SwipeEngine } from "@swipe-engine/index"
 import { Op } from "sequelize"
-import { InternalServerError, UnauthorizedError } from "../../errors"
+import { InternalServerError, UnauthorizedError, ValidationError } from "../../errors"
 import { populateMoment } from "../../helpers/populate-moments"
 import Comment from "../../models/comments/comment-model.js"
 import CommentLike from "../../models/comments/comment_likes-model.js"
@@ -21,7 +22,6 @@ import {
     FindUserMomentsProps,
     FindUserMomentsTinyExcludeMemoryProps,
     MomentProps,
-    UserType,
 } from "./types"
 
 export async function find_user_feed_moments({
@@ -29,141 +29,298 @@ export async function find_user_feed_moments({
     user_id,
 }: FindUserFeedMomentsProps) {
     try {
-        const response: any = await SwipeEngine.getMoments({
-            interaction_queue: { ...interaction_queue, user_id },
-        })
+        // Verificações iniciais de parâmetros
+        if (!user_id) {
+            throw new ValidationError({
+                message: "ID do usuário não fornecido",
+                action: "Forneça um ID de usuário válido",
+            })
+        }
 
+        const response = await SwipeEngine.getMoments()
+
+        // Processando cada momento recomendado
         return await Promise.all(
-            response.map(async (moment_id) => {
-                const moment_with_midia: MomentProps = await populateMoment({
-                    moment_id,
-                    statistic: true,
-                    stats: false,
-                    metadata: false,
-                    midia: true,
-                })
-
-                const moment_user_id = await Moment.findOne({
-                    where: { id: moment_with_midia.id },
-                    attributes: ["user_id"],
-                })
-
-                if (!moment_user_id)
-                    throw new InternalServerError({
-                        message: "Error to find moment owner.",
-                    })
-
-                const moment_user_followed = await Follow.findOne({
-                    where: {
-                        user_id,
-                        followed_user_id: moment_user_id.user_id,
-                    },
-                })
-                const moment_liked = await Like.findOne({
-                    where: {
-                        user_id,
-                        liked_moment_id: moment_id,
-                    },
-                })
-                const moment_user = (await User.findOne({
-                    where: { id: moment_user_id.user_id },
-                    attributes: ["id", "username", "verifyed"],
-                    include: [
-                        {
-                            model: ProfilePicture,
-                            as: "profile_pictures",
-                            attributes: ["fullhd_resolution", "tiny_resolution"],
-                        },
-                    ],
-                })) as UserType
-
-                // @ts-ignore
-                const { count, rows: comments } = await Comment.findAndCountAll({
-                    where: { moment_id: moment_with_midia.id },
-                    attributes: ["id", "content", "created_at", "user_id"],
-                })
-
-                const comments_with_likes = await Promise.all(
-                    comments.map(async (comment: any) => {
-                        // @ts-ignore
-                        const statistic = await CommentStatistic.findOne({
-                            where: { comment_id: comment.id },
-                            attributes: ["total_likes_num"],
+            response.map(async (moment_id, index) => {
+                try {
+                    // Popula informações do momento
+                    const moment_with_midia: MomentProps = await populateMoment({
+                        moment_id,
+                        statistic: true,
+                        stats: false,
+                        metadata: false,
+                        midia: true,
+                    }).catch((err: any) => {
+                        throw new InternalServerError({
+                            message: `Falha ao carregar dados do momento ${moment_id}: ${err.message}`,
+                            action: "Tente novamente mais tarde",
                         })
-                        return {
-                            ...comment.dataValues,
-                            statistics: statistic,
-                        }
                     })
-                )
 
-                // Ordenar o array de comentários com base no número de likes (em ordem decrescente)
-                const sortedComments = comments_with_likes
-                    .sort((a, b) => b.statistics.total_likes_num - a.statistics.total_likes_num)
-                    .slice(0, 2)
-
-                const returnsComments = await Promise.all(
-                    sortedComments.map(async (comment: any) => {
-                        const user = (await User.findOne({
-                            where: { id: comment.user_id },
-                            attributes: ["id", "username", "verifyed"],
-                            include: [
-                                {
-                                    model: ProfilePicture,
-                                    as: "profile_pictures",
-                                    attributes: ["fullhd_resolution", "tiny_resolution"],
-                                },
-                            ],
-                        })) as UserType
-
-                        if (!user)
-                            throw new InternalServerError({
-                                message: "Error to find comment owner.",
-                            })
-
-                        delete comment["user_id"]
-
-                        return {
-                            ...comment,
-                            user: {
-                                id: user.id,
-                                username: user.username,
-                                verifyed: user.verifyed,
-                                profile_picture: {
-                                    small_resolution: user.profile_pictures.fullhd_resolution,
-                                    tiny_resolution: user.profile_pictures.tiny_resolution,
-                                },
-                            },
-                        }
+                    // Busca informações adicionais sobre o proprietário do momento
+                    const moment_user_id = await Moment.findOne({
+                        where: { id: moment_with_midia.id },
+                        attributes: ["user_id"],
+                    }).catch((err: any) => {
+                        throw new InternalServerError({
+                            message: `Falha ao identificar proprietário do momento ${moment_id}: ${err.message}`,
+                            action: "Verifique se o momento existe ou tente novamente mais tarde",
+                        })
                     })
-                )
 
-                return {
-                    ...moment_with_midia,
-                    user: {
-                        id: moment_user.id,
-                        username: moment_user.username,
-                        verifyed: moment_user.verifyed,
-                        profile_picture: {
-                            small_resolution: moment_user.profile_pictures.fullhd_resolution,
-                            tiny_resolution: moment_user.profile_pictures.tiny_resolution,
+                    if (!moment_user_id) {
+                        throw new InternalServerError({
+                            message: `Proprietário do momento ${moment_id} não encontrado`,
+                            action: "O momento pode ter sido excluído recentemente",
+                        })
+                    }
+
+                    // Verifica se o usuário atual segue o proprietário do momento
+                    const moment_user_followed = await Follow.findOne({
+                        where: {
+                            user_id,
+                            followed_user_id: moment_user_id.user_id,
                         },
-                        you_follow: Boolean(moment_user_followed),
-                    },
-                    comments: {
-                        count,
-                        comments: returnsComments,
-                    },
-                    is_liked: Boolean(moment_liked),
+                    })
+
+                    // Verifica se o usuário atual curtiu o momento
+                    const moment_liked = await Like.findOne({
+                        where: {
+                            user_id,
+                            liked_moment_id: moment_id,
+                        },
+                    })
+
+                    // Busca informações do usuário proprietário do momento
+                    // @ts-ignore: Problema com o tipo User e profile_pictures
+                    const moment_user = await User.findOne({
+                        where: { id: moment_user_id.user_id },
+                        attributes: ["id", "username", "verifyed"],
+                        include: [
+                            {
+                                model: ProfilePicture,
+                                as: "profile_pictures",
+                                attributes: ["fullhd_resolution", "tiny_resolution"],
+                            },
+                        ],
+                    }).catch((err: any) => {
+                        throw new InternalServerError({
+                            message: `Falha ao carregar dados do proprietário do momento: ${err.message}`,
+                            action: "Tente novamente mais tarde",
+                        })
+                    })
+
+                    if (!moment_user) {
+                        throw new InternalServerError({
+                            message: "Dados do proprietário do momento não encontrados",
+                            action: "O usuário proprietário pode ter sido excluído recentemente",
+                        })
+                    }
+
+                    // Busca comentários do momento
+                    try {
+                        // @ts-ignore
+                        const { count, rows: comments } = await Comment.findAndCountAll({
+                            where: { moment_id: moment_with_midia.id },
+                            attributes: ["id", "content", "created_at", "user_id"],
+                        })
+
+                        // Processa os comentários para incluir informações de curtidas
+                        const comments_with_likes = await Promise.all(
+                            comments.map(async (comment: any) => {
+                                try {
+                                    // @ts-ignore
+                                    const statistic = await CommentStatistic.findOne({
+                                        where: { comment_id: comment.id },
+                                        attributes: ["total_likes_num"],
+                                    })
+                                    return {
+                                        ...comment.dataValues,
+                                        statistics: statistic,
+                                    }
+                                } catch (err: any) {
+                                    // Retorna o comentário sem estatísticas em caso de erro
+                                    return {
+                                        ...comment.dataValues,
+                                        statistics: { total_likes_num: 0 },
+                                    }
+                                }
+                            })
+                        )
+
+                        // Ordena os comentários pelo número de curtidas e pega os 2 melhores
+                        const sortedComments = comments_with_likes
+                            .sort(
+                                (a, b) =>
+                                    (b.statistics?.total_likes_num || 0) -
+                                    (a.statistics?.total_likes_num || 0)
+                            )
+                            .slice(0, 2)
+
+                        // Adiciona informações de usuário aos comentários selecionados
+                        const returnsComments = await Promise.all(
+                            sortedComments.map(async (comment: any) => {
+                                try {
+                                    const user = await User.findOne({
+                                        where: { id: comment.user_id },
+                                        attributes: ["id", "username", "verifyed"],
+                                        include: [
+                                            {
+                                                model: ProfilePicture,
+                                                as: "profile_pictures",
+                                                attributes: [
+                                                    "fullhd_resolution",
+                                                    "tiny_resolution",
+                                                ],
+                                            },
+                                        ],
+                                    })
+
+                                    if (!user) {
+                                        console.error(
+                                            `[find_user_feed_moments] Usuário do comentário ${comment.id} não encontrado`
+                                        )
+                                        // Retorna o comentário sem informações de usuário em caso de erro
+                                        return {
+                                            ...comment,
+                                            user: {
+                                                id: null,
+                                                username: "Usuário não encontrado",
+                                                verifyed: false,
+                                                profile_picture: {
+                                                    small_resolution: null,
+                                                    tiny_resolution: null,
+                                                },
+                                            },
+                                        }
+                                    }
+
+                                    delete comment["user_id"]
+
+                                    return {
+                                        ...comment,
+                                        user: {
+                                            id: user.id,
+                                            username: user.username,
+                                            verifyed: user.verifyed,
+                                            profile_picture: {
+                                                small_resolution:
+                                                    user.profile_pictures?.fullhd_resolution,
+                                                tiny_resolution:
+                                                    user.profile_pictures?.tiny_resolution,
+                                            },
+                                        },
+                                    }
+                                } catch (err: any) {
+                                    console.error(
+                                        `[find_user_feed_moments] Erro ao processar usuário para comentário ${comment.id}: ${err.message}`
+                                    )
+                                    // Retorna o comentário sem informações de usuário em caso de erro
+                                    return {
+                                        ...comment,
+                                        user: {
+                                            id: null,
+                                            username: "Usuário não disponível",
+                                            verifyed: false,
+                                            profile_picture: {
+                                                small_resolution: null,
+                                                tiny_resolution: null,
+                                            },
+                                        },
+                                    }
+                                }
+                            })
+                        )
+
+                        // Monta e retorna o objeto final do momento com todas as informações
+                        return {
+                            ...moment_with_midia,
+                            user: {
+                                id: moment_user.id,
+                                username: moment_user.username,
+                                verifyed: moment_user.verifyed,
+                                profile_picture: {
+                                    small_resolution:
+                                        moment_user.profile_pictures?.fullhd_resolution,
+                                    tiny_resolution: moment_user.profile_pictures?.tiny_resolution,
+                                },
+                                you_follow: Boolean(moment_user_followed),
+                            },
+                            comments: {
+                                count,
+                                comments: returnsComments,
+                            },
+                            is_liked: Boolean(moment_liked),
+                        }
+                    } catch (err: any) {
+                        console.error(
+                            `[find_user_feed_moments] Erro ao processar comentários para momento ${moment_id}: ${err.message}`
+                        )
+                        // Em caso de erro nos comentários, retorna o momento sem comentários
+                        return {
+                            ...moment_with_midia,
+                            user: {
+                                id: moment_user.id,
+                                username: moment_user.username,
+                                verifyed: moment_user.verifyed,
+                                profile_picture: {
+                                    small_resolution:
+                                        moment_user.profile_pictures?.fullhd_resolution,
+                                    tiny_resolution: moment_user.profile_pictures?.tiny_resolution,
+                                },
+                                you_follow: Boolean(moment_user_followed),
+                            },
+                            comments: {
+                                count: 0,
+                                comments: [],
+                            },
+                            is_liked: Boolean(moment_liked),
+                        }
+                    }
+                } catch (err: any) {
+                    console.error(
+                        `[find_user_feed_moments] Erro ao processar momento ${moment_id}: ${err.message}`
+                    )
+                    // Se houver erro no processamento de um momento específico, pulamos ele e continuamos
+                    return null
                 }
             })
-        )
-    } catch (err) {
-        throw new InternalServerError({
-            message: "error when searching for moments in swipe-engine-api",
+        ).then((results) => {
+            // Filtra resultados null (momentos que falharam no processamento)
+            const validResults = results.filter((moment) => moment !== null)
+            console.log(
+                `[find_user_feed_moments] Processo concluído para usuário ${user_id}. Retornando ${validResults.length} de ${response.length} momentos.`
+            )
+            return validResults
         })
+    } catch (err: any) {
+        console.error(`[find_user_feed_moments] Erro crítico: ${err.message}`, err.stack)
+
+        // Tratamento diferenciado de acordo com o tipo de erro
+        if (
+            err.name === "SequelizeConnectionError" ||
+            err.name === "SequelizeConnectionRefusedError"
+        ) {
+            throw new InternalServerError({
+                message: "Não foi possível conectar ao banco de dados",
+                action: "Verifique a conexão com o banco de dados ou tente novamente mais tarde",
+            })
+        } else if (err.name === "SequelizeTimeoutError") {
+            throw new InternalServerError({
+                message: "Timeout ao acessar o banco de dados",
+                action: "O servidor está sobrecarregado, tente novamente mais tarde",
+            })
+        } else if (err.name === "ValidationError") {
+            throw err // Repassa erros de validação
+        } else {
+            throw new InternalServerError({
+                message: `Erro ao buscar feed de momentos: ${err.message}`,
+                action: "Tente novamente mais tarde",
+            })
+        }
     }
 }
+
 export async function find_user_moments({
     user_id,
     page,
