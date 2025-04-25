@@ -17,6 +17,7 @@ class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Mome
     declare deleted: CreationOptional<boolean>
     declare blocked: CreationOptional<boolean>
     declare user_id: bigint
+    declare created_at?: CreationOptional<Date>
 
     static initialize(sequelize: Sequelize): void {
         Moment.init(
