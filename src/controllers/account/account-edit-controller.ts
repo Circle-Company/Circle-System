@@ -163,7 +163,6 @@ export async function edit_profile_picture(req: Request, res: Response) {
             imageBase64: midia_base64,
             quality: 18,
             img_width: metadata.resolution_width,
-            img_height: metadata.resolution_width,
             resolution: "FULL_HD",
             isMoment: false,
         })
@@ -171,7 +170,6 @@ export async function edit_profile_picture(req: Request, res: Response) {
             imageBase64: midia_base64,
             quality: 10,
             img_width: metadata.resolution_width,
-            img_height: metadata.resolution_width,
             resolution: "NHD",
             isMoment: false,
         })

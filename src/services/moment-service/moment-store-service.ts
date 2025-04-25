@@ -25,14 +25,12 @@ export async function store_new_moment({ user_id, moment }: StoreNewMomentsProps
         imageBase64: midia_base64,
         quality: 40,
         img_width: moment.metadata.resolution_width,
-        img_height: moment.metadata.resolution_height,
         resolution: "FULL_HD",
     })
     const compressed_nhd_base64 = await image_compressor({
         imageBase64: midia_base64,
         quality: 25,
         img_width: moment.metadata.resolution_width,
-        img_height: moment.metadata.resolution_height,
         resolution: "NHD",
     })
 
