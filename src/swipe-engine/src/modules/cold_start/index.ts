@@ -1,7 +1,8 @@
 //@ts-nocheck
 import Moment from "@models/moments/moment-model.js"
 import MomentInteraction from "@models/moments/moment_interaction-model.js"
-import { Op } from "sequelize"
+import { QueryTypes } from "sequelize"
+import { connection as db } from "../../../../database/index.js"
 
 export default async function cold_start_algorithm(): Promise<number[]> {
     try {
@@ -10,16 +11,19 @@ export default async function cold_start_algorithm(): Promise<number[]> {
         let candidateMoments
 
         // Busca momentos das últimas 24 horas
-        const moments = await Moment.findAll({
-            where: {
-                created_at: { [Op.gte]: twentyFourHoursAgo },
-                visible: true,
-                blocked: false,
-            },
-            attributes: ["id"],
-            raw: true,
-            limit: 100,
-        })
+
+        const moments = (await db.query(
+            `SELECT id 
+             FROM moments 
+             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+             AND visible = true 
+             AND blocked = false 
+             ORDER BY created_at DESC
+             LIMIT 100`,
+            {
+                type: QueryTypes.SELECT,
+            }
+        )) as { id: number }[]
 
         if (moments.length >= 10) {
             candidateMoments = moments
