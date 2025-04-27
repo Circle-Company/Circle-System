@@ -2,6 +2,7 @@ import bodyParser from "body-parser"
 import express from "express"
 import "express-async-errors"
 import "module-alias/register"
+import { NotificationService } from "notification-service/modules/circle-trigger"
 import config from "./config/index"
 import { RP } from "./config/routes_prefix"
 import "./database/index"
@@ -55,8 +56,38 @@ app.use(MOMENTS_PREFIX_V2, UserAuthenticationValidator, MomentRouterV2)
 app.use(NOTIFICATION_PREFIX, UserAuthenticationValidator, NotificationRouter)
 app.use(PREFERENCES_PREFIX, UserAuthenticationValidator, PreferencesRouter)
 
-app.listen(config.PORT, () =>
-    console.log("🚀 circle-system (server) - running on port: " + config.PORT)
-)
+// Inicializa o servidor e depois o NotificationService
+const startServer = async () => {
+    try {
+        // Inicia o servidor
+        const server = app.listen(config.PORT, () => {
+            console.log("🚀 circle-system (server) - running on port: " + config.PORT)
+        })
+
+        // Inicializa o NotificationService após o servidor estar rodando
+        await NotificationService.initialize()
+        console.log("📬 NotificationService initialized successfully")
+
+        // Tratamento de erros do servidor
+        server.on("error", (error) => {
+            console.error("Server error:", error)
+            process.exit(1)
+        })
+
+        // Tratamento de desligamento gracioso
+        process.on("SIGTERM", () => {
+            console.log("SIGTERM received. Shutting down gracefully...")
+            server.close(() => {
+                console.log("Server closed")
+                process.exit(0)
+            })
+        })
+    } catch (error) {
+        console.error("Failed to start server or initialize NotificationService:", error)
+        process.exit(1)
+    }
+}
+
+startServer()
 
 export default app
