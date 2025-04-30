@@ -1,4 +1,4 @@
-import { sigmoid } from "@math/sigmoid"
+import { sigmoid } from "../../../math/sigmoid"
 import negativeInteractionWeights from "../data/negative_action_weights.json"
 import positiveInteractionWeights from "../data/positive_action_weights.json"
 
