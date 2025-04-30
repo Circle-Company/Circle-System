@@ -19,15 +19,10 @@ export type InteractionTypeProp =
 export async function getMoments() {
     try {
         const momentIds = await cold_start_algorithm()
-        if (!Array.isArray(momentIds)) {
-            console.error("cold_start_algorithm retornou um formato inválido:", momentIds)
-            return []
-        }
         return momentIds.filter((id) => typeof id === "number" && !isNaN(id))
-    } catch (error) {
-        console.error("Erro ao buscar momentos:", error)
+    } catch (error: any) {
         throw new InternalServerError({
-            message: "Erro ao buscar feed de momentos",
+            message: error.message,
             action: "Por favor, tente novamente mais tarde",
         })
     }
