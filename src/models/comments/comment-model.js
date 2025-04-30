@@ -23,7 +23,7 @@ class MomentComment extends Model {
             as: "parent_comment",
         })
         this.hasMany(models.MomentComment, { foreignKey: "parent_comment_id", as: "replies" })
-        this.hasMany(models.CommentLike, { foreignKey: "comment_id" })
+        this.hasMany(models.CommentLike, { foreignKey: "comment_id", as: "likes" })
     }
 }
 
