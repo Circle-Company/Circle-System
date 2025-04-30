@@ -32,6 +32,8 @@ import Relation from "../models/user/relation-model"
 import Report from "../models/user/report-model.js"
 import Statistic from "../models/user/statistic-model"
 import User from "../models/user/user-model"
+// swipe-engine models
+import { initializeModels as initializeSwipeEngineModels } from "../swipe-engine"
 //mysql database connection
 
 const DB_CONFIG =
@@ -61,7 +63,7 @@ Statistic.initialize(connection)
 Contact.init(connection)
 Block.init(connection)
 Coordinate.initialize(connection)
-Follow.initialize(connection)
+Follow.init(connection)
 Report.init(connection)
 Relation.initialize(connection)
 Notification.initialize(connection)
@@ -84,6 +86,9 @@ ProfileClick.init(connection)
 MomentInteraction.init(connection)
 NotificationToken.init(connection)
 Preference.initialize(connection)
+
+// Inicializar modelos da swipe-engine v2
+initializeSwipeEngineModels()
 
 //models associations
 User.associate(connection.models)
