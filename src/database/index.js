@@ -11,7 +11,7 @@ import Like from "../models/moments/like-model"
 import Moment from "../models/moments/moment-model"
 import MomentInteraction from "../models/moments/moment_interaction-model.js"
 import MomentMetadata from "../models/moments/moment_metadata-model.js"
-import MomentMidia from "../models/moments/moment_midia-model.js"
+import MomentMidia from "../models/moments/moment_midia-model"
 import MomentStatistic from "../models/moments/moment_statistic-model.js"
 import MomentTag from "../models/moments/moment_tag-model.js"
 import ProfileClick from "../models/moments/profile_click-model.js"
@@ -68,7 +68,7 @@ Notification.initialize(connection)
 Moment.initialize(connection)
 Tag.initialize(connection)
 MomentStatistic.init(connection)
-MomentMidia.init(connection)
+MomentMidia.initialize(connection)
 MomentTag.init(connection)
 MomentMetadata.init(connection)
 Comment.init(connection)
