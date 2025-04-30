@@ -3,11 +3,33 @@ import request from "supertest"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { testBearerToken } from "../app-test"
 
+// Mock o módulo database para impedir a inicialização global
+vi.mock("../../database/index.js", () => {
+    return {
+        // Mock as propriedades/funções que SÃO usadas pelo código sob teste, se houver.
+        // Se nada for usado, pode retornar um objeto vazio ou com funções vazias.
+        connection: {
+            authenticate: vi.fn().mockResolvedValue(undefined),
+            models: {}, // Evita erros se algo tentar acessar connection.models
+            sync: vi.fn().mockResolvedValue(undefined), // Se sync for chamado
+        },
+        // Adicione mocks para outras exportações se necessário
+    }
+})
+
 // Mock dos modelos com factory functions para evitar hoisting issues
 vi.mock("../../models/notification/notification-model", () => {
     return {
         default: {
             findAndCountAll: vi.fn(),
+            initialize: vi.fn(),
+            associate: vi.fn(),
+            // Propriedades básicas do Sequelize
+            sequelize: { options: {}, datatypes: {} },
+            tableName: "notifications",
+            prototype: {},
+            name: "Notification",
+            isSequelizeModel: true,
         },
     }
 })
@@ -24,6 +46,13 @@ vi.mock("../../models/notification/notification_token-model", () => {
             findOne: findOneMock,
             update: updateMock,
             create: createMock,
+            init: vi.fn(),
+            associate: vi.fn(),
+            sequelize: { options: {}, datatypes: {} },
+            tableName: "notification_tokens",
+            prototype: {},
+            name: "NotificationToken",
+            isSequelizeModel: true,
         },
         __mocks: { findOneMock, updateMock, createMock },
     }

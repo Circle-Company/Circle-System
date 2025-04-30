@@ -23,11 +23,6 @@ declare module "models/moments/moment_metadata-model.js" {
     export default MomentMetadata
 }
 
-declare module "models/moments/moment_midia-model.js" {
-    const MomentMidia: any
-    export default MomentMidia
-}
-
 declare module "models/moments/moment_statistic-model.js" {
     const MomentStatistic: any
     export default MomentStatistic

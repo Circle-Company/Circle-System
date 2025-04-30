@@ -6,10 +6,93 @@ import { verifyAndRepairUserPreferences } from "../../helpers/user/verify-prefer
 import { testBearerToken } from "../app-test"
 
 // Mock dos modelos com vi.mock
-vi.mock("@models/user/follow-model")
-vi.mock("@models/user/profilepicture-model")
-vi.mock("@models/user/statistic-model")
-vi.mock("@models/user/user-model")
+vi.mock("@models/user/follow-model", () => ({
+    default: {
+        findAndCountAll: vi.fn(),
+        initialize: vi.fn(),
+        associate: vi.fn(),
+        belongsTo: vi.fn(),
+        sequelize: { options: {}, datatypes: {} },
+        tableName: "follows",
+        prototype: {},
+        name: "Follow",
+    },
+}))
+vi.mock("@models/user/profilepicture-model", () => ({
+    default: {
+        initialize: vi.fn(),
+        associate: vi.fn(),
+        belongsTo: vi.fn(),
+        sequelize: { options: {}, datatypes: {} },
+        tableName: "profile_pictures",
+        prototype: {},
+        name: "ProfilePicture",
+    },
+}))
+vi.mock("@models/user/statistic-model", () => ({
+    default: {
+        initialize: vi.fn(),
+        associate: vi.fn(),
+        belongsTo: vi.fn(),
+        sequelize: { options: {}, datatypes: {} },
+        tableName: "statistics",
+        prototype: {},
+        name: "Statistic",
+    },
+}))
+vi.mock("@models/user/user-model", () => ({
+    default: {
+        findAll: vi.fn(), // Manter mocks específicos se houver
+        findOne: vi.fn(),
+        initialize: vi.fn(),
+        associate: vi.fn(),
+        hasOne: vi.fn(),
+        hasMany: vi.fn(),
+        belongsToMany: vi.fn(),
+        sequelize: { options: {}, datatypes: {} },
+        tableName: "users",
+        prototype: {},
+        name: "User",
+    },
+}))
+// Adicionando mock para UserMetadata
+vi.mock("@models/user/metadata-model.js", () => ({
+    default: {
+        init: vi.fn(),
+        associate: vi.fn(),
+        belongsTo: vi.fn(),
+        sequelize: { options: {}, datatypes: {} },
+        tableName: "user_metadata",
+        prototype: {},
+        name: "Metadata",
+    },
+}))
+
+// Adicionando mock para Contact
+vi.mock("@models/user/contact-model.js", () => ({
+    default: {
+        init: vi.fn(),
+        associate: vi.fn(),
+        belongsTo: vi.fn(),
+        sequelize: { options: {}, datatypes: {} },
+        tableName: "contacts",
+        prototype: {},
+        name: "Contact",
+    },
+}))
+
+// Adicionando mock para Block
+vi.mock("@models/user/block-model.js", () => ({
+    default: {
+        init: vi.fn(),
+        associate: vi.fn(),
+        belongsTo: vi.fn(),
+        sequelize: { options: {}, datatypes: {} },
+        tableName: "blocks",
+        prototype: {},
+        name: "Block",
+    },
+}))
 
 describe("GET /account/list/followings", () => {
     const app = express()

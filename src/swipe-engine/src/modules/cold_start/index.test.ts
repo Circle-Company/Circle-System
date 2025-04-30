@@ -1,26 +1,48 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import cold_start_algorithm from "./index"
 
-// Mock para o Sequelize e os modelos
-vi.mock("@models/moments/moment-model.js", () => {
+// Mock o módulo database para impedir a inicialização global
+vi.mock("../../../../database/index.js", () => {
     return {
-        default: {
-            findAll: vi.fn(),
+        connection: {
+            authenticate: vi.fn().mockResolvedValue(undefined),
+            models: {},
+            sync: vi.fn().mockResolvedValue(undefined),
         },
     }
 })
 
-vi.mock("@models/moments/moment_interaction-model.js", () => {
+// Mock dos modelos com funções mockadas
+const mockFindAll = vi.fn()
+
+vi.mock("@models/moments/moment-model", () => {
+    return {
+        default: {
+            findAll: mockFindAll,
+            initialize: vi.fn(),
+            associate: vi.fn(),
+            name: "Moment",
+            prototype: {},
+            isSequelizeModel: true,
+        },
+    }
+})
+
+vi.mock("@models/moments/moment_interaction-model", () => {
     return {
         default: {
             findAll: vi.fn(),
+            initialize: vi.fn(),
+            associate: vi.fn(),
+            name: "MomentInteraction",
+            prototype: {},
+            isSequelizeModel: true,
         },
     }
 })
 
 // Importar os mocks após declarar o vi.mock
-import Moment from "@models/moments/moment-model.js"
-import MomentInteraction from "@models/moments/moment_interaction-model.js"
+import MomentInteraction from "@models/moments/moment_interaction-model"
 
 // Helper para criar mock objects que se parecem com modelos Sequelize
 const createMockModel = (data: any) => ({
@@ -33,6 +55,7 @@ const createMockModel = (data: any) => ({
 describe("cold_start_algorithm", () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mockFindAll.mockReset() // Reset específico para o mock do findAll
         // Mock para console.log e console.error para reduzir ruído nos testes
         vi.spyOn(console, "log").mockImplementation(() => {})
         vi.spyOn(console, "error").mockImplementation(() => {})
@@ -43,25 +66,23 @@ describe("cold_start_algorithm", () => {
     })
 
     it("deve retornar momentos populares quando encontrados", async () => {
-        // Mock de retorno do findAll para momentos
         const mockMoments = [
             createMockModel({ id: 1 }),
             createMockModel({ id: 2 }),
             createMockModel({ id: 3 }),
         ]
 
-        // Mock de retorno do findAll para interações
         const mockInteractions = [
             createMockModel({ positive_interaction_rate: 0.8 }),
             createMockModel({ positive_interaction_rate: 0.6 }),
         ]
 
-        vi.mocked(Moment.findAll).mockResolvedValueOnce(mockMoments as any)
-        vi.mocked(MomentInteraction.findAll).mockResolvedValue(mockInteractions as any)
+        mockFindAll.mockResolvedValueOnce(mockMoments)
+        vi.mocked(MomentInteraction.findAll).mockResolvedValue(mockInteractions)
 
         const result = await cold_start_algorithm()
 
-        expect(Moment.findAll).toHaveBeenCalledTimes(1)
+        expect(mockFindAll).toHaveBeenCalledTimes(1)
         expect(result).toBeInstanceOf(Array)
         expect(result.length).toBeLessThanOrEqual(10)
         expect(result.every((id) => typeof id === "number")).toBe(true)
@@ -69,61 +90,58 @@ describe("cold_start_algorithm", () => {
 
     it("deve chamar o fallback quando não há momentos suficientes", async () => {
         // Primeiro findAll retorna poucos momentos
-        vi.mocked(Moment.findAll).mockResolvedValueOnce([
-            createMockModel({ id: 1 }),
-            createMockModel({ id: 2 }),
-        ] as any)
+        mockFindAll.mockResolvedValueOnce([createMockModel({ id: 1 }), createMockModel({ id: 2 })])
 
         // Segundo findAll (fallback) retorna mais momentos
-        vi.mocked(Moment.findAll).mockResolvedValueOnce([
+        mockFindAll.mockResolvedValueOnce([
             createMockModel({ id: 3 }),
             createMockModel({ id: 4 }),
             createMockModel({ id: 5 }),
-        ] as any)
+        ])
 
         vi.mocked(MomentInteraction.findAll).mockResolvedValue([
             createMockModel({ positive_interaction_rate: 0.7 }),
-        ] as any)
+        ])
 
         const result = await cold_start_algorithm()
 
-        expect(Moment.findAll).toHaveBeenCalledTimes(2)
+        expect(mockFindAll).toHaveBeenCalledTimes(2)
         expect(result).toBeInstanceOf(Array)
         expect(result.length).toBeGreaterThan(0)
     })
 
     it("deve retornar array vazio quando não há momentos", async () => {
-        vi.mocked(Moment.findAll).mockResolvedValue([])
+        mockFindAll.mockResolvedValue([])
 
         const result = await cold_start_algorithm()
 
-        expect(Moment.findAll).toHaveBeenCalledTimes(1)
+        expect(mockFindAll).toHaveBeenCalledTimes(1)
         expect(result).toBeInstanceOf(Array)
         expect(result).toHaveLength(0)
     })
 
     it("deve lidar com momentos sem interações", async () => {
-        vi.mocked(Moment.findAll).mockResolvedValueOnce([
+        mockFindAll.mockResolvedValueOnce([
             createMockModel({ id: 1 }),
             createMockModel({ id: 2 }),
             createMockModel({ id: 3 }),
-        ] as any)
+        ])
 
         vi.mocked(MomentInteraction.findAll).mockResolvedValue([])
 
         const result = await cold_start_algorithm()
 
-        expect(Moment.findAll).toHaveBeenCalledTimes(1)
+        expect(mockFindAll).toHaveBeenCalledTimes(1)
         expect(result).toBeInstanceOf(Array)
         expect(result.length).toBeGreaterThan(0)
     })
 
     it("deve lidar com erros nas consultas", async () => {
-        vi.mocked(Moment.findAll).mockRejectedValue(new Error("Erro de banco de dados"))
+        mockFindAll.mockRejectedValue(new Error("Erro de banco de dados"))
 
         const result = await cold_start_algorithm()
 
-        expect(Moment.findAll).toHaveBeenCalledTimes(1)
+        expect(mockFindAll).toHaveBeenCalledTimes(1)
         expect(result).toBeInstanceOf(Array)
         expect(result).toHaveLength(0)
     })
