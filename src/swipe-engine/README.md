@@ -1,141 +1,91 @@
-# SwipeEngine V2
+# Sistema de Recomendação Circle (Swipe Engine V2)
 
-O SwipeEngine é um sistema de recomendação baseado em embeddings e clustering, projetado para oferecer recomendações personalizadas de conteúdo e conexões entre usuários.
+O Swipe Engine V2 é um sistema avançado de recomendação baseado em embeddings vetoriais que permite à plataforma Circle fornecer recomendações personalizadas aos usuários. Este sistema opera de forma independente, sem depender de versões anteriores do motor de recomendações.
 
 ## Arquitetura
 
-O SwipeEngine V2 foi construído de forma modular, com os seguintes componentes principais:
+O sistema é composto por vários componentes principais:
 
-### Core
+1. **RecommendationCoordinator**: Coordenador central que gerencia o fluxo de recomendação
+2. **UserEmbeddingService**: Serviço para gerar e gerenciar embeddings de usuários
+3. **PostEmbeddingBuilder**: Serviço para gerar embeddings de posts
+4. **Clustering**: Sistema de agrupamento de conteúdos similares
+5. **API Simplificada**: Interface para integração com outros serviços
 
-1. **Serviços de Embedding**
+## Modelos de Dados
 
-    - `BaseEmbeddingService`: Classe abstrata base para serviços de embedding
-    - `UserEmbeddingService`: Gera e atualiza embeddings de usuários
-    - `PostEmbeddingService`: Gera e atualiza embeddings de conteúdo
-
-2. **Clustering**
-
-    - `ClusteringAlgorithm`: Interface para algoritmos de clustering
-    - `BaseClusteringAlgorithm`: Classe abstrata com funcionalidades comuns para algoritmos de clustering
-    - `SimpleKMeans`: Implementação do algoritmo K-Means
-    - `ClusteringFactory`: Fábrica para criar instâncias de algoritmos de clustering
-
-3. **Recomendação**
-
-    - `RecommendationEngine`: Motor principal de recomendação
-    - `ClusterMatcher`: Corresponde usuários a clusters com base em similaridade
-
-4. **Utilitários**
-    - `vectorUtils`: Operações com vetores (distância, similaridade, etc.)
-    - `normalization`: Funções para normalização de embeddings
-    - `logger`: Sistema de logging consistente
-
-## Como Usar
-
-### Inicialização Básica
-
-```typescript
-import { createSwipeEngine } from "./swipe-engine/v2"
-
-// Criar uma instância com configuração padrão
-const swipeEngine = createSwipeEngine()
-
-// Obter recomendações para um usuário
-const userId = BigInt(123456)
-const recommendations = await swipeEngine.getRecommendations(userId)
-```
-
-### Configuração Personalizada
-
-```typescript
-import { createSwipeEngine, SimpleKMeans } from "./swipe-engine/v2"
-
-// Criar instância com configurações personalizadas
-const swipeEngine = createSwipeEngine({
-    embeddingDimension: 256,
-    modelPath: "models/custom_embedding_model",
-
-    // Repositórios personalizados
-    userRepository: myUserRepository,
-    interactionRepository: myInteractionRepository,
-    userEmbeddingRepository: myEmbeddingRepository,
-
-    // Algoritmos de clustering personalizados
-    customClusteringAlgorithms: {
-        "my-custom-algorithm": () => new MyCustomAlgorithm(),
-    },
-
-    // Opções de recomendação
-    recommendationOptions: {
-        defaultClusteringAlgorithm: "kmeans",
-        cacheExpiration: 30 * 60 * 1000, // 30 minutos
-        diversityLevel: 0.7,
-    },
-})
-```
+-   **Cluster**: Grupos de itens similares
+-   **UserEmbedding**: Representações vetoriais de usuários
+-   **PostEmbedding**: Representações vetoriais de posts
+-   **UserClusterRank**: Associação entre usuários e clusters
+-   **InteractionEvent**: Interações de usuários com o sistema
 
 ## Fluxo de Recomendação
 
-1. O sistema gera embeddings para usuários com base em suas interações e perfil
-2. Os embeddings são agrupados em clusters usando algoritmos como K-Means
-3. Quando um usuário solicita recomendações:
-    - O sistema encontra clusters relevantes para o usuário
-    - Extrai candidatos desses clusters
-    - Filtra e ranqueia os candidatos
-    - Diversifica os resultados
-    - Retorna as recomendações finais
+1. O usuário solicita recomendações (via feed ou outra interface)
+2. O sistema verifica se o usuário possui um embedding; caso não, cria um
+3. O engine busca clusters relevantes para o usuário
+4. Candidatos são selecionados e ranqueados
+5. Os posts recomendados são retornados ordenados por relevância
+6. As interações do usuário são registradas para melhorar recomendações futuras
 
-## Extensão
+## Integração com o Serviço de Feed
 
-### Criando um Novo Algoritmo de Clustering
+O `find_user_feed_moments` foi completamente reescrito para utilizar exclusivamente o novo motor de recomendação:
+
+1. Os dados do usuário são enviados para o Swipe Engine V2
+2. As recomendações são processadas e enriquecidas com dados adicionais
+3. As interações com o feed são registradas automaticamente para melhorar futuras recomendações
+4. Tratamento robusto de erros garante uma experiência contínua
+
+## Uso da API
 
 ```typescript
-import { BaseClusteringAlgorithm, Cluster, ClusterConfig, Entity } from "./swipe-engine/v2"
+// Inicialização
+import { initializeRecommendationSystem } from "./swipe-engine/services"
+initializeRecommendationSystem()
 
-export class MyCustomAlgorithm extends BaseClusteringAlgorithm {
-    public readonly name = "my-custom-algorithm"
+// Obter recomendações
+import { getRecommendations } from "./swipe-engine/services"
+const recommendations = await getRecommendations(userId, options)
 
-    public async cluster(
-        embeddings: number[][],
-        entities: Entity[],
-        config: ClusterConfig
-    ): Promise<Cluster[]> {
-        // Validar entrada
-        this.validateInput(embeddings, entities)
+// Processar interações
+import { processInteraction } from "./swipe-engine/services"
+await processInteraction(userId, entityId, entityType, interactionType, metadata)
 
-        // Implementação personalizada...
+// Processar novos posts
+import { processNewPost } from "./swipe-engine/services"
+await processNewPost(postId)
+```
 
-        // Retornar clusters formados
-        return clusters
-    }
+## Benefícios do Novo Sistema
+
+-   **Independência**: Sistema completamente autônomo, sem dependências de sistemas legados
+-   **Personalização Avançada**: Recomendações adaptadas ao perfil, interesses e comportamento do usuário
+-   **Diversidade Controlada**: Equilíbrio entre relevância e diversidade de conteúdo
+-   **Descoberta**: Os usuários podem descobrir novos conteúdos que talvez não encontrassem naturalmente
+-   **Aprendizado Contínuo**: O sistema evolui com as interações dos usuários
+
+## Configuração e Otimização
+
+Parâmetros como diversidade e novidade podem ser ajustados para controlar o comportamento do sistema:
+
+```typescript
+const options = {
+    limit: 20, // Número de recomendações
+    diversity: 0.4, // 0-1: quanto maior, mais diverso o feed
+    novelty: 0.3, // 0-1: quanto maior, mais prioriza conteúdo recente
+    context: {
+        timeOfDay: new Date().getHours(),
+        dayOfWeek: new Date().getDay(),
+    },
 }
 ```
 
-### Registrando o Algoritmo
+## Extensões Futuras
 
-```typescript
-import { ClusteringFactory } from "./swipe-engine/v2"
-import { MyCustomAlgorithm } from "./my-custom-algorithm"
-
-const factory = new ClusteringFactory()
-factory.registerAlgorithm("custom", () => new MyCustomAlgorithm())
-```
-
-## Métricas e Monitoramento
-
-O SwipeEngine inclui recursos para monitorar a qualidade das recomendações:
-
--   Coesão de clusters: O quão próximos estão os membros de um cluster
--   Diversidade: Variedade de recomendações
--   Feedback dos usuários: Captura de interações para melhorar as recomendações futuras
-
-## Roadmap
-
-Funcionalidades planejadas para futuras versões:
-
-1. Suporte para embeddings mais avançados (BERT, transformers)
-2. Algoritmos adicionais de clustering (DBSCAN, Hierarchical)
-3. Recomendações contextuais (por localização, hora do dia)
-4. Suporte para feedback explícito dos usuários
-5. Explicabilidade de recomendações
+-   Implementar modelos ML mais avançados para geração de embeddings
+-   Adicionar recomendações baseadas em colaboração (usuários similares)
+-   Desenvolver dashboards para visualização e ajuste de parâmetros
+-   Expandir para outros tipos de conteúdo além de posts
+-   Implementar testes A/B para otimização contínua de parâmetros
