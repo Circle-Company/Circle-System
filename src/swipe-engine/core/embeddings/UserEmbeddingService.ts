@@ -5,13 +5,13 @@
 import { Op } from "sequelize"
 import InteractionEvent from "../../models/InteractionEvent"
 import UserEmbedding from "../../models/UserEmbedding"
-import { UserEmbeddingProps, UserInteraction } from "../types"
+import { UserEmbeddingProps, UserEmbedding as UserEmbeddingType, UserInteraction } from "../types"
 import { getLogger } from "../utils/logger"
 import { normalizeL2 } from "../utils/normalization"
 import { resizeVector } from "../utils/vector-operations"
 import { BaseEmbeddingService } from "./BaseEmbeddingService"
 
-// Interface para métricas de visualização
+// Interface para representar métricas de visualização
 interface ViewMetrics {
     contentType: string
     averageDuration: number
@@ -19,18 +19,12 @@ interface ViewMetrics {
     frequency: number
 }
 
-// Interface para dados demográficos do usuário
+// Interface para representar informações demográficas do usuário
 interface UserDemographics {
     ageRange?: string
     location?: string
     languages?: string[]
     interests?: string[]
-}
-
-// Interface para representar vector embedding de um usuário ou post
-interface VectorEmbedding {
-    values: number[]
-    dimensions: number
 }
 
 export interface IInteractionRepository {
@@ -151,7 +145,7 @@ export class UserEmbeddingService extends BaseEmbeddingService<
     }
 
     // Recupera ou gera o embedding para um usuário
-    async getUserEmbedding(userId: bigint): Promise<VectorEmbedding | null> {
+    async getUserEmbedding(userId: bigint): Promise<UserEmbeddingType | null> {
         try {
             const embedding = await UserEmbedding.findOne({
                 where: { userId: userId.toString() },
@@ -159,13 +153,8 @@ export class UserEmbeddingService extends BaseEmbeddingService<
 
             if (!embedding) return null
 
-            // Parse do vetor JSON armazenado como string
-            const vectorData = JSON.parse(embedding.vector)
-
-            return {
-                values: vectorData.values || vectorData,
-                dimensions: vectorData.dimension || this.dimension,
-            }
+            // Usar o método toUserEmbeddingType do modelo
+            return embedding.toUserEmbeddingType()
         } catch (error: any) {
             this.logger.error(`Erro ao buscar embedding do usuário ${userId}: ${error.message}`)
             return null
@@ -380,7 +369,7 @@ export class UserEmbeddingService extends BaseEmbeddingService<
     /**
      * Gera um novo embedding para o usuário
      */
-    public async generateUserEmbedding(userId: bigint): Promise<VectorEmbedding> {
+    public async generateUserEmbedding(userId: bigint): Promise<UserEmbeddingType> {
         try {
             this.logger.info(`Gerando embedding para usuário ${userId}`)
 
@@ -412,17 +401,35 @@ export class UserEmbeddingService extends BaseEmbeddingService<
             // 3. Persistir o embedding
             await this.saveUserEmbedding(userId, vector)
 
-            return {
-                values: vector,
-                dimensions: this.dimension,
+            // 4. Buscar o embedding salvo e retornar convertido
+            const savedEmbedding = await UserEmbedding.findOne({
+                where: { userId: userId.toString() },
+            })
+
+            if (!savedEmbedding) {
+                throw new Error(`Erro ao recuperar embedding recém-salvo para usuário ${userId}`)
             }
+
+            // 5. Retornar usando o método de conversão
+            return savedEmbedding.toUserEmbeddingType()
         } catch (error: any) {
             this.logger.error(`Erro ao gerar embedding para usuário ${userId}: ${error.message}`)
 
-            // Em caso de erro, retornar um embedding neutro
+            // Em caso de erro, retornar um embedding neutro (formato UserEmbeddingType)
+            const now = new Date()
+
             return {
-                values: new Array(this.dimension).fill(0),
-                dimensions: this.dimension,
+                userId: userId.toString(),
+                vector: {
+                    dimension: this.dimension,
+                    values: new Array(this.dimension).fill(0),
+                    createdAt: now,
+                    updatedAt: now,
+                },
+                metadata: {
+                    source: "default",
+                    error: error.message,
+                },
             }
         }
     }
