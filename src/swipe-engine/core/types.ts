@@ -446,13 +446,18 @@ export interface RecommendationOptions {
 /**
  * Tipos de interação que um usuário pode ter com um item
  */
-export enum InteractionType {
-    LIKE = "like",
-    COMMENT = "comment",
-    SHARE = "share",
-    SAVE = "save",
-    VIEW = "view",
-}
+export type InteractionType =
+    | "short_view"
+    | "long_view"
+    | "like"
+    | "dislike"
+    | "share"
+    | "comment"
+    | "like_comment"
+    | "show_less_often"
+    | "report"
+    | "save"
+    | "click"
 
 /**
  * Níveis de força para interações
