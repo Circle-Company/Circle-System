@@ -1,100 +1,70 @@
-import { InternalServerError } from "@errors/index"
-import MomentInteraction from "@models/moments/moment_interaction-model"
-import { Request, Response } from "express"
-import { Modules_Controller } from "./src/modules/modules-controller"
+/**
+ * SwipeEngine v2 - Motor de recomendação baseado em embeddings
+ *
+ * Exportação principal para o motor de recomendação do Circle
+ * que usa o algoritmo DBSCAN para clustering e geração de recomendações.
+ */
+
+import { connection } from "../database"
 import {
-    calcule_one_negative_interaction_rate,
-    calcule_one_positive_interaction_rate,
-} from "./src/modules/positive_interaction_rate"
-import { normalizeWatchTime } from "./src/modules/pre-processing"
-import { getPostEmbedding, updatePostEmbedding } from "./src/modules_v2/posts/actions"
-import { getUserEmbedding, updateUserEmbedding } from "./src/modules_v2/users/embeddings"
+    DBSCANClustering,
+    DBSCANConfig,
+    performClustering,
+    trainClusteringModel,
+} from "./core/clustering"
+import { RecommendationEngine } from "./core/recommendation/RecommendationEngine"
+import { ClusterInfo, Recommendation, RecommendationOptions, UserProfile } from "./core/types"
+import Cluster from "./models/Cluster"
+import InteractionEvent from "./models/InteractionEvent"
+import PostCluster from "./models/PostCluster"
+import PostClusterRank from "./models/PostClusterRank"
+import PostEmbedding from "./models/PostEmbedding"
+import UserClusterRank from "./models/UserClusterRank"
+import UserEmbedding from "./models/UserEmbedding"
 
-export type InteractionTypeProp =
-    | "like"
-    | "share"
-    | "clickIntoMoment"
-    | "watchTime"
-    | "clickProfile"
-    | "comment"
-    | "showLessOften"
-    | "report"
-    | string
-
-export async function getMoments(data) {
-    return await Modules_Controller(data)
+// Exportações públicas
+export {
+    Cluster,
+    ClusterInfo,
+    DBSCANClustering,
+    DBSCANConfig,
+    initializeModels,
+    InteractionEvent,
+    performClustering,
+    PostCluster,
+    PostClusterRank,
+    PostEmbedding,
+    Recommendation,
+    RecommendationEngine,
+    RecommendationOptions,
+    trainClusteringModel,
+    UserClusterRank,
+    UserEmbedding,
+    UserProfile,
 }
 
-export async function getFeed(req: Request, res: Response) {
-    const userId = req.params.id
-    const period = req.query.period
+// Função para criar uma instância do SwipeEngine
+export function createSwipeEngine(config?: any) {
+    return new RecommendationEngine(config)
 }
 
-export async function storeInteraction(req: Request, res: Response) {
-    const userId = Number(req.params.user_id)
-    const postId = Number(req.params.post_id)
-    const type: InteractionTypeProp = String(req.query.type)
-    const currentUserEmbedding = await getUserEmbedding(userId)
-    const currentPostEmbedding = await getPostEmbedding(postId)
+// Inicializar modelos
+const initializeModels = () => {
+    // Inicializar modelos
+    Cluster.initialize(connection)
+    UserEmbedding.initialize(connection)
+    PostEmbedding.initialize(connection)
+    UserClusterRank.initialize(connection)
+    InteractionEvent.initialize(connection)
+    PostCluster.initialize(connection)
+    PostClusterRank.initialize(connection)
 
-    const updatedStatistics = req.body.statistics
-    const duration = req.body.duration
-    const updatedTags = req.body.tags
-
-    if (type == "like") {
-        await updatePostEmbedding({
-            updatedStatistics,
-            updatedTags,
-            currentEmbedding: currentPostEmbedding,
-            totalDuration: duration,
-        })
-        // @ts-ignore
-        await updateUserEmbedding()
-    }
-}
-
-export async function storeMomentInteraction(data) {
-    const { user_id, moment_owner_id, moment_id, interaction } = data
-    try {
-        console.log(interaction)
-
-        const processed_interaction = {
-            like: interaction.like ? 1 : 0,
-            share: interaction.share ? 1 : 0,
-            click_into_moment: interaction.click_into_moment ? 1 : 0,
-            watch_time: normalizeWatchTime(interaction.watch_time, 0) / 1000,
-            click_profile: interaction.click_profile ? 1 : 0,
-            comment: interaction.comment ? 1 : 0,
-            like_comment: interaction.like_comment ? 1 : 0,
-            pass_to_next: interaction.pass_to_next ? 1 : 0,
-            show_less_often: interaction.show_less_often ? 1 : 0,
-            report: interaction.report ? 1 : 0,
-        }
-
-        const negative_interaction_rate =
-            calcule_one_negative_interaction_rate(processed_interaction)
-        const positive_interaction_rate =
-            calcule_one_positive_interaction_rate(processed_interaction)
-
-        console.log(negative_interaction_rate, positive_interaction_rate)
-        // @ts-ignore
-        const stored_interaction = await MomentInteraction.create({
-            user_id,
-            moment_owner_id,
-            moment_id,
-            ...interaction,
-            negative_interaction_rate,
-            positive_interaction_rate,
-            created_at: new Date(),
-            updated_at: new Date(),
-        })
-        return stored_interaction
-    } catch (err: any) {
-        throw new InternalServerError({ message: err.message })
-    }
-}
-
-export const SwipeEngine = {
-    getMoments,
-    storeMomentInteraction,
+    // Associações
+    Cluster.associate(connection.models)
+    UserEmbedding.associate(connection.models)
+    PostEmbedding.associate(connection.models)
+    UserClusterRank.associate(connection.models)
+    InteractionEvent.associate(connection.models)
+    PostCluster.associate(connection.models)
+    PostClusterRank.associate(connection.models)
 }

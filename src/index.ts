@@ -17,8 +17,7 @@ import { router as NotificationRouter } from "./routes/notification-router"
 import { router as PreferencesRouter } from "./routes/preferences-router"
 import { router as ReportRouter } from "./routes/report-router"
 import { router as UserRouter } from "./routes/user-router"
-import { runRecommendationSystem } from "./swipe-engine/v2/run-recommendation-system"
-import { runClusterTests } from "./swipe-engine/v2/server-init-tests"
+import { initSwipeEngineV2 } from "./swipe-engine/init"
 
 declare module "express-serve-static-core" {
     interface Request {
@@ -61,21 +60,9 @@ app.use(PREFERENCES_PREFIX, UserAuthenticationValidator, PreferencesRouter)
 app.listen(config.PORT, () => {
     console.log("🚀 circle-system (server) - running on port: " + config.PORT)
 
-    // Executar testes de cluster após inicialização do servidor
-    if (process.env.RUN_CLUSTER_TESTS === "true") {
-        console.log("🔍 Iniciando testes de cluster...")
-        runClusterTests().catch((err) => {
-            console.error("❌ Erro ao executar testes de cluster:", err)
-        })
-    }
-
-    // Executar sistema de recomendação
-    if (process.env.RUN_RECOMMENDATION_SYSTEM === "true") {
-        console.log("🔍 Iniciando sistema de recomendação...")
-        runRecommendationSystem().catch((err) => {
-            console.error("❌ Erro ao executar sistema de recomendação:", err)
-        })
-    }
+    // Inicializar o sistema de recomendação V2
+    console.log("🔍 Iniciando sistema de recomendação V2...")
+    initSwipeEngineV2()
 })
 
 export default app
