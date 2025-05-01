@@ -1,4 +1,3 @@
-import { SwipeEngine } from "@swipe-engine/index"
 import { Op } from "sequelize"
 import { InternalServerError, UnauthorizedError } from "../../errors"
 import { populateMoment } from "../../helpers/populate-moments"
@@ -14,6 +13,7 @@ import Tag from "../../models/tags/tag-model"
 import Follow from "../../models/user/follow-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
 import User from "../../models/user/user-model"
+import { getRecommendations, processInteraction } from "../../swipe-engine/services"
 import {
     FindMomentStatisticsViewProps,
     FindMomentTagsProps,
@@ -24,19 +24,52 @@ import {
     UserType,
 } from "./types"
 
-export async function find_user_feed_moments({
-    interaction_queue,
-    user_id,
-}: FindUserFeedMomentsProps) {
+export async function find_user_feed_moments({ user_id }: FindUserFeedMomentsProps) {
     try {
-        const response: any = await SwipeEngine.getMoments({
-            interaction_queue: { ...interaction_queue, user_id },
-        })
+        // Configurar opções de recomendação baseadas no contexto atual
+        const recommendationOptions = {
+            limit: 20, // Número de recomendações a solicitar
+            diversity: 0.4, // Valor entre 0-1, quanto maior mais diverso
+            novelty: 0.3, // Valor entre 0-1, quanto maior mais prioriza conteúdo recente
+            context: {
+                timeOfDay: new Date().getHours(), // Hora do dia (0-23)
+                dayOfWeek: new Date().getDay(), // Dia da semana (0-6)
+                // Outros dados de contexto podem ser adicionados aqui
+            },
+        }
 
-        return await Promise.all(
-            response.map(async (moment_id) => {
+        // Usar o novo sistema de recomendação v2
+        const recommendations = await getRecommendations(user_id, recommendationOptions)
+
+        // Extrair IDs dos momentos recomendados
+        const moment_ids = recommendations
+            .filter((rec) => rec.entityType === "post") // Filtra apenas por posts
+            .map((rec) => rec.entityId.toString())
+
+        // Se não houver recomendações, retornar array vazio
+        if (moment_ids.length === 0) {
+            return []
+        }
+
+        return await processResponseItems(moment_ids, user_id)
+    } catch (err) {
+        console.error("Erro ao obter recomendações:", err)
+        throw new InternalServerError({
+            message: "Falha ao obter recomendações de conteúdo",
+        })
+    }
+}
+
+// Função auxiliar para processar os itens da resposta
+async function processResponseItems(moment_ids: string[], user_id: bigint | string) {
+    return await Promise.all(
+        moment_ids.map(async (moment_id) => {
+            try {
+                // Converter moment_id de string para bigint para compatibilidade com o populateMoment
+                const bigintMomentId = BigInt(moment_id)
+
                 const moment_with_midia: MomentProps = await populateMoment({
-                    moment_id,
+                    moment_id: bigintMomentId,
                     statistic: true,
                     stats: false,
                     metadata: false,
@@ -138,6 +171,16 @@ export async function find_user_feed_moments({
                     })
                 )
 
+                // Registrar visualização como interação no novo sistema
+                try {
+                    await processInteraction(user_id.toString(), moment_id, "post", "short_view", {
+                        source: "feed",
+                    })
+                } catch (error) {
+                    // Falha silenciosa para não interromper o feed
+                    console.error("Falha ao registrar interação:", error)
+                }
+
                 return {
                     ...moment_with_midia,
                     user: {
@@ -156,14 +199,14 @@ export async function find_user_feed_moments({
                     },
                     is_liked: Boolean(moment_liked),
                 }
-            })
-        )
-    } catch (err) {
-        throw new InternalServerError({
-            message: "error when searching for moments in swipe-engine-api",
+            } catch (error) {
+                console.error(`Erro ao processar momento ${moment_id}:`, error)
+                return null
+            }
         })
-    }
+    ).then((results) => results.filter(Boolean)) // Filtrar itens que tiveram erro e retornaram null
 }
+
 export async function find_user_moments({
     user_id,
     page,

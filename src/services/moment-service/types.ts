@@ -96,7 +96,6 @@ export interface TagsProps {
 }
 
 export interface FindUserFeedMomentsProps {
-    interaction_queue: InteractionQueueProps
     user_id: bigint
 }
 
