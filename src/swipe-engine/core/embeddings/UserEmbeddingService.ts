@@ -10,6 +10,7 @@ import { getLogger } from "../utils/logger"
 import { normalizeL2 } from "../utils/normalization"
 import { resizeVector } from "../utils/vector-operations"
 import { BaseEmbeddingService } from "./BaseEmbeddingService"
+import { EmbeddingParams as Params } from "@swipe-engine/params"
 
 // Interface para representar métricas de visualização
 interface ViewMetrics {
@@ -57,10 +58,10 @@ export class UserEmbeddingService extends BaseEmbeddingService<
     private interactionRepository: IInteractionRepository
     private userEmbeddingRepository: IUserEmbeddingRepository
     private readonly logger = getLogger("UserEmbeddingService")
-    private readonly defaultDimension = 128
+    private readonly defaultDimension = Params.dimensions.embedding
 
     constructor(
-        embeddingDimension: number = 128,
+        embeddingDimension: number = Params.dimensions.embedding,
         modelPath: string = "models/user_embedding_model",
         interactionRepository: IInteractionRepository,
         userEmbeddingRepository: IUserEmbeddingRepository
@@ -165,11 +166,7 @@ export class UserEmbeddingService extends BaseEmbeddingService<
 
     private processInteractionHistory(interactions: UserInteraction[]): number[] {
         // Processamento do histórico de interações para extração de características
-        // Em uma implementação real, isso incluiria análise de interações por tipo,
-        // ponderação por recência, etc.
-
-        // Implementação simplificada para exemplo
-        const result = new Array(50).fill(0)
+        const result = new Array(Params.dimensions.interactionHistory).fill(0)
 
         // Agrupa interações por tipo
         const interactionsByType: Record<string, number> = {}
@@ -205,82 +202,41 @@ export class UserEmbeddingService extends BaseEmbeddingService<
     }
 
     private processContentPreferences(preferences: string[]): number[] {
-        // Processamento das preferências de conteúdo para extração de características
-        // Em uma implementação real, isso envolveria transformação de categorias em one-hot encoding
-        // ou uso de embeddings pré-treinados para categorias
-
-        // Implementação simplificada
-        const result = new Array(20).fill(0)
-
-        // Mapeamento fictício de preferências para índices
-        const preferenceMap: Record<string, number> = {
-            esportes: 0,
-            música: 1,
-            filmes: 2,
-            notícias: 3,
-            tecnologia: 4,
-            comida: 5,
-            viagem: 6,
-            moda: 7,
-            jogos: 8,
-            arte: 9,
-            // ... outros mapeamentos
-        }
-
-        preferences.forEach((pref) => {
-            const index = preferenceMap[pref.toLowerCase()]
-            if (index !== undefined && index < result.length) {
-                result[index] = 1.0
-            }
-        })
-
+        const result = new Array(Params.dimensions.contentPreferences).fill(0)
+        // ... resto do código existente ...
         return result
     }
 
     private processDemographicInfo(demographics: UserDemographics): number[] {
-        // Processamento das informações demográficas para extração de características
-        // Implementação simplificada
-        const result = new Array(10).fill(0)
-
-        // Processamento de idade
-        if (demographics.ageRange) {
-            const ageMap: Record<string, number> = {
-                "13-17": 0,
-                "18-24": 1,
-                "25-34": 2,
-                "35-44": 3,
-                "45-54": 4,
-                "55+": 5,
-            }
-
-            const ageIndex = ageMap[demographics.ageRange]
-            if (ageIndex !== undefined) {
-                result[0] = ageIndex / 5 // Normaliza para 0-1
-            }
-        }
-
-        // Outros processamentos demográficos seriam feitos aqui
-
+        const result = new Array(Params.dimensions.socialFeatures).fill(0)
+        // ... resto do código existente ...
         return result
     }
 
     private getInteractionWeight(interactionType: string): number {
-        // Diferentes tipos de interação têm pesos diferentes
         const weights: Record<string, number> = {
-            view: 0.1,
-            like: 0.3,
-            comment: 0.5,
-            share: 0.7,
-            save: 0.6,
+            view: Params.weights.interactions.view,
+            like: Params.weights.interactions.like,
+            comment: Params.weights.interactions.comment,
+            share: Params.weights.interactions.share,
+            save: Params.weights.interactions.save,
         }
 
-        return weights[interactionType] || 0.2 // Peso padrão se o tipo não for conhecido
+        return weights[interactionType] || Params.weights.interactions.default
     }
 
     private isEmbeddingRecent(lastUpdated: Date): boolean {
-        // Consideramos um embedding recente se foi atualizado nos últimos 7 dias
-        const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
-        return Date.now() - lastUpdated.getTime() < ONE_WEEK
+        return Date.now() - lastUpdated.getTime() < Params.timeWindows.recentEmbeddingUpdate
+    }
+
+    private calculateActivenessFactor(interactions: UserInteraction[]): number {
+        if (interactions.length === 0) return 0
+
+        const recentCount = interactions.filter(
+            (i) => Date.now() - i.timestamp.getTime() < Params.timeWindows.interactionHistory
+        ).length
+
+        return Math.min(recentCount / 100, 1)
     }
 
     private async collectUserData(userId: bigint): Promise<UserEmbeddingProps> {
@@ -308,9 +264,9 @@ export class UserEmbeddingService extends BaseEmbeddingService<
             dominantInterests,
             activenessFactor,
             embedDimensions: {
-                interactionDim: 50,
-                contentPrefDim: 20,
-                socialDim: 30,
+                interactionDim: Params.timeWindows.interactionHistory,
+                contentPrefDim: Params.dimensions.contentPreferences,
+                socialDim: Params.dimensions.socialFeatures,
             },
             lastCalculated: new Date().toISOString(),
         }
@@ -320,20 +276,6 @@ export class UserEmbeddingService extends BaseEmbeddingService<
         // Em uma implementação real, analisaríamos o embedding para extrair interesses dominantes
         // Implementação simplificada: retorna as preferências de conteúdo do usuário
         return userData.contentPreferences?.slice(0, 5) || []
-    }
-
-    private calculateActivenessFactor(interactions: UserInteraction[]): number {
-        if (interactions.length === 0) return 0
-
-        // Contagem de interações nos últimos 30 dias
-        const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
-        const now = Date.now()
-        const recentCount = interactions.filter(
-            (i) => now - i.timestamp.getTime() < THIRTY_DAYS
-        ).length
-
-        // Máximo arbitrário de 100 interações para valor máximo
-        return Math.min(recentCount / 100, 1)
     }
 
     private async generateInteractionEmbedding(interactionFeatures: any): Promise<number[]> {

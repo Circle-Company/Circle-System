@@ -7,6 +7,7 @@ import { getLogger } from "../utils/logger"
 import { normalizeL2 } from "../utils/normalization"
 import { combineVectors, resizeVector } from "../utils/vector-operations"
 import { BaseEmbeddingService } from "./BaseEmbeddingService"
+import { EmbeddingParams as Params } from "@swipe-engine/params"
 
 // Definição das interfaces para repositórios
 export interface IPostRepository {
@@ -51,12 +52,12 @@ export class PostEmbeddingService extends BaseEmbeddingService<
     private readonly logger = getLogger("PostEmbeddingService")
 
     // Pesos para diferentes componentes do embedding
-    private readonly WEIGHT_TEXT = 0.5
-    private readonly WEIGHT_TAGS = 0.3
-    private readonly WEIGHT_ENGAGEMENT = 0.2
+    private readonly WEIGHT_TEXT = Params.weights.content.text
+    private readonly WEIGHT_TAGS = Params.weights.content.tags
+    private readonly WEIGHT_ENGAGEMENT = Params.weights.content.engagement
 
     constructor(
-        dimension: number = 128,
+        dimension: number = Params.dimensions.embedding,
         modelPath: string = "models/post_embedding_model",
         postRepository: IPostRepository,
         postEmbeddingRepository: IPostEmbeddingRepository,
@@ -216,7 +217,7 @@ export class PostEmbeddingService extends BaseEmbeddingService<
         const results = new Map<string, PostEmbedding>()
 
         // Processar em lotes para não sobrecarregar o sistema
-        const batchSize = 100
+        const batchSize = Params.batchProcessing.size
         for (let i = 0; i < postIds.length; i += batchSize) {
             const batch = postIds.slice(i, i + batchSize)
             const batchPromises = batch.map(async (postId) => {
@@ -271,7 +272,6 @@ export class PostEmbeddingService extends BaseEmbeddingService<
      * Extrai embedding baseado nas métricas de engajamento
      */
     private extractEngagementEmbedding(metrics: Partial<EngagementMetrics>): number[] {
-        // Criamos um vetor representando diferentes aspectos de engajamento
         const engagementVector = [
             metrics.views || 0,
             metrics.likes || 0,
@@ -281,12 +281,10 @@ export class PostEmbeddingService extends BaseEmbeddingService<
             metrics.engagementRate || 0,
         ]
 
-        // Normalizar valores - logaritmo para comprimir valores grandes
         const normalizedVector = engagementVector.map(
-            (val) => (val > 0 ? Math.log10(1 + val) / 5 : 0) // Divide por 5 para manter valores entre 0-1 na maioria dos casos
+            (val) => (val > 0 ? Math.log10(1 + val) / Params.normalization.engagementScaleFactor : 0)
         )
 
-        // Expandir para a dimensão correta
         return resizeVector(normalizedVector, this.dimension)
     }
 
@@ -295,24 +293,24 @@ export class PostEmbeddingService extends BaseEmbeddingService<
      */
     private calculateUpdateWeight(lastInteraction?: Date): number {
         if (!lastInteraction) {
-            return 0.5 // Peso padrão para atualizações sem data
+            return Params.weights.update.default
         }
 
         const now = Date.now()
         const interactionTime = lastInteraction.getTime()
         const hoursSinceInteraction = (now - interactionTime) / (1000 * 60 * 60)
 
-        // Mais recente = mais peso, com decaimento exponencial
-        return Math.max(0.1, Math.exp(-hoursSinceInteraction / 24))
+        return Math.max(
+            Params.decay.interactionWeight.minimum,
+            Math.exp(-hoursSinceInteraction / Params.decay.interactionWeight.base)
+        )
     }
 
     /**
      * Verifica se um embedding é considerado recente
      */
     private isEmbeddingRecent(lastUpdated: Date): boolean {
-        // Consideramos um embedding recente se foi atualizado nas últimas 24 horas
-        const ONE_DAY = 24 * 60 * 60 * 1000
-        return Date.now() - lastUpdated.getTime() < ONE_DAY
+        return Date.now() - lastUpdated.getTime() < Params.timeWindows.recentEmbeddingUpdate
     }
 
     /**
@@ -385,8 +383,8 @@ export class PostEmbeddingService extends BaseEmbeddingService<
      */
     public async findSimilarPosts(
         postId: bigint,
-        limit: number = 10,
-        minSimilarity: number = 0.7
+        limit: number = Params.similarity.defaultLimit,
+        minSimilarity: number = Params.similarity.minimumThreshold
     ): Promise<Array<{ id: bigint; similarity: number }>> {
         try {
             // 1. Obter embedding do post de referência
