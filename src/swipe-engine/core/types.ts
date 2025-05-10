@@ -182,6 +182,9 @@ export interface EmbeddingVector {
 
     /** Timestamp da última atualização do embedding */
     updatedAt: Date
+
+    /** Metadados adicionais sobre o embedding */
+    metadata?: Record<string, any>
 }
 
 /**
