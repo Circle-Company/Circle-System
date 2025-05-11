@@ -11,7 +11,7 @@ module.exports = {
         allowNull: false,
       },
       moment_id: {
-        type: Sequelize.INTEGER(),
+        type: Sequelize.BIGINT(),
         allowNull: false,
         references: {
           model: 'moments', // Certifique-se de ajustar para o nome real da tabela de moments
@@ -21,7 +21,7 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       user_id: {
-        type: Sequelize.INTEGER(),
+        type: Sequelize.BIGINT(),
         allowNull: false,
         references: {
           model: 'users', // Certifique-se de ajustar para o nome real da tabela de usuários
