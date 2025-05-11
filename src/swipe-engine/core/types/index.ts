@@ -69,12 +69,12 @@ export interface PostEmbedding {
 export interface ClusterInfo {
     id: string
     name: string
-    centroid: number[]
+    centroid: EmbeddingVector
     members: string[]
     radius: number
     density: number
     topics?: string[]
-    activeTimeOfDay?: string[]
+    activeTimeOfDay?: [number, number][]
     geographicFocus?: string
     dominantLanguages?: string[]
     metrics?: ClusterMetrics
@@ -103,7 +103,7 @@ export interface UserProfile {
 }
 
 export interface RecommendationContext {
-    timeOfDay?: "morning" | "afternoon" | "evening" | "night"
+    timeOfDay?: number // Hora do dia em formato 24h (0-23)
     dayOfWeek?: number
     location?: string
     deviceType?: "mobile" | "desktop" | "tablet"
