@@ -1,7 +1,10 @@
 import { DataTypes, Model, Sequelize } from "sequelize"
+import SnowflakeID from "snowflake-id"
+
+const snowflake = new SnowflakeID()
 
 interface PostClusterRankAttributes {
-    id: string
+    id: bigint
     postId: string
     clusterId: string
     score: number
@@ -16,14 +19,14 @@ interface PostClusterRankAttributes {
 
 interface PostClusterRankCreationAttributes
     extends Omit<PostClusterRankAttributes, "id" | "createdAt" | "updatedAt"> {
-    id?: string
+    id?: bigint
 }
 
 class PostClusterRank
     extends Model<PostClusterRankAttributes, PostClusterRankCreationAttributes>
     implements PostClusterRankAttributes
 {
-    public id!: string
+    public id!: bigint
     public postId!: string
     public clusterId!: string
     public score!: number
@@ -41,9 +44,11 @@ class PostClusterRank
         PostClusterRank.init(
             {
                 id: {
-                    type: DataTypes.UUID,
-                    defaultValue: DataTypes.UUIDV4,
+                    type: DataTypes.BIGINT,
                     primaryKey: true,
+                    autoIncrement: false,
+                    allowNull: false,
+                    defaultValue: () => snowflake.generate(),
                 },
                 postId: {
                     type: DataTypes.STRING,
