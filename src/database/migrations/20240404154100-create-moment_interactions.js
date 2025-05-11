@@ -11,21 +11,21 @@ module.exports = {
         allowNull: false
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.BIGINT(),
         allowNull: false,
         references: { model: 'users', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
       moment_owner_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.BIGINT(),
         allowNull: false,
         references: { model: 'users', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
       moment_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.BIGINT(),
         allowNull: false,
         references: { model: 'moments', key: 'id' },
         onUpdate: 'CASCADE',
