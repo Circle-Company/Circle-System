@@ -1,7 +1,10 @@
 import { DataTypes, Model, Sequelize } from "sequelize"
+import SnowflakeID from "snowflake-id"
+
+const snowflake = new SnowflakeID()
 
 interface UserClusterRankAttributes {
-    id: string
+    id: bigint
     userId: string
     clusterId: string
     score: number
@@ -16,14 +19,14 @@ interface UserClusterRankAttributes {
 
 interface UserClusterRankCreationAttributes
     extends Omit<UserClusterRankAttributes, "id" | "createdAt" | "updatedAt"> {
-    id?: string
+    id?: bigint
 }
 
 class UserClusterRank
     extends Model<UserClusterRankAttributes, UserClusterRankCreationAttributes>
     implements UserClusterRankAttributes
 {
-    public id!: string
+    public id!: bigint
     public userId!: string
     public clusterId!: string
     public score!: number
@@ -41,9 +44,11 @@ class UserClusterRank
         UserClusterRank.init(
             {
                 id: {
-                    type: DataTypes.UUID,
-                    defaultValue: DataTypes.UUIDV4,
+                    type: DataTypes.BIGINT,
                     primaryKey: true,
+                    autoIncrement: false,
+                    allowNull: false,
+                    defaultValue: () => snowflake.generate(),
                 },
                 userId: {
                     type: DataTypes.STRING,
