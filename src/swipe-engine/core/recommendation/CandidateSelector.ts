@@ -1,18 +1,15 @@
 import Moment from "../../../models/moments/moment-model"
 import { Candidate, CandidateSelectorOptions, ClusterInfo, MatchResult } from "../types"
 import { getLogger } from "../utils/logger"
+import { EmbeddingParams } from "../../params"
 
 export class CandidateSelector {
     private readonly logger = getLogger("CandidateSelector")
-    private readonly weights = {
-        clusterScore: 0.4, // Peso do score do cluster
-        recency: 0.3, // Peso da data de criação
-        engagement: 0.2, // Peso do engajamento
-        random: 0.1, // Componente aleatório
-    }
+    private readonly weights = EmbeddingParams.candidateSelector.weights
+    private readonly thresholds = EmbeddingParams.candidateSelector.thresholds
     private readonly PostModel = Moment
 
-    constructor(weights?: Partial<typeof CandidateSelector.prototype.weights>) {
+    constructor(weights?: Partial<typeof EmbeddingParams.candidateSelector.weights>) {
         // Permite customização dos pesos no construtor
         if (weights) {
             this.weights = { ...this.weights, ...weights }
@@ -28,15 +25,15 @@ export class CandidateSelector {
     ): Promise<Candidate[]> {
         try {
             const {
-                limit = 30,
+                limit = this.thresholds.defaultLimit,
                 excludeIds = new Set<string>(),
                 userId,
-                timeWindow = 24 * 7, // 7 dias em horas
+                timeWindow = this.thresholds.timeWindow,
             } = options
 
             // Filtra e ordena clusters por score
             const validClusters = matchedClusters
-                .filter((match) => match.score > 0.2)
+                .filter((match) => match.score > this.thresholds.minimumClusterScore)
                 .sort((a, b) => b.score - a.score)
 
             // Coleta candidatos de cada cluster
@@ -48,7 +45,7 @@ export class CandidateSelector {
                     userId,
                     timeWindow,
                     clusterScore: match.score,
-                    limit: Math.ceil(limit / validClusters.length) + 5, // Buffer extra
+                    limit: Math.ceil(limit / validClusters.length) + this.thresholds.bufferSize,
                 })
                 allCandidates.push(...clusterCandidates)
             }
@@ -144,6 +141,7 @@ export class CandidateSelector {
             return []
         }
     }
+
     /**
      * Verifica se um candidato está dentro da janela de tempo
      */
