@@ -1,8 +1,11 @@
 import { DataTypes, Model, Sequelize } from "sequelize"
 import { EntityType, InteractionType, UserInteraction } from "../core/types"
+import SnowflakeID from "snowflake-id"
+
+const snowflake = new SnowflakeID()
 
 interface InteractionEventAttributes {
-    id: string
+    id: bigint
     userId: string
     entityId: string
     entityType: EntityType
@@ -15,14 +18,14 @@ interface InteractionEventAttributes {
 
 interface InteractionEventCreationAttributes
     extends Omit<InteractionEventAttributes, "id" | "createdAt" | "updatedAt"> {
-    id?: string
+    id?: bigint
 }
 
 class InteractionEvent
     extends Model<InteractionEventAttributes, InteractionEventCreationAttributes>
     implements InteractionEventAttributes
 {
-    public id!: string
+    public id!: bigint
     public userId!: string
     public entityId!: string
     public entityType!: EntityType
@@ -36,7 +39,7 @@ class InteractionEvent
     // Converte para o tipo UserInteraction do core
     public toUserInteraction(): UserInteraction {
         return {
-            id: this.id,
+            id: this.id.toString(),
             userId: BigInt(this.userId),
             entityId: BigInt(this.entityId),
             entityType: this.entityType,
@@ -51,9 +54,11 @@ class InteractionEvent
         InteractionEvent.init(
             {
                 id: {
-                    type: DataTypes.UUID,
-                    defaultValue: DataTypes.UUIDV4,
+                    type: DataTypes.BIGINT,
                     primaryKey: true,
+                    autoIncrement: false,
+                    allowNull: false,
+                    defaultValue: () => snowflake.generate(),
                 },
                 userId: {
                     type: DataTypes.STRING,
