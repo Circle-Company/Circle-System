@@ -7,9 +7,10 @@
 
 import { PostEmbeddingService } from "../embeddings/PostEmbeddingService"
 import { UserEmbeddingService } from "../embeddings/UserEmbeddingService"
-import { InteractionStrength, InteractionType, UserInteraction } from "../types"
+import { InteractionType, UserInteraction } from "../types"
 import { Logger } from "../utils/logger"
 import { normalizeVector } from "../utils/vector-operations"
+import { EmbeddingParams as Params } from "../../params"
 
 export class FeedbackProcessor {
     private readonly userEmbeddingService: UserEmbeddingService
@@ -30,7 +31,7 @@ export class FeedbackProcessor {
         userEmbeddingService: UserEmbeddingService,
         postEmbeddingService: PostEmbeddingService,
         logger: Logger,
-        batchSize: number = 100
+        batchSize: number = Params.batchProcessing.size
     ) {
         this.userEmbeddingService = userEmbeddingService
         this.postEmbeddingService = postEmbeddingService
@@ -39,17 +40,9 @@ export class FeedbackProcessor {
         this.pendingInteractions = []
 
         // Configurar pesos para diferentes tipos de interação
-        this.interactionStrengths = new Map<InteractionType, number>([
-            ["short_view", InteractionStrength.VERY_LOW],
-            ["long_view", InteractionStrength.MEDIUM],
-            ["like", InteractionStrength.HIGH],
-            ["like_comment", InteractionStrength.HIGH],
-            ["share", InteractionStrength.VERY_HIGH],
-            ["comment", InteractionStrength.HIGH],
-            ["dislike", InteractionStrength.NEGATIVE],
-            ["show_less_often", InteractionStrength.NEGATIVE],
-            ["report", InteractionStrength.VERY_NEGATIVE],
-        ])
+        this.interactionStrengths = new Map<InteractionType, number>(
+            Object.entries(Params.feedback.interactionStrengths) as [InteractionType, number][]
+        )
     }
 
     /**
@@ -225,7 +218,7 @@ export class FeedbackProcessor {
         const normalizedUpdates = normalizeVector(embeddingUpdates)
 
         // Aplicar as atualizações ao embedding do usuário, com taxa de aprendizado
-        const learningRate = 0.05
+        const learningRate = Params.feedback.learningRates.user.normal
         const newUserVector = new Array(this.getVectorDimension(userEmbedding)).fill(0)
 
         for (let i = 0; i < newUserVector.length; i++) {
@@ -303,7 +296,7 @@ export class FeedbackProcessor {
                     const normalizedUpdates = normalizeVector(embeddingUpdates)
 
                     // Aplicar atualização ao embedding do post (taxa de aprendizado menor para posts)
-                    const learningRate = 0.02
+                    const learningRate = Params.feedback.learningRates.post.normal
                     const newPostVector = new Array(this.getVectorDimension(postEmbedding)).fill(0)
 
                     for (let i = 0; i < newPostVector.length; i++) {
@@ -364,8 +357,8 @@ export class FeedbackProcessor {
                 // isso seria feito com uma busca vetorial eficiente)
                 const similarPosts = await this.postEmbeddingService.findSimilarPosts(
                     postId,
-                    5, // Top 5 posts similares
-                    0.8 // Limiar de similaridade
+                    Params.feedback.networkEffects.similarPostsLimit,
+                    Params.feedback.networkEffects.similarityThreshold
                 )
 
                 if (!similarPosts || similarPosts.length === 0) {
@@ -373,7 +366,7 @@ export class FeedbackProcessor {
                 }
 
                 // Aplicar uma pequena atualização aos posts similares
-                const networkLearningRate = 0.005 // Taxa muito baixa para efeitos indiretos
+                const networkLearningRate = Params.feedback.learningRates.post.networkEffect
 
                 for (const similarPost of similarPosts) {
                     const similarPostEmbedding = await this.postEmbeddingService.getPostEmbedding(
@@ -436,7 +429,7 @@ export class FeedbackProcessor {
             }
 
             const strength = this.getInteractionStrength(interaction)
-            const learningRate = 0.1 // Taxa maior para atualizações individuais de alta prioridade
+            const learningRate = Params.feedback.learningRates.user.highPriority
 
             // Criar novo vetor de usuário
             const newUserVector = new Array(this.getVectorDimension(userEmbedding)).fill(0)
@@ -471,45 +464,37 @@ export class FeedbackProcessor {
      * @returns Valor numérico representando a força da interação
      */
     private getInteractionStrength(interaction: UserInteraction): number {
-        // Obter valor base para o tipo de interação
-        const baseStrength =
-            this.interactionStrengths.get(interaction.type) || InteractionStrength.LOW
-
-        // Ajustar com base em metadados (se disponíveis)
-        let adjustedStrength = baseStrength
+        const baseStrength = this.interactionStrengths.get(interaction.type) || 0.2
 
         if (interaction.metadata) {
-            // Ajustar com base no tempo de engajamento
+            let adjustedStrength = baseStrength
+
             if (interaction.metadata.engagementTime) {
                 const engagementTime = interaction.metadata.engagementTime
 
-                // Aumentar força com base no tempo de engajamento, para interações positivas
                 if (baseStrength > 0) {
-                    if (engagementTime > 60) {
-                        // Mais de 1 minuto
-                        adjustedStrength *= 1.5
-                    } else if (engagementTime < 5) {
-                        // Menos de 5 segundos
-                        adjustedStrength *= 0.5
+                    if (engagementTime > Params.feedback.engagement.timeThresholds.long) {
+                        adjustedStrength *= Params.feedback.engagement.timeMultipliers.long
+                    } else if (engagementTime < Params.feedback.engagement.timeThresholds.short) {
+                        adjustedStrength *= Params.feedback.engagement.timeMultipliers.short
                     }
                 }
             }
 
-            // Ajustar com base em outros metadados, como porcentagem assistida
             if (interaction.metadata.percentWatched) {
                 const percentWatched = interaction.metadata.percentWatched
 
-                if (percentWatched > 0.8) {
-                    // Assistiu mais de 80%
-                    adjustedStrength *= 1.3
-                } else if (percentWatched < 0.2) {
-                    // Assistiu menos de 20%
-                    adjustedStrength *= 0.7
+                if (percentWatched > Params.feedback.engagement.watchPercentages.high) {
+                    adjustedStrength *= Params.feedback.engagement.watchMultipliers.high
+                } else if (percentWatched < Params.feedback.engagement.watchPercentages.low) {
+                    adjustedStrength *= Params.feedback.engagement.watchMultipliers.low
                 }
             }
+
+            return adjustedStrength
         }
 
-        return adjustedStrength
+        return baseStrength
     }
 
     private getVectorDimension(embedding: any): number {
