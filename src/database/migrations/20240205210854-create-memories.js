@@ -5,13 +5,13 @@ module.exports = {
     async up(queryInterface, Sequelize) {
         return queryInterface.createTable("memories", {
             id: {
-                type: Sequelize.INTEGER(),
+                type: Sequelize.BIGINT(),
                 primaryKey: true,
-                autoIncrement: true,
+                autoIncrement: false,
                 allowNull: false,
             },
             user_id: {
-                type: Sequelize.INTEGER(),
+                type: Sequelize.BIGINT(),
                 allowNull: false,
                 references: {
                     model: "users", // Certifique-se de ajustar para o nome real da tabela de usuários
