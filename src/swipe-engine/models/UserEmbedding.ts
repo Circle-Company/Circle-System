@@ -1,8 +1,11 @@
 import { DataTypes, Model, Sequelize } from "sequelize"
 import { UserEmbedding as UserEmbeddingType } from "../core/types"
+import SnowflakeID from "snowflake-id"
+
+const snowflake = new SnowflakeID()
 
 interface UserEmbeddingAttributes {
-    id: string
+    id: bigint
     userId: string
     vector: string // JSON stringificado do EmbeddingVector
     dimension: number
@@ -13,14 +16,14 @@ interface UserEmbeddingAttributes {
 
 interface UserEmbeddingCreationAttributes
     extends Omit<UserEmbeddingAttributes, "id" | "createdAt" | "updatedAt"> {
-    id?: string
+    id?: bigint
 }
 
 class UserEmbedding
     extends Model<UserEmbeddingAttributes, UserEmbeddingCreationAttributes>
     implements UserEmbeddingAttributes
 {
-    public id!: string
+    public id!: bigint
     public userId!: string
     public vector!: string
     public dimension!: number
@@ -49,9 +52,11 @@ class UserEmbedding
         UserEmbedding.init(
             {
                 id: {
-                    type: DataTypes.UUID,
-                    defaultValue: DataTypes.UUIDV4,
+                    type: DataTypes.BIGINT,
                     primaryKey: true,
+                    autoIncrement: false,
+                    allowNull: false,
+                    defaultValue: () => snowflake.generate(),
                 },
                 userId: {
                     type: DataTypes.STRING,
