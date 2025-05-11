@@ -1,11 +1,12 @@
-import { getLogger } from "../../v2/core/utils/logger"
-import { cosineSimilarity, normalizeVector } from "../../v2/core/utils/vectorUtils"
+import { getLogger } from "../utils/logger"
+import { cosineSimilarity, normalizeVector } from "../utils/vector-operations"
 import {
     ClusterInfo,
     MatchResult,
     RecommendationContext,
     UserEmbedding,
     UserProfile,
+    EmbeddingVector
 } from "../types"
 
 /**
@@ -83,11 +84,11 @@ export class ClusterMatcher {
             return this.getDefaultClusters()
         }
 
-        const normalizedUserEmbedding = normalizeVector(userEmbedding.vector)
+        const normalizedUserEmbedding = normalizeVector(userEmbedding.vector.values)
 
         // Calcular similaridade com cada cluster
         const matches = this._clusters.map((cluster) => {
-            const normalizedClusterVector = normalizeVector(cluster.centroid)
+            const normalizedClusterVector = normalizeVector(cluster.centroid.values)
 
             // Similaridade de cosseno entre o usuário e o centroide do cluster
             let similarity = cosineSimilarity(normalizedUserEmbedding, normalizedClusterVector)
@@ -104,7 +105,7 @@ export class ClusterMatcher {
                 clusterName: cluster.name,
                 similarity,
                 score: similarity,
-                cluster,
+                cluster
             } as MatchResult
         })
 
@@ -150,7 +151,7 @@ export class ClusterMatcher {
                 clusterName: cluster.name,
                 similarity,
                 score: similarity,
-                cluster,
+                cluster
             } as MatchResult
         })
 
@@ -233,7 +234,7 @@ export class ClusterMatcher {
                     clusterName: cluster.name,
                     similarity,
                     score,
-                    cluster,
+                    cluster
                 }
             }
         )
@@ -266,7 +267,7 @@ export class ClusterMatcher {
                         clusterName: cluster.name,
                         similarity,
                         score,
-                        cluster,
+                        cluster
                     }
                 })
 
@@ -357,9 +358,7 @@ export class ClusterMatcher {
      */
     private getPreferredLocations(cluster: ClusterInfo): string[] | undefined {
         // Verificar as diferentes possíveis propriedades para localizações
-        return cluster.preferredLocations || (cluster as any).geographicFocus
-            ? [(cluster as any).geographicFocus]
-            : undefined
+        return (cluster as any).geographicFocus ? [(cluster as any).geographicFocus] : undefined
     }
 
     /**
@@ -369,7 +368,7 @@ export class ClusterMatcher {
      */
     private getClusterLanguages(cluster: ClusterInfo): string[] | undefined {
         // Verificar as diferentes possíveis propriedades para idiomas
-        return cluster.languages || (cluster as any).dominantLanguages
+        return (cluster as any).dominantLanguages
     }
 
     /**
