@@ -6,9 +6,9 @@ import PostCluster from "../../models/PostCluster"
 import PostEmbedding from "../../models/PostEmbedding"
 import UserClusterRank from "../../models/UserClusterRank"
 import UserEmbedding from "../../models/UserEmbedding"
-import { PostEmbeddingBuilder } from "../embeddings/PostEmbeddingBuilder"
+import { PostEmbeddingBuilder } from "../embeddings/builders/PostEmbeddingBuilder"
 import { UserEmbeddingService } from "../embeddings/UserEmbeddingService"
-import { InteractionType, Recommendation, RecommendationOptions } from "../types"
+import { InteractionType, PostEmbeddingProps, Recommendation, RecommendationOptions } from "../types"
 import { getLogger } from "../utils/logger"
 import { RankingService } from "./RankingService"
 import { RecommendationEngine } from "./RecommendationEngine"
@@ -288,14 +288,40 @@ export class RecommendationCoordinator {
         try {
             this.logger.info(`Processando novo post ${postId}`)
 
-            // 1. Buscar dados do post
-            const post = await Moment.findByPk(postId)
+            // 1. Buscar dados do post com suas associações
+            const post = await Moment.findByPk(postId, {
+                include: [{
+                    association: 'tags',
+                    attributes: ['title']
+                }]
+            })
             if (!post) {
                 throw new Error(`Post ${postId} não encontrado`)
             }
 
-            // 2. Gerar embedding
-            await this.postEmbeddingBuilder.generatePostEmbedding(BigInt(postId.toString()))
+            // 2. Gerar embedding com validações de tipo
+            const description = post.getDataValue('description') as string | null
+            const userId = post.getDataValue('user_id') as bigint
+            const createdAt = post.createdAt // Usando o campo createdAt gerado automaticamente pelo Sequelize
+
+            // Extrair títulos das tags
+            const tagTitles = (post as any).tags?.map((tag: any) => tag.getDataValue('title')) || []
+
+            const postData: PostEmbeddingProps = {
+                textContent: description || '',
+                tags: tagTitles,
+                engagementMetrics: {
+                    views: 0,
+                    likes: 0,
+                    comments: 0,
+                    shares: 0,
+                    saves: 0,
+                    engagementRate: 0
+                },
+                authorId: userId,
+                createdAt: createdAt
+            }
+            await this.postEmbeddingBuilder.build(postData)
 
             // 3. Associar a clusters (em produção seria um job em background)
             await this.assignPostToClusters(postId)
