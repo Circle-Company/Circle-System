@@ -38,14 +38,12 @@ export async function getRecommendations(
  *
  * @param userId ID do usuário
  * @param entityId ID da entidade (post, usuário)
- * @param entityType Tipo da entidade
  * @param interactionType Tipo de interação
  * @param metadata Metadados adicionais
  */
 export async function processInteraction(
     userId: string | bigint,
     entityId: string | bigint,
-    entityType: "user" | "post",
     interactionType: InteractionType,
     metadata: Record<string, any> = {}
 ): Promise<void> {
@@ -53,7 +51,6 @@ export async function processInteraction(
     return await coordinator!.processInteraction(
         userId,
         entityId,
-        entityType,
         interactionType,
         metadata
     )
