@@ -11,7 +11,7 @@ module.exports = {
         allowNull: false,
       },
       moment_id: {
-        type: Sequelize.INTEGER(),
+        type: Sequelize.BIGINT(),
         allowNull: false,
         references: {
           model: 'moments',
