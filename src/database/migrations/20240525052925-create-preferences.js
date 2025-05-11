@@ -18,7 +18,7 @@ module.exports = {
                 onDelete: "CASCADE",
             },
             app_timezone: {
-                type: Sequelize.NUMBER,
+                type: Sequelize.INTEGER,
                 defaultValue: -3,
             },
             app_language: {
