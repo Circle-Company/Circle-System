@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest"
-import { Candidate, UserEmbedding } from "../../types"
+import { Candidate, UserEmbedding, EmbeddingVector } from "../../types"
 import { RankingService } from "../RankingService"
 
 describe("RankingService", () => {
@@ -10,6 +10,14 @@ describe("RankingService", () => {
     beforeEach(() => {
         rankingService = new RankingService()
 
+        // Função auxiliar para criar vetores de embedding
+        const createEmbeddingVector = (values: number[]): EmbeddingVector => ({
+            dimension: values.length,
+            values,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        })
+
         // Mock para candidatos
         mockCandidates = [
             {
@@ -18,13 +26,8 @@ describe("RankingService", () => {
                 statistics: { likes: 100, comments: 20, shares: 5, views: 1000 },
                 embedding: {
                     userId: "test",
-                    vector: {
-                        dimension: 3,
-                        values: [0.5, 0.3, 0.2],
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    },
-                },
+                    vector: createEmbeddingVector([0.5, 0.3, 0.2])
+                }
             },
             {
                 id: 2,
@@ -32,13 +35,8 @@ describe("RankingService", () => {
                 statistics: { likes: 50, comments: 10, shares: 2, views: 500 },
                 embedding: {
                     userId: "test",
-                    vector: {
-                        dimension: 3,
-                        values: [0.1, 0.8, 0.1],
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    },
-                },
+                    vector: createEmbeddingVector([0.1, 0.8, 0.1])
+                }
             },
             {
                 id: 3,
@@ -46,33 +44,23 @@ describe("RankingService", () => {
                 statistics: { likes: 10, comments: 2, shares: 1, views: 100 },
                 embedding: {
                     userId: "test",
-                    vector: {
-                        dimension: 3,
-                        values: [0.2, 0.2, 0.6],
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    },
-                },
-            },
+                    vector: createEmbeddingVector([0.2, 0.2, 0.6])
+                }
+            }
         ]
 
         // Mock para embedding do usuário
         mockUserEmbedding = {
             userId: "user1",
-            vector: {
-                dimension: 3,
-                values: [0.2, 0.3, 0.5],
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            },
+            vector: createEmbeddingVector([0.2, 0.3, 0.5])
         }
     })
 
-    it("deve classificar candidatos com base em scores", async () => {
-        const result = await rankingService.rankCandidates(mockCandidates, {
+    it("deve classificar candidatos com base em scores", () => {
+        const result = rankingService.rankCandidates(mockCandidates, {
             userEmbedding: mockUserEmbedding,
             userProfile: null,
-            limit: 3,
+            limit: 3
         })
 
         expect(result).toHaveLength(3)
@@ -85,27 +73,27 @@ describe("RankingService", () => {
         expect(result[1].finalScore).toBeGreaterThanOrEqual(result[2].finalScore)
     })
 
-    it("deve limitar o número de resultados conforme especificado", async () => {
-        const result = await rankingService.rankCandidates(mockCandidates, {
+    it("deve limitar o número de resultados conforme especificado", () => {
+        const result = rankingService.rankCandidates(mockCandidates, {
             userEmbedding: mockUserEmbedding,
             userProfile: null,
-            limit: 2,
+            limit: 2
         })
 
         expect(result).toHaveLength(2)
     })
 
-    it("deve aplicar diversificação aos resultados", async () => {
-        const resultWithoutDiversity = await rankingService.rankCandidates(mockCandidates, {
+    it("deve aplicar diversificação aos resultados", () => {
+        const resultWithoutDiversity = rankingService.rankCandidates(mockCandidates, {
             userEmbedding: mockUserEmbedding,
             userProfile: null,
-            diversityLevel: 0,
+            diversityLevel: 0
         })
 
-        const resultWithDiversity = await rankingService.rankCandidates(mockCandidates, {
+        const resultWithDiversity = rankingService.rankCandidates(mockCandidates, {
             userEmbedding: mockUserEmbedding,
             userProfile: null,
-            diversityLevel: 1,
+            diversityLevel: 1
         })
 
         // Não podemos testar exatamente a ordem, mas podemos verificar
@@ -123,37 +111,37 @@ describe("RankingService", () => {
         expect(orderMatches).toBe(false)
     })
 
-    it("deve tratar erros graciosamente", async () => {
+    it("deve tratar erros graciosamente", () => {
         // Mock de candidato com dados inválidos
         const invalidCandidates = [
             {
                 id: 1,
                 created_at: "invalid date",
-                statistics: null,
-            } as unknown as Candidate,
+                statistics: null
+            } as unknown as Candidate
         ]
 
-        // Não deve lançar erro, apenas retornar array vazio
-        const result = await rankingService.rankCandidates(invalidCandidates, {
+        const result = rankingService.rankCandidates(invalidCandidates, {
             userEmbedding: mockUserEmbedding,
-            userProfile: null,
+            userProfile: null
         })
 
         expect(Array.isArray(result)).toBe(true)
+        expect(result[0]).toHaveProperty("finalScore", 0.5)
     })
 
-    it("deve calcular scores para candidatos sem embedding", async () => {
+    it("deve calcular scores para candidatos sem embedding", () => {
         const candidatesWithoutEmbedding = [
             {
                 id: 1,
                 created_at: new Date(),
-                statistics: { likes: 100, comments: 20, shares: 5, views: 1000 },
-            } as Candidate,
+                statistics: { likes: 100, comments: 20, shares: 5, views: 1000 }
+            } as Candidate
         ]
 
-        const result = await rankingService.rankCandidates(candidatesWithoutEmbedding, {
+        const result = rankingService.rankCandidates(candidatesWithoutEmbedding, {
             userEmbedding: mockUserEmbedding,
-            userProfile: null,
+            userProfile: null
         })
 
         expect(result).toHaveLength(1)
@@ -162,14 +150,43 @@ describe("RankingService", () => {
         expect(result[0].relevanceScore).toBe(0.5)
     })
 
-    it("deve funcionar sem embedding de usuário", async () => {
-        const result = await rankingService.rankCandidates(mockCandidates, {
+    it("deve funcionar sem embedding de usuário", () => {
+        const result = rankingService.rankCandidates(mockCandidates, {
             userEmbedding: null,
-            userProfile: null,
+            userProfile: null
         })
 
         expect(result).toHaveLength(3)
         // Espera-se que todos os candidatos tenham um score de relevância padrão
         expect(result.every((r) => r.relevanceScore === 0.5)).toBe(true)
+    })
+
+    it("deve considerar o contexto na classificação", () => {
+        const result = rankingService.rankCandidates(mockCandidates, {
+            userEmbedding: mockUserEmbedding,
+            userProfile: null,
+            context: {
+                timeOfDay: 14, // 14:00
+                dayOfWeek: 1, // Segunda-feira
+                location: "BR"
+            }
+        })
+
+        expect(result).toHaveLength(3)
+        expect(result[0]).toHaveProperty("contextScore")
+        expect(result.every((r) => typeof r.contextScore === "number")).toBe(true)
+    })
+
+    it("deve ajustar pesos com base no nível de novidade", () => {
+        const result = rankingService.rankCandidates(mockCandidates, {
+            userEmbedding: mockUserEmbedding,
+            userProfile: null,
+            noveltyLevel: 0.8 // Alto nível de novidade
+        })
+
+        expect(result).toHaveLength(3)
+        // Com alto nível de novidade, candidatos mais recentes devem ter scores mais altos
+        const newestCandidate = result.find(c => c.id === 3)
+        expect(newestCandidate?.noveltyScore).toBeGreaterThan(0.5)
     })
 })
