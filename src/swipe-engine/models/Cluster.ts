@@ -1,8 +1,10 @@
 import { DataTypes, Model, Sequelize } from "sequelize"
 import { ClusterInfo, EmbeddingVector } from "../core/types"
+import SnowflakeID from "snowflake-id"
+const snowflake = new SnowflakeID()
 
 interface ClusterAttributes {
-    id: string
+    id: bigint
     name: string
     centroid: string // JSON stringificado do EmbeddingVector
     topics: string[] // Array de tópicos
@@ -20,14 +22,14 @@ interface ClusterAttributes {
 
 interface ClusterCreationAttributes
     extends Omit<ClusterAttributes, "id" | "createdAt" | "updatedAt"> {
-    id?: string
+    id?: bigint
 }
 
 class Cluster
     extends Model<ClusterAttributes, ClusterCreationAttributes>
     implements ClusterAttributes
 {
-    public id!: string
+    public id!: bigint
     public name!: string
     public centroid!: string
     public topics!: string[]
@@ -47,7 +49,7 @@ class Cluster
     public toClusterInfo(): ClusterInfo {
         const centroidData = JSON.parse(this.centroid) as EmbeddingVector
         return {
-            id: this.id,
+            id: this.id.toString(),
             name: this.name,
             centroid: centroidData,
             topics: this.topics,
@@ -70,9 +72,11 @@ class Cluster
         Cluster.init(
             {
                 id: {
-                    type: DataTypes.UUID,
-                    defaultValue: DataTypes.UUIDV4,
+                    type: DataTypes.BIGINT,
                     primaryKey: true,
+                    autoIncrement: false,
+                    allowNull: false,
+                    defaultValue: () => snowflake.generate(),
                 },
                 name: {
                     type: DataTypes.STRING,
