@@ -210,7 +210,7 @@ export class RecommendationCoordinator {
                 let userClusterRank = await UserClusterRank.findOne({
                     where: {
                         userId: userId.toString(),
-                        clusterId: cluster.id,
+                        clusterId: cluster.id.toString(),
                     },
                 })
 
@@ -255,7 +255,7 @@ export class RecommendationCoordinator {
                     // Criar novo ranking
                     await UserClusterRank.create({
                         userId: userId.toString(),
-                        clusterId: cluster.id,
+                        clusterId: cluster.id.toString(),
                         score: interactionBoost > 0 ? 0.3 : 0,
                         similarity: 0.3,
                         interactionScore: interactionBoost > 0 ? 0.3 : 0,
@@ -371,7 +371,7 @@ export class RecommendationCoordinator {
                     }
 
                     // 2. Criar/atualizar registro de rank
-                    await this.createOrUpdatePostClusterRank(postId, cluster.id, similarity)
+                    await this.createOrUpdatePostClusterRank(postId, cluster.id.toString(), similarity)
                 }
             }
         } catch (error: any) {
