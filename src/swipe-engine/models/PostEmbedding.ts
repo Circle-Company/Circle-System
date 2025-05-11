@@ -1,8 +1,11 @@
 import { DataTypes, Model, Sequelize } from "sequelize"
 import { PostEmbedding as PostEmbeddingType } from "../core/types"
+import SnowflakeID from "snowflake-id"
+
+const snowflake = new SnowflakeID()
 
 interface PostEmbeddingAttributes {
-    id: string
+    id: bigint
     postId: string
     vector: string // JSON stringificado do vetor
     dimension: number
@@ -13,14 +16,14 @@ interface PostEmbeddingAttributes {
 
 interface PostEmbeddingCreationAttributes
     extends Omit<PostEmbeddingAttributes, "id" | "createdAt" | "updatedAt"> {
-    id?: string
+    id?: bigint
 }
 
 class PostEmbedding
     extends Model<PostEmbeddingAttributes, PostEmbeddingCreationAttributes>
     implements PostEmbeddingAttributes
 {
-    public id!: string
+    public id!: bigint
     public postId!: string
     public vector!: string
     public dimension!: number
@@ -49,9 +52,11 @@ class PostEmbedding
         PostEmbedding.init(
             {
                 id: {
-                    type: DataTypes.UUID,
-                    defaultValue: DataTypes.UUIDV4,
+                    type: DataTypes.BIGINT,
                     primaryKey: true,
+                    autoIncrement: false,
+                    allowNull: false,
+                    defaultValue: () => snowflake.generate(),
                 },
                 postId: {
                     type: DataTypes.STRING,
