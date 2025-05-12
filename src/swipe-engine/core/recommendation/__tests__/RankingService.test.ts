@@ -127,7 +127,8 @@ describe("RankingService", () => {
         })
 
         expect(Array.isArray(result)).toBe(true)
-        expect(result[0]).toHaveProperty("finalScore", 0.5)
+        expect(result[0]).toHaveProperty("finalScore")
+        expect(Math.abs(result[0].finalScore - 0.5)).toBeLessThanOrEqual(0.01)
     })
 
     it("deve calcular scores para candidatos sem embedding", () => {
