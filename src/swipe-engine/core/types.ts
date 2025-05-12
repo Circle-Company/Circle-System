@@ -537,6 +537,8 @@ export interface Candidate {
         views?: number
     }
     created_at: string | Date
+    tags?: string[]
+    location?: string
 }
 
 export interface RankedCandidate extends Candidate {
