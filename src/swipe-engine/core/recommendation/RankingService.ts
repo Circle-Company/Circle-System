@@ -1,6 +1,6 @@
 import { Candidate, RankedCandidate, RankingOptions, UserEmbedding } from "../types"
 import { getLogger } from "../utils/logger"
-
+import { RankingParams as Params } from "../../params"
 /**
  * Serviço responsável por classificar candidatos de recomendação baseado em diversos critérios
  */
@@ -210,25 +210,241 @@ export class RankingService {
     }
 
     /**
-     * Score de diversidade (implementação simplificada)
+     * Calcula score de diversidade baseado em características do conteúdo
+     * e histórico de interações do usuário
      */
     private calculateDiversityScore(candidate: Candidate): number {
-        // Em produção, isso consideraria a diversidade em relação a outros itens
-        // Para simplificar, usamos valor fixo
-        return 0.5
+        try {
+            // Se não temos dados suficientes, retornar score padrão
+            if (!candidate.statistics || !candidate.tags || !Array.isArray(candidate.tags)) {
+                this.logger.debug("Dados insuficientes para cálculo de diversidade, usando score padrão")
+                return Params.defaultScores.diversity
+            }
+
+            // Validar e filtrar tags inválidas
+            const validTags = candidate.tags.filter(tag => 
+                typeof tag === 'string' && tag.trim().length > 0
+            )
+
+            if (validTags.length === 0) {
+                this.logger.debug("Nenhuma tag válida encontrada, usando score padrão")
+                return Params.defaultScores.diversity
+            }
+
+            // Calcular diversidade baseada em tags
+            const tagDiversity = this.calculateTagDiversity(validTags)
+            
+            // Calcular diversidade baseada em engajamento
+            const engagementDiversity = this.calculateEngagementDiversity(candidate.statistics)
+            
+            // Combinar scores com pesos
+            const finalScore = (
+                tagDiversity * Params.diversityWeights.tags +
+                engagementDiversity * Params.diversityWeights.engagement
+            )
+
+            // Garantir que o score final está no intervalo [0,1]
+            return Math.max(0, Math.min(1, finalScore))
+        } catch (error) {
+            this.logger.error("Erro ao calcular score de diversidade:", error)
+            return Params.defaultScores.diversity
+        }
     }
 
     /**
-     * Score de contexto baseado no contexto atual (hora do dia, etc)
+     * Calcula diversidade baseada nas tags do conteúdo
      */
-    private calculateContextScore(candidate: Candidate, options: RankingOptions): number {
-        if (!options.context) {
-            return 0.5
+    private calculateTagDiversity(tags: string[]): number {
+        if (!tags || tags.length === 0) {
+            return Params.defaultScores.diversity
         }
 
-        // Em produção, isso compararia o contexto atual com metadados do conteúdo
-        // Para simplificar, usamos valor fixo
-        return 0.5
+        try {
+            // Remover duplicatas e normalizar tags
+            const uniqueTags = [...new Set(tags.map(tag => tag.toLowerCase().trim()))]
+            
+            // Normalizar número de tags (mais tags = mais diverso)
+            const tagCount = Math.min(uniqueTags.length, Params.maxTags)
+            
+            // Aplicar função de suavização para evitar saltos bruscos
+            const normalizedScore = Math.tanh(tagCount / (Params.maxTags / 2))
+            
+            return (normalizedScore + 1) / 2 // Converter para [0,1]
+        } catch (error) {
+            this.logger.error("Erro ao calcular diversidade de tags:", error)
+            return Params.defaultScores.diversity
+        }
+    }
+
+    /**
+     * Calcula diversidade baseada no padrão de engajamento
+     */
+    private calculateEngagementDiversity(stats: NonNullable<Candidate['statistics']>): number {
+        try {
+            if (!stats) return Params.defaultScores.diversity
+
+            // Normalizar métricas de engajamento
+            const normalizedStats = {
+                likes: Math.log10((stats.likes || 0) + 1) / Math.log10(1000),
+                comments: Math.log10((stats.comments || 0) + 1) / Math.log10(100),
+                shares: Math.log10((stats.shares || 0) + 1) / Math.log10(50)
+            }
+
+            // Calcular razão entre diferentes tipos de engajamento
+            const totalEngagement = normalizedStats.likes + normalizedStats.comments + normalizedStats.shares
+            if (totalEngagement === 0) return Params.defaultScores.diversity
+
+            const commentRatio = normalizedStats.comments / totalEngagement
+            const shareRatio = normalizedStats.shares / totalEngagement
+            const likeRatio = normalizedStats.likes / totalEngagement
+
+            // Calcular entropia de Shannon para medir diversidade
+            const entropy = -(
+                (likeRatio * Math.log2(likeRatio + 1e-10)) +
+                (commentRatio * Math.log2(commentRatio + 1e-10)) +
+                (shareRatio * Math.log2(shareRatio + 1e-10))
+            )
+
+            // Normalizar entropia para [0,1]
+            const maxEntropy = Math.log2(3) // Máxima entropia para 3 tipos de engajamento
+            const normalizedEntropy = entropy / maxEntropy
+
+            return Math.max(Params.defaultScores.diversity, normalizedEntropy)
+        } catch (error) {
+            this.logger.error("Erro ao calcular diversidade de engajamento:", error)
+            return Params.defaultScores.diversity
+        }
+    }
+
+    /**
+     * Calcula score de contexto baseado no momento atual e preferências do usuário
+     */
+    private calculateContextScore(candidate: Candidate, options: RankingOptions): number {
+        try {
+            if (!options.context) {
+                return Params.defaultScores.context
+            }
+
+            const context = options.context
+            let score = Params.defaultScores.context
+            let weightSum = 0
+
+            // Ajustar score baseado no horário do dia
+            if (typeof context.timeOfDay === 'number' && context.timeOfDay >= 0 && context.timeOfDay < 24) {
+                const timeScore = this.calculateTimeOfDayScore(context.timeOfDay)
+                score += timeScore
+                weightSum++
+            }
+
+            // Ajustar score baseado no dia da semana
+            if (typeof context.dayOfWeek === 'number' && context.dayOfWeek >= 0 && context.dayOfWeek < 7) {
+                const dayScore = this.calculateDayOfWeekScore(context.dayOfWeek)
+                score += dayScore
+                weightSum++
+            }
+
+            // Ajustar score baseado na localização
+            if (typeof context.location === 'string' && context.location.trim().length > 0) {
+                const locationScore = this.calculateLocationScore(context.location, candidate)
+                score += locationScore
+                weightSum++
+            }
+
+            // Normalizar score final para [0,1]
+            return weightSum > 0 
+                ? Math.min(1, Math.max(0, score / weightSum))
+                : Params.defaultScores.context
+        } catch (error) {
+            this.logger.error("Erro ao calcular score de contexto:", error)
+            return Params.defaultScores.context
+        }
+    }
+
+    /**
+     * Calcula ajuste de score baseado no horário do dia
+     */
+    private calculateTimeOfDayScore(hour: number): number {
+        try {
+            // Horários de pico (manhã e noite) recebem scores mais altos
+            const morningPeak = hour >= 7 && hour <= 9
+            const eveningPeak = hour >= 18 && hour <= 21
+            
+            if (morningPeak || eveningPeak) {
+                return Params.contextWeights.peakHours
+            }
+            
+            // Horários de baixo engajamento recebem scores mais baixos
+            const lowEngagement = hour >= 0 && hour <= 5
+            if (lowEngagement) {
+                return Params.contextWeights.lowEngagementHours
+            }
+            
+            // Aplicar função de suavização para transições
+            const distanceFromPeak = Math.min(
+                Math.abs(hour - 8), // Distância do pico da manhã
+                Math.abs(hour - 19) // Distância do pico da noite
+            )
+            
+            const smoothFactor = Math.exp(-distanceFromPeak / 4) // Suavização exponencial
+            return Params.contextWeights.normalHours * (1 + smoothFactor)
+        } catch (error) {
+            this.logger.error("Erro ao calcular score de horário:", error)
+            return Params.contextWeights.normalHours
+        }
+    }
+
+    /**
+     * Calcula ajuste de score baseado no dia da semana
+     */
+    private calculateDayOfWeekScore(day: number): number {
+        try {
+            // Fim de semana (0 = domingo, 6 = sábado) recebe score mais alto
+            if (day === 0 || day === 6) {
+                return Params.contextWeights.weekend
+            }
+            
+            // Meio da semana recebe score médio
+            if (day >= 2 && day <= 4) {
+                return Params.contextWeights.midWeek
+            }
+            
+            // Segunda e sexta recebem score intermediário
+            return Params.contextWeights.weekStartEnd
+        } catch (error) {
+            this.logger.error("Erro ao calcular score de dia da semana:", error)
+            return Params.contextWeights.midWeek
+        }
+    }
+
+    /**
+     * Calcula ajuste de score baseado na localização
+     */
+    private calculateLocationScore(location: string, candidate: Candidate): number {
+        try {
+            // Normalizar localizações para comparação
+            const normalizeLocation = (loc: string) => loc.trim().toUpperCase()
+            const normalizedContextLocation = normalizeLocation(location)
+            
+            // Se o candidato tem localização definida, verificar correspondência
+            if (candidate.location) {
+                const normalizedCandidateLocation = normalizeLocation(candidate.location)
+                
+                // Verificar correspondência exata ou parcial
+                if (normalizedCandidateLocation === normalizedContextLocation) {
+                    return Params.contextWeights.sameLocation
+                }
+                
+                // Verificar se é do mesmo país (primeiros 2 caracteres)
+                if (normalizedCandidateLocation.slice(0, 2) === normalizedContextLocation.slice(0, 2)) {
+                    return (Params.contextWeights.sameLocation + Params.contextWeights.differentLocation) / 2
+                }
+            }
+            
+            return Params.contextWeights.differentLocation
+        } catch (error) {
+            this.logger.error("Erro ao calcular score de localização:", error)
+            return Params.defaultScores.context
+        }
     }
 
     /**
@@ -242,16 +458,16 @@ export class RankingService {
         context: number
     } {
         const defaultWeights = {
-            relevance: 0.4,
-            engagement: 0.25,
-            novelty: 0.15,
-            diversity: 0.1,
-            context: 0.1,
+            relevance: Params.weights.relevance,
+            engagement: Params.weights.engagement,
+            novelty: Params.weights.novelty,
+            diversity: Params.weights.diversity,
+            context: Params.weights.context,
         }
 
         // Ajustar peso da novidade se especificado
         if (options.noveltyLevel !== undefined) {
-            const noveltyAdjustment = options.noveltyLevel - 0.3 // Base é 0.3
+            const noveltyAdjustment = options.noveltyLevel - Params.noveltyLevel // Base é 0.3
             defaultWeights.novelty += noveltyAdjustment
             defaultWeights.relevance -= noveltyAdjustment / 2
             defaultWeights.engagement -= noveltyAdjustment / 2
@@ -259,7 +475,7 @@ export class RankingService {
 
         // Ajustar peso da diversidade se especificado
         if (options.diversityLevel !== undefined) {
-            const diversityAdjustment = options.diversityLevel - 0.4 // Base é 0.4
+            const diversityAdjustment = options.diversityLevel - Params.diversityLevel // Base é 0.4
             defaultWeights.diversity += diversityAdjustment
             defaultWeights.relevance -= diversityAdjustment
         }
@@ -283,14 +499,14 @@ export class RankingService {
         candidates: RankedCandidate[],
         options: RankingOptions
     ): RankedCandidate[] {
-        if (!options.diversityLevel || options.diversityLevel < 0.6) {
+        if (!options.diversityLevel || options.diversityLevel < Params.diversityLevel) {
             // Sem diversificação para níveis baixos
             return candidates
         }
 
         // Para níveis altos de diversidade, intercalamos conteúdos diversos
         const result: RankedCandidate[] = []
-        const numTopItems = Math.ceil(candidates.length * 0.3) // Top 30%
+        const numTopItems = Math.ceil(candidates.length * Params.noveltyLevel) // Top 30%
 
         // Adicionar top items sem modificação
         for (let i = 0; i < Math.min(numTopItems, candidates.length); i++) {
