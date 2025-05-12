@@ -550,3 +550,45 @@ export const FeedRecommendationParams = {
             },
         }
 }
+
+export const RankingParams = {
+    weights: {
+        relevance: 0.4,
+        engagement: 0.25,
+        novelty: 0.15,
+        diversity: 0.1,
+        context: 0.1,
+    },
+    noveltyLevel: 0.3,
+    diversityLevel: 0.4,
+    decay: {
+        interactionWeight: 24,
+        minimum: 0.1,
+    },
+    // Scores padrão para cada dimensão
+    defaultScores: {
+        relevance: 0.5,
+        engagement: 0.5,
+        novelty: 0.5,
+        diversity: 0.5,
+        context: 0.5,
+    },
+    // Pesos para cálculo de diversidade
+    diversityWeights: {
+        tags: 0.6,
+        engagement: 0.4,
+    },
+    // Pesos para cálculo de contexto
+    contextWeights: {
+        peakHours: 0.3,
+        lowEngagementHours: 0.1,
+        normalHours: 0.2,
+        weekend: 0.3,
+        midWeek: 0.2,
+        weekStartEnd: 0.25,
+        sameLocation: 0.3,
+        differentLocation: 0.1,
+    },
+    // Configurações gerais
+    maxTags: 10, // Número máximo de tags para normalização
+}
