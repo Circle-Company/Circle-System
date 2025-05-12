@@ -31,29 +31,42 @@ export class RankingService {
 
             // Aplicar classificação a cada candidato
             const rankedCandidates = candidates.map((candidate) => {
-                // Calcular scores individuais
-                const relevanceScore = this.calculateRelevanceScore(candidate, options)
-                const engagementScore = this.calculateEngagementScore(candidate)
-                const noveltyScore = this.calculateNoveltyScore(candidate)
-                const diversityScore = this.calculateDiversityScore(candidate)
-                const contextScore = this.calculateContextScore(candidate, options)
+                try {
+                    // Calcular scores individuais
+                    const relevanceScore = this.calculateRelevanceScore(candidate, options)
+                    const engagementScore = this.calculateEngagementScore(candidate)
+                    const noveltyScore = this.calculateNoveltyScore(candidate)
+                    const diversityScore = this.calculateDiversityScore(candidate)
+                    const contextScore = this.calculateContextScore(candidate, options)
 
-                // Calcular score final ponderado
-                const finalScore =
-                    relevanceScore * weights.relevance +
-                    engagementScore * weights.engagement +
-                    noveltyScore * weights.novelty +
-                    diversityScore * weights.diversity +
-                    contextScore * weights.context
+                    // Calcular score final ponderado
+                    const finalScore =
+                        relevanceScore * weights.relevance +
+                        engagementScore * weights.engagement +
+                        noveltyScore * weights.novelty +
+                        diversityScore * weights.diversity +
+                        contextScore * weights.context
 
-                return {
-                    ...candidate,
-                    relevanceScore,
-                    engagementScore,
-                    noveltyScore,
-                    diversityScore,
-                    contextScore,
-                    finalScore,
+                    return {
+                        ...candidate,
+                        relevanceScore,
+                        engagementScore,
+                        noveltyScore,
+                        diversityScore,
+                        contextScore,
+                        finalScore,
+                    }
+                } catch (error) {
+                    // Em caso de erro no cálculo individual, retornar scores padrão
+                    return {
+                        ...candidate,
+                        relevanceScore: 0.5,
+                        engagementScore: 0.5,
+                        noveltyScore: 0.5,
+                        diversityScore: 0.5,
+                        contextScore: 0.5,
+                        finalScore: 0.5,
+                    }
                 }
             })
 
@@ -61,7 +74,10 @@ export class RankingService {
             rankedCandidates.sort((a, b) => b.finalScore - a.finalScore)
 
             // Aplicar estratégia de diversificação se necessário
-            return this.applyDiversityStrategy(rankedCandidates, options)
+            const diversifiedCandidates = this.applyDiversityStrategy(rankedCandidates, options)
+
+            // Aplicar limite após a diversificação
+            return options.limit ? diversifiedCandidates.slice(0, options.limit) : diversifiedCandidates
         } catch (error: any) {
             this.logger.error(`Erro ao classificar candidatos: ${error.message}`)
             // Em caso de erro, retornar candidatos sem classificação
@@ -73,7 +89,7 @@ export class RankingService {
                 diversityScore: 0.5,
                 contextScore: 0.5,
                 finalScore: 0.5,
-            }))
+            })).slice(0, options.limit)
         }
     }
 
@@ -164,10 +180,23 @@ export class RankingService {
      */
     private calculateNoveltyScore(candidate: Candidate): number {
         try {
-            const createdAt =
-                typeof candidate.created_at === "string"
+            if (!candidate.created_at) {
+                return 0.5
+            }
+
+            let createdAt: Date
+            try {
+                createdAt = typeof candidate.created_at === "string"
                     ? new Date(candidate.created_at)
                     : candidate.created_at
+
+                // Verificar se a data é válida
+                if (isNaN(createdAt.getTime())) {
+                    return 0.5
+                }
+            } catch {
+                return 0.5
+            }
 
             const now = new Date()
             const ageInHours = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60)
