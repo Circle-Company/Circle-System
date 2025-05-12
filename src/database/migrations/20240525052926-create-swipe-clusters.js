@@ -7,9 +7,11 @@ module.exports = {
             id: {
                 type: Sequelize.BIGINT,
                 primaryKey: true,
+                autoIncrement: false,
+                allowNull: false,
             },
             name: {
-                type: Sequelize.STRING,
+                type: Sequelize.STRING(255),
                 allowNull: false,
             },
             centroid: {
@@ -17,40 +19,55 @@ module.exports = {
                 allowNull: false,
             },
             topics: {
-                type: Sequelize.ARRAY(Sequelize.STRING),
-                defaultValue: [],
+                type: Sequelize.TEXT,
+                defaultValue: JSON.stringify([]),
+                allowNull: false,
+                comment: 'Array de tópicos em formato JSON',
             },
             member_ids: {
-                type: Sequelize.ARRAY(Sequelize.STRING),
-                defaultValue: [],
+                type: Sequelize.TEXT,
+                defaultValue: JSON.stringify([]),
+                allowNull: false,
+                comment: 'Array de IDs de membros em formato JSON',
             },
             active_time_of_day: {
-                type: Sequelize.ARRAY(Sequelize.INTEGER),
-                defaultValue: [0, 23],
+                type: Sequelize.TEXT,
+                defaultValue: JSON.stringify([0, 23]),
+                allowNull: false,
+                comment: 'Array de horários ativos em formato JSON',
             },
             active_days_of_week: {
-                type: Sequelize.ARRAY(Sequelize.INTEGER),
-                defaultValue: [0, 1, 2, 3, 4, 5, 6],
+                type: Sequelize.TEXT,
+                defaultValue: JSON.stringify([0, 1, 2, 3, 4, 5, 6]),
+                allowNull: false,
+                comment: 'Array de dias ativos em formato JSON',
             },
             preferred_locations: {
-                type: Sequelize.ARRAY(Sequelize.STRING),
-                defaultValue: [],
+                type: Sequelize.TEXT,
+                defaultValue: JSON.stringify([]),
+                allowNull: false,
+                comment: 'Array de localizações preferidas em formato JSON',
             },
             languages: {
-                type: Sequelize.ARRAY(Sequelize.STRING),
-                defaultValue: [],
+                type: Sequelize.TEXT,
+                defaultValue: JSON.stringify([]),
+                allowNull: false,
+                comment: 'Array de idiomas em formato JSON',
             },
             size: {
                 type: Sequelize.INTEGER,
                 defaultValue: 0,
+                allowNull: false,
             },
             density: {
                 type: Sequelize.FLOAT,
                 defaultValue: 0,
+                allowNull: false,
             },
             metadata: {
-                type: Sequelize.JSONB,
+                type: Sequelize.JSON,
                 defaultValue: {},
+                allowNull: false,
             },
             created_at: {
                 type: Sequelize.DATE,
@@ -60,6 +77,21 @@ module.exports = {
                 type: Sequelize.DATE,
                 allowNull: false,
             },
+        }, {
+            charset: 'utf8mb4',
+            collate: 'utf8mb4_unicode_ci',
+            engine: 'InnoDB'
+        })
+
+        // Adicionar índices para melhorar performance
+        await queryInterface.addIndex("swipe_clusters", ["name"], {
+            name: 'idx_swipe_clusters_name'
+        })
+        await queryInterface.addIndex("swipe_clusters", ["size"], {
+            name: 'idx_swipe_clusters_size'
+        })
+        await queryInterface.addIndex("swipe_clusters", ["density"], {
+            name: 'idx_swipe_clusters_density'
         })
     },
 

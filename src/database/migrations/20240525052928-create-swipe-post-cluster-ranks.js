@@ -7,6 +7,8 @@ module.exports = {
             id: {
                 type: Sequelize.BIGINT,
                 primaryKey: true,
+                autoIncrement: false,
+                allowNull: false,
             },
             post_id: {
                 type: Sequelize.STRING,
