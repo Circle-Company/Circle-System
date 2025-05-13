@@ -143,18 +143,42 @@ export default class User extends Model<UserAttributes> implements UserAttribute
             }
         )
 
-        const createFullTextIndex = async () => {
+        // Removendo a criação automática do índice FULLTEXT
+        // O índice será criado via migration
+    }
+
+    static async ensureFullTextIndex(sequelize: Sequelize) {
+        try {
+            // Verifica se o índice já existe
             const [result] = await sequelize.query(
                 `SHOW INDEX FROM users WHERE Key_name = 'fulltext_index_username';`
             )
 
             if ((result as any[]).length === 0) {
-                await sequelize.query(
-                    `ALTER TABLE users ADD FULLTEXT INDEX fulltext_index_username (username);`
-                )
+                // Se não existir, tenta criar com retry em caso de deadlock
+                let retries = 3
+                while (retries > 0) {
+                    try {
+                        await sequelize.query(
+                            `CREATE FULLTEXT INDEX fulltext_index_username ON users (username);`
+                        )
+                        console.log("[User] Índice FULLTEXT criado com sucesso")
+                        break
+                    } catch (error: any) {
+                        if (error.original?.code === 'ER_LOCK_DEADLOCK' && retries > 1) {
+                            console.log("[User] Deadlock detectado, tentando novamente...")
+                            retries--
+                            await new Promise(resolve => setTimeout(resolve, 1000)) // Espera 1 segundo
+                            continue
+                        }
+                        throw error
+                    }
+                }
             }
+        } catch (error) {
+            console.error("[User] Erro ao criar índice FULLTEXT:", error)
+            // Não propaga o erro para não impedir a inicialização do modelo
         }
-        createFullTextIndex()
     }
 
     static associate(models: any) {
@@ -218,5 +242,40 @@ export default class User extends Model<UserAttributes> implements UserAttribute
             foreignKey: "user_id",
             as: "who_profile_clicked",
         })
+
+        if (models.UserEmbedding) {
+            this.hasOne(models.UserEmbedding, {
+                foreignKey: "user_id",
+                as: "user_embedding"
+            })
+        }
+
+        if (models.UserInteractionHistory) {
+            this.hasMany(models.UserInteractionHistory, {
+                foreignKey: "user_id",
+                as: "user_interaction_history"
+            })
+        }
+
+        if (models.UserInteractionSummary) {
+            this.hasOne(models.UserInteractionSummary, {
+                foreignKey: "user_id",
+                as: "user_interaction_summary"
+            })
+        }
+
+        if (models.UserClusterRank) {
+            this.hasMany(models.UserClusterRank, {
+                foreignKey: "user_id",
+                as: "user_cluster_ranks"
+            })
+        }
+
+        if (models.InteractionEvent) {
+            this.hasMany(models.InteractionEvent, {
+                foreignKey: "user_id",
+                as: "interaction_events"
+            })
+        }
     }
 }
