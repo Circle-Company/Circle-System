@@ -131,7 +131,27 @@ class InteractionEvent
 
     // Método para definir associações
     public static associate(models: any): void {
-        // Associações poderiam ser adicionadas aqui
+        // Associação com User
+        if (models.User) {
+            InteractionEvent.belongsTo(models.User, {
+                foreignKey: "user_id",
+                as: "interaction_event_user",
+                targetKey: "id"
+            })
+        }
+
+        // Associação com Moment (quando entityType é 'post')
+        if (models.Moment) {
+            InteractionEvent.belongsTo(models.Moment, {
+                foreignKey: "entity_id",
+                as: "interaction_event_post",
+                targetKey: "id",
+                constraints: false,
+                scope: {
+                    entityType: "post"
+                }
+            })
+        }
     }
 }
 
