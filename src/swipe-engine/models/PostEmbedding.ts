@@ -105,7 +105,14 @@ class PostEmbedding
 
     // Método para definir associações
     public static associate(models: any): void {
-        // Associação com Post/Moment poderia ser adicionada aqui
+        // Associação com Post/Moment
+        if (models.Moment) {
+            PostEmbedding.belongsTo(models.Moment, {
+                foreignKey: "post_id",
+                as: "post_embedding_post",
+                targetKey: "id"
+            })
+        }
     }
 }
 
