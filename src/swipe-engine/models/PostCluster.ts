@@ -143,7 +143,23 @@ class PostCluster
 
     // Método para definir associações
     public static associate(models: any): void {
-        // Associações podem ser adicionadas posteriormente
+        // Associação com Moment através de PostClusterRank
+        if (models.Moment) {
+            PostCluster.belongsToMany(models.Moment, {
+                through: models.PostClusterRank,
+                foreignKey: "cluster_id",
+                otherKey: "post_id",
+                as: "posts"
+            })
+        }
+
+        // Associação com PostClusterRank
+        if (models.PostClusterRank) {
+            PostCluster.hasMany(models.PostClusterRank, {
+                foreignKey: "cluster_id",
+                as: "postRanks"
+            })
+        }
     }
 }
 
