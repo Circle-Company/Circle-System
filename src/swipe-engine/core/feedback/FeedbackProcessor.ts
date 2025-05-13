@@ -11,6 +11,8 @@ import { InteractionType, UserInteraction } from "../types"
 import { Logger } from "../utils/logger"
 import { normalizeVector } from "../utils/vector-operations"
 import { EmbeddingParams as Params } from "../../params"
+import UserInteractionHistory from "../../models/UserInteractionHistory"
+import UserInteractionSummary from "../../models/UserInteractionSummary"
 
 export class FeedbackProcessor {
     private readonly userEmbeddingService: UserEmbeddingService
@@ -52,6 +54,15 @@ export class FeedbackProcessor {
      */
     public async processInteraction(interaction: UserInteraction): Promise<boolean> {
         try {
+            // Registrar a interação no histórico
+            await UserInteractionHistory.create({
+                userId: interaction.userId.toString(),
+                entityId: interaction.entityId.toString(),
+                interactionType: interaction.type,
+                interactionDate: interaction.timestamp,
+                metadata: interaction.metadata || {},
+            })
+
             // Registrar a interação para processamento em lote posterior
             this.pendingInteractions.push(interaction)
 
@@ -525,5 +536,83 @@ export class FeedbackProcessor {
         }
         // Default fallback - empty vector
         return []
+    }
+
+    /**
+     * Verifica se um usuário já interagiu com uma entidade
+     * @param userId ID do usuário
+     * @param entityId ID da entidade
+     * @returns Verdadeiro se já houve interação
+     */
+    public async hasUserInteractedWithEntity(
+        userId: string | bigint,
+        entityId: string | bigint
+    ): Promise<boolean> {
+        const userIdStr = userId.toString()
+        const entityIdStr = entityId.toString()
+
+        const interaction = await UserInteractionHistory.findOne({
+            where: {
+                userId: userIdStr,
+                entityId: entityIdStr,
+            },
+        })
+
+        return !!interaction
+    }
+
+    /**
+     * Obtém o resumo de interações de um usuário
+     * @param userId ID do usuário
+     * @returns Resumo das interações do usuário
+     */
+    public async getUserInteractionSummary(
+        userId: string | bigint
+    ): Promise<UserInteractionSummary | null> {
+        return await UserInteractionSummary.findByPk(userId.toString())
+    }
+
+    /**
+     * Obtém o histórico de interações de um usuário
+     * @param userId ID do usuário
+     * @param limit Limite de interações
+     * @param offset Offset para paginação
+     * @returns Lista de interações do usuário
+     */
+    public async getUserInteractionHistory(
+        userId: string | bigint,
+        limit: number = 100,
+        offset: number = 0
+    ): Promise<UserInteractionHistory[]> {
+        return await UserInteractionHistory.findAll({
+            where: {
+                userId: userId.toString(),
+            },
+            order: [["interactionDate", "DESC"]],
+            limit,
+            offset,
+        })
+    }
+
+    /**
+     * Obtém entidades com que o usuário já interagiu
+     * @param userId ID do usuário
+     * @param types Tipos de interação a considerar
+     * @returns Lista de IDs de entidades
+     */
+    public async getInteractedEntities(
+        userId: string | bigint,
+        types: InteractionType[] = ["like", "long_view", "share"]
+    ): Promise<string[]> {
+        const interactions = await UserInteractionHistory.findAll({
+            where: {
+                userId: userId.toString(),
+                interactionType: types,
+            },
+            attributes: ["entityId"],
+            group: ["entityId"],
+        })
+
+        return interactions.map((i) => i.entityId)
     }
 }
