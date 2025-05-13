@@ -100,18 +100,18 @@ describe("ClusterMatcher", () => {
     })
 
     describe("getClusterStats", () => {
-        test("deve retornar estatísticas corretas dos clusters", () => {
-            const stats = clusterMatcher.getClusterStats()
+    test("deve retornar estatísticas corretas dos clusters", () => {
+        const stats = clusterMatcher.getClusterStats()
 
-            expect(stats.count).toBe(6)
-            expect(stats.totalMembers).toBe(750)
-            expect(stats.sizeStats.avgSize).toBe(125)
-            expect(stats.densityStats.hasDensityInfo).toBe(true)
+        expect(stats.count).toBe(6)
+        expect(stats.totalMembers).toBe(750)
+        expect(stats.sizeStats.avgSize).toBe(125)
+        expect(stats.densityStats.hasDensityInfo).toBe(true)
             expect(stats.sizeDistribution.small).toBe(1)
             expect(stats.sizeDistribution.medium).toBe(2)
             expect(stats.sizeDistribution.large).toBe(3)
             expect(stats.topicStats.uniqueTopicsCount).toBeGreaterThan(0)
-        })
+    })
 
         test("deve lidar corretamente com lista vazia de clusters", () => {
             clusterMatcher.updateClusters([])
@@ -204,18 +204,18 @@ describe("ClusterMatcher", () => {
     })
 
     describe("updateClusters", () => {
-        test("deve atualizar clusters corretamente", () => {
-            const newClusters = [
+    test("deve atualizar clusters corretamente", () => {
+        const newClusters = [
                 createTestCluster("7", "Novo Cluster 1", 100, 0.7),
                 createTestCluster("8", "Novo Cluster 2", 120, 0.6)
-            ]
+        ]
 
-            clusterMatcher.updateClusters(newClusters)
+        clusterMatcher.updateClusters(newClusters)
 
-            const stats = clusterMatcher.getClusterStats()
-            expect(stats.count).toBe(2)
-            expect(stats.totalMembers).toBe(220)
-        })
+        const stats = clusterMatcher.getClusterStats()
+        expect(stats.count).toBe(2)
+        expect(stats.totalMembers).toBe(220)
+    })
 
         test("deve manter configurações ao atualizar clusters", () => {
             const originalOptions = {
