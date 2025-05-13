@@ -57,12 +57,9 @@ app.use(MOMENTS_PREFIX_V2, UserAuthenticationValidator, MomentRouterV2)
 app.use(NOTIFICATION_PREFIX, UserAuthenticationValidator, NotificationRouter)
 app.use(PREFERENCES_PREFIX, UserAuthenticationValidator, PreferencesRouter)
 
-app.listen(config.PORT, () => {
+app.listen(config.PORT, async () => {
     console.log("🚀 circle-system (server) - running on port: " + config.PORT)
-
-    // Inicializar o sistema de recomendação V2
-    console.log("🔍 Iniciando sistema de recomendação V2...")
-    initSwipeEngineV2()
+        await initSwipeEngineV2()
 })
 
 export default app
