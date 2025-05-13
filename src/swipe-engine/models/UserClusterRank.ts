@@ -132,14 +132,14 @@ class UserClusterRank
         if (models.Cluster) {
             UserClusterRank.belongsTo(models.Cluster, {
                 foreignKey: "cluster_id",
-                as: "cluster",
+                as: "user_cluster_rank_cluster",
             })
         }
 
         if (models.User) {
             UserClusterRank.belongsTo(models.User, {
                 foreignKey: "user_id",
-                as: "user",
+                as: "user_cluster_rank_user",
             })
         }
     }
