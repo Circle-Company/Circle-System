@@ -132,14 +132,14 @@ class PostClusterRank
         if (models.PostCluster) {
             PostClusterRank.belongsTo(models.PostCluster, {
                 foreignKey: "cluster_id",
-                as: "cluster",
+                as: "post_cluster_rank_cluster",
             })
         }
 
         if (models.Moment) {
             PostClusterRank.belongsTo(models.Moment, {
                 foreignKey: "post_id",
-                as: "post",
+                as: "post_cluster_rank_post",
             })
         }
     }
