@@ -105,7 +105,14 @@ class UserEmbedding
 
     // Método para definir associações
     public static associate(models: any): void {
-        // Associação com User poderia ser adicionada aqui
+        // Associação com User
+        if (models.User) {
+            UserEmbedding.belongsTo(models.User, {
+                foreignKey: "user_id",
+                as: "embedding_user",
+                targetKey: "id"
+            })
+        }
     }
 }
 
