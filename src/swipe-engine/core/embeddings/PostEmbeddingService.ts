@@ -7,7 +7,7 @@ import { getLogger } from "../utils/logger"
 import { normalizeL2 } from "../utils/normalization"
 import { combineVectors, resizeVector } from "../utils/vector-operations"
 import { BaseEmbeddingService } from "./BaseEmbeddingService"
-import { EmbeddingParams as Params } from "@swipe-engine/params"
+import { EmbeddingParams as Params } from "../../params"
 
 // Definição das interfaces para repositórios
 export interface IPostRepository {
