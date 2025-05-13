@@ -3,7 +3,6 @@ node_modules
 .bash
 build
 dist
-scripts
 seeders
 firebase-settings.json
 tsconfig.tsbuildinfo
