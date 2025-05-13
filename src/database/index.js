@@ -55,6 +55,9 @@ try {
     console.error("unable to connect to database: ", err)
 }
 
+// Inicializar modelos do Swipe Engine primeiro
+initializeSwipeEngineModels()
+
 //models connections
 User.initialize(connection)
 Metadata.init(connection)
@@ -87,8 +90,10 @@ MomentInteraction.init(connection)
 NotificationToken.init(connection)
 Preference.initialize(connection)
 
-// Inicializar modelos da swipe-engine v2
-initializeSwipeEngineModels()
+// Criar índices FULLTEXT de forma assíncrona
+User.ensureFullTextIndex(connection).catch(error => {
+    console.error("❌ Erro ao criar índice FULLTEXT:", error)
+})
 
 //models associations
 User.associate(connection.models)
