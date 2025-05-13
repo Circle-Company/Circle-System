@@ -10,7 +10,7 @@ import { getLogger } from "../utils/logger"
 import { normalizeL2 } from "../utils/normalization"
 import { resizeVector } from "../utils/vector-operations"
 import { BaseEmbeddingService } from "./BaseEmbeddingService"
-import { EmbeddingParams as Params } from "@swipe-engine/params"
+import { EmbeddingParams as Params } from "../../params"
 
 // Interface para representar métricas de visualização
 interface ViewMetrics {
