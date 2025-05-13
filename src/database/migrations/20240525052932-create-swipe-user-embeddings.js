@@ -11,7 +11,7 @@ module.exports = {
                 allowNull: false,
             },
             user_id: {
-                type: Sequelize.STRING(36),
+                type: Sequelize.BIGINT,
                 allowNull: false,
                 comment: 'ID do usuário associado ao embedding',
             },
