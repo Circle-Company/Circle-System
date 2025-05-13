@@ -134,6 +134,15 @@ class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Mome
             as: "likes",
         })
         this.hasMany(models.Notification, { foreignKey: "moment_id" })
+        
+        // Associação com PostEmbedding
+        if (models.PostEmbedding) {
+            this.hasOne(models.PostEmbedding, {
+                foreignKey: "post_id",
+                as: "PostEmbedding",
+                sourceKey: "id"
+            })
+        }
     }
 }
 
