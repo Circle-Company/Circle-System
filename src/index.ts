@@ -57,7 +57,6 @@ app.use(MOMENTS_PREFIX_V2, UserAuthenticationValidator, MomentRouterV2)
 app.use(NOTIFICATION_PREFIX, UserAuthenticationValidator, NotificationRouter)
 app.use(PREFERENCES_PREFIX, UserAuthenticationValidator, PreferencesRouter)
 app.use(NEAR_PREFIX, UserAuthenticationValidator, NearRouter)
-app.listen(config.PORT, () =>
 
 app.listen(config.PORT, () =>
     console.log("🚀 circle-system (server) - running on port: " + config.PORT)
