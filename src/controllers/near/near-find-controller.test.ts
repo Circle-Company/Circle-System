@@ -1,6 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import request from 'supertest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import express from 'express'
+// Importação do controller após os mocks
+import { findNearbyUsers } from './near-find-controller'
+import request from 'supertest'
 
 // Declaração dos mocks no topo do arquivo
 const mockFindAll = vi.fn()
@@ -44,8 +47,6 @@ vi.mock('../../models/user/user-mute-model', () => ({
     }
 }))
 
-// Importação do controller após os mocks
-import { findNearbyUsers } from './near-find-controller'
 
 const app = express()
 app.use(express.json())
