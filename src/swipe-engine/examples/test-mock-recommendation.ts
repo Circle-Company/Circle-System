@@ -1,16 +1,17 @@
-import { RecommendationEngine } from "../core/recommendation/RecommendationEngine"
+import { InteractionType, UserEmbedding, UserInteraction } from "../core/types"
+import { mockInteractions, mockPosts, mockUserProfile } from "../data/mock-posts"
+
 import { FeedbackProcessor } from "../core/feedback/FeedbackProcessor"
-import { mockPosts, mockInteractions, mockUserProfile } from "../data/mock-posts"
-import { getLogger } from "../core/utils/logger"
-import { UserEmbeddingService } from "../core/embeddings/UserEmbeddingService"
-import { RankingService } from "../core/recommendation/RankingService"
 import { PostEmbeddingService } from "../core/embeddings/PostEmbeddingService"
-import { UserInteraction, InteractionType, UserEmbedding } from "../core/types"
+import { RankingService } from "../core/recommendation/RankingService"
+import { RecommendationEngine } from "../core/recommendation/RecommendationEngine"
+import { UserEmbeddingService } from "../core/embeddings/UserEmbeddingService"
+import { getLogger } from "../core/utils/logger"
 import { v4 as uuidv4 } from "uuid"
 
 const logger = getLogger("test-mock-recommendation")
 
-async function testMockRecommendation() {
+export async function testMockRecommendation() {
     try {
         // Inicializar serviços necessários
         logger.info("Inicializando serviços...")
@@ -77,6 +78,12 @@ async function testMockRecommendation() {
                 saveOrUpdate: async (data) => {
                     logger.info(`Atualizando embedding para post ${data.postId}`)
                 }
+            },
+            {
+                findTagsForPost: async (postId) => {
+                    const post = mockPosts.find(p => p.id === postId.toString())
+                    return post?.tags || []
+                }
             }
         )
 
@@ -123,16 +130,76 @@ async function testMockRecommendation() {
             }
         )
 
-        // Exibir resultados
-        logger.info("Resultados das recomendações:")
-        recommendations.forEach((rec, index) => {
+        // Formatar recomendações como feed
+        const feedRecommendations = await Promise.all(recommendations.map(async (rec, index) => {
             const post = mockPosts.find((p) => p.id === rec.entityId.toString())
-            if (post) {
-                logger.info(
-                    `${index + 1}. Post ${post.id} (${post.tags?.join(", ") || "sem tags"}) - Score: ${rec.score.toFixed(2)}`
-                )
+            if (!post) return null
+
+            // Buscar embedding do post para análise de similaridade
+            const postEmbedding = await postEmbeddingService.getPostEmbedding(BigInt(post.id))
+            
+            // Buscar posts similares para contexto
+            const similarPosts = await postEmbeddingService.findSimilarPosts(
+                BigInt(post.id),
+                3,
+                0.5
+            )
+
+            return {
+                id: post.id,
+                type: "post",
+                score: rec.score,
+                rank: index + 1,
+                content: {
+                    tags: post.tags || [],
+                    location: post.location,
+                    created_at: post.created_at
+                },
+                author: {
+                    id: post.user_id,
+                    statistics: post.statistics || {
+                        likes: 0,
+                        comments: 0,
+                        shares: 0,
+                        views: 0
+                    }
+                },
+                engagement: {
+                    likes: post.statistics?.likes || 0,
+                    comments: post.statistics?.comments || 0,
+                    shares: post.statistics?.shares || 0,
+                    views: post.statistics?.views || 0
+                },
+                metadata: {
+                    similarity_score: rec.score,
+                    embedding_version: postEmbedding.metadata?.version || 1,
+                    content_topics: postEmbedding.metadata?.contentTopics || [],
+                    interests: post.embedding?.metadata?.interests || [],
+                    similar_posts: similarPosts.map(sp => ({
+                        id: sp.id.toString(),
+                        similarity: sp.similarity
+                    }))
+                }
             }
-        })
+        }))
+
+        // Exibir feed em formato JSON
+        logger.info("\nFeed de Recomendações:")
+        logger.info(JSON.stringify({
+            user_id: mockUserProfile.userId,
+            generated_at: new Date().toISOString(),
+            context: {
+                time_of_day: new Date().getHours(),
+                day_of_week: new Date().getDay(),
+                location: mockUserProfile.demographics?.location
+            },
+            recommendations: feedRecommendations.filter(r => r !== null),
+            pagination: {
+                total: recommendations.length,
+                page: 1,
+                limit: 5
+            }
+        }, null, 2))
 
         // Verificar histórico de interações
         logger.info("\nVerificando histórico de interações...")
