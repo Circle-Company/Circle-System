@@ -1,7 +1,7 @@
-import { initializeRecommendationSystem } from "./services"
-import { testPostClustering } from "./examples/test-post-clustering"
 import { getLogger } from "./core/utils/logger"
-
+import { initializeRecommendationSystem } from "./services"
+import { testMockRecommendation } from "./examples/test-mock-recommendation"
+import { testPostClustering } from "./examples/test-post-clustering"
 const logger = getLogger("SwipeEngineInit")
 
 /**
@@ -21,6 +21,8 @@ export async function initSwipeEngineV2() {
         await testPostClustering()
 
         logger.info("✅ SwipeEngine V2 inicializado com sucesso!")
+
+        await testMockRecommendation()
     } catch (error) {
         logger.error("❌ Erro ao inicializar SwipeEngine V2:", error)
         throw error // Propagar o erro para que a aplicação saiba que houve falha na inicialização
