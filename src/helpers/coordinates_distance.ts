@@ -19,7 +19,7 @@ export function haversineDistance(coord1: Coordinates, coord2: Coordinates): num
 
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
         const distance = R * c // Distância em quilômetros
-        return distance
+        return Number(distance.toFixed(2))
     }
 }
 
