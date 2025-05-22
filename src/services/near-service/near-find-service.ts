@@ -1,4 +1,4 @@
-import { Op, and, literal, where } from "sequelize"
+import { Op, and, col, fn, literal, where } from "sequelize"
 
 import Coordinate from "../../models/user/coordinate-model"
 import Follow from "../../models/user/follow-model"
@@ -13,6 +13,16 @@ interface FindNearbyUsersParams {
     longitude: string | number
     radius?: number | string
     limit?: number | string
+}
+
+interface UserWithRelations extends User {
+    distance_km: string
+    profile_pictures?: {
+        tiny_resolution: string | null
+    }
+    statistics?: Array<{
+        total_followers_num: number
+    }>
 }
 
 /**
@@ -73,80 +83,6 @@ function validateRadius(radius: any, maxRadius: number = 100): number {
 }
 
 /**
- * Formata os dados de usuário para o padrão desejado
- */
-async function formatUserData(users: any[], userID: bigint): Promise<any[]> {
-    if (!users.length) return []
-    
-    try {
-        // Extrair IDs dos usuários encontrados
-        const userIds = users.map(user => 
-            (typeof user.get === 'function' ? user.get({ plain: true }) : user).id
-        )
-        
-        // Buscar relacionamentos de follow em uma única query para cada tipo
-        const [youFollowRelations, followYouRelations] = await Promise.all([
-            // Quem o usuário logado segue
-            Follow.findAll({
-                where: {
-                    user_id: userID,
-                    followed_user_id: { [Op.in]: userIds }
-                },
-                attributes: ['followed_user_id']
-            }),
-            // Quem segue o usuário logado
-            Follow.findAll({
-                where: {
-                    user_id: { [Op.in]: userIds },
-                    followed_user_id: userID
-                },
-                attributes: ['user_id']
-            })
-        ])
-        
-        // Criar Sets para lookup mais rápido
-        const youFollowSet = new Set(
-            youFollowRelations.map(relation => 
-                relation.get('followed_user_id').toString()
-            )
-        )
-        
-        const followYouSet = new Set(
-            followYouRelations.map(relation => 
-                relation.get('user_id').toString()
-            )
-        )
-
-        // Mapear usuários para o formato desejado
-        return users.map(user => {
-            const userData = typeof user.get === 'function' ? user.get({ plain: true }) : user
-            if (userData.deleted || userData.blocked) return null
-
-            const userIdStr = userData.id.toString()
-            
-            return {
-                id: userIdStr,
-                name: userData.name,
-                username: userData.username,
-                verifyed: Boolean(userData.verifyed),
-                profile_picture: {
-                    tiny_resolution: userData.profile_pictures?.[0]?.tiny_resolution || null
-                },
-                distance_km: parseFloat(parseFloat(userData.distance_km).toFixed(1)),
-                you_follow: youFollowSet.has(userIdStr),
-                follow_you: followYouSet.has(userIdStr),
-                statistic: userData.statistics?.[0] ? {
-                    total_followers_num: userData.statistics[0].total_followers_num || 0
-                } : undefined
-            }
-        }).filter(Boolean)
-    } catch (error) {
-        console.error('Erro ao formatar dados de usuários:', error)
-        return []
-    }
-}
-
-/**
  * Serviço de busca de usuários próximos
  */
 export async function findNearbyUsersService({ 
@@ -197,14 +133,7 @@ export async function findNearbyUsersService({
                 {
                     model: ProfilePicture,
                     as: 'profile_pictures',
-                    required: false,
                     attributes: ['tiny_resolution']
-                },
-                {
-                    model: Statistic,
-                    as: 'statistics',
-                    required: false,
-                    attributes: ['total_followers_num']
                 }
             ],
             where: and(
@@ -214,10 +143,37 @@ export async function findNearbyUsersService({
             ),
             order: [[haversineFormula, 'ASC']],
             limit: limitValue
-        })
+        }) as unknown as UserWithRelations[]
 
-        // Formatar dados dos usuários com informações de follow
-        const users = await formatUserData(nearbyUsers, userID)
+        // Buscar relacionamentos de follow
+        const [youFollow, followYou] = await Promise.all([
+            Follow.findOne({
+                where: {
+                    user_id: userID,
+                    followed_user_id: { [Op.in]: nearbyUsers.map(user => user.id) }
+                },
+                attributes: ['followed_user_id']
+            }),
+            Follow.findOne({
+                where: {
+                    user_id: { [Op.in]: nearbyUsers.map(user => user.id) },
+                    followed_user_id: userID
+                },
+                attributes: ['user_id']
+            })
+        ])
+
+        // Formatar resultados
+        const users = nearbyUsers.map(user => ({
+            id: user.id.toString(),
+            name: user.name,
+            username: user.username,
+            verifyed: user.verifyed,
+            profile_picture: {tiny_resolution: user.profile_pictures?.tiny_resolution},
+            distance_km: user.distance_km,
+            you_follow: Boolean(youFollow?.followed_user_id === user.id),
+            follow_you: Boolean(followYou?.user_id === user.id),
+        }))
 
         // Retornar resultados formatados
         return {
