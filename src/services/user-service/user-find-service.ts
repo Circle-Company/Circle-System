@@ -1,21 +1,19 @@
-import { InternalServerError, ValidationError } from "../../errors"
-import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
-import { Relation } from "../../helpers/relation"
-import { default as Follow, default as FollowModel } from "../../models/user/follow-model"
-import ProfilePicture from "../../models/user/profilepicture-model"
-import Statistic from "../../models/user/statistic-model"
-import User from "../../models/user/user-model"
-import { TriggerNotification } from "../../notification-service"
-import { SearchEngine } from "../../search_engine"
-import { WTF } from "../../who-to-follow"
-
-import { usersRankerAlgorithm } from "../../algorithms/users-ranker"
 import {
     FindUserByUsernameProps,
     FindUserDataProps,
-    RecommenderUsersProps,
     UserSearchProps,
 } from "./types"
+import { default as Follow, default as FollowModel } from "../../models/user/follow-model"
+import { InternalServerError, ValidationError } from "../../errors"
+
+import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
+import ProfilePicture from "../../models/user/profilepicture-model"
+import { Relation } from "../../helpers/relation"
+import { SearchEngine } from "../../search_engine"
+import Statistic from "../../models/user/statistic-model"
+import { TriggerNotification } from "../../notification-service"
+import User from "../../models/user/user-model"
+import { usersRankerAlgorithm } from "../../algorithms/users-ranker"
 
 export async function find_user_by_username({ user_id, username }: FindUserByUsernameProps) {
     const user = await User.findOne({ where: { username } })
@@ -270,9 +268,6 @@ export async function find_user_data({ username, user_id }: FindUserDataProps) {
 }
 export async function search_user({ searchTerm, userId }: UserSearchProps) {
     return await SearchEngine({ searchTerm, userId })
-}
-export async function recommender_users({ user_id }: RecommenderUsersProps) {
-    return await WTF({ user_id })
 }
 
 export async function find_session_user_by_pk({ user_pk }: { user_pk: string }) {

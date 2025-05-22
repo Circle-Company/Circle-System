@@ -1,6 +1,6 @@
-import { Router } from "express"
 import { NearController } from "@controllers/near"
+import { Router } from "express"
 
 export const router = Router()
 
-router.get("/users/find", NearController.FindNearbyUsers)
+router.post("/users", NearController.FindNearbyUsers)
