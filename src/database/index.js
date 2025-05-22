@@ -1,37 +1,38 @@
-import Sequelize from "sequelize"
-import CONFIG from "../config"
-import db_config from "../config/database.js"
 // all models imports
-import Comment from "../models/comments/comment-model.js"
-import CommentLike from "../models/comments/comment_likes-model.js"
-import CommentStatistic from "../models/comments/comment_statistics-model.js"
+import Block from "../models/user/block-model"
+import CONFIG from "../config"
+import Comment from "../models/comments/comment-model"
+import CommentLike from "../models/comments/comment_likes-model"
+import CommentStatistic from "../models/comments/comment_statistics-model"
+import Contact from "../models/user/contact-model"
+import Coordinate from "../models/user/coordinate-model"
+import Follow from "../models/user/follow-model"
+import Like from "../models/moments/like-model"
 import Memory from "../models/memories/memory-model"
 import MemoryMoment from "../models/memories/memory_moments-model"
-import Like from "../models/moments/like-model"
+import Metadata from "../models/user/metadata-model"
 import Moment from "../models/moments/moment-model"
-import MomentInteraction from "../models/moments/moment_interaction-model.js"
-import MomentMetadata from "../models/moments/moment_metadata-model.js"
-import MomentMidia from "../models/moments/moment_midia-model.js"
-import MomentStatistic from "../models/moments/moment_statistic-model.js"
-import MomentTag from "../models/moments/moment_tag-model.js"
-import ProfileClick from "../models/moments/profile_click-model.js"
-import Share from "../models/moments/share-model.js"
-import Skip from "../models/moments/skip-model.js"
-import View from "../models/moments/view-model.js"
+import MomentInteraction from "../models/moments/moment_interaction-model"
+import MomentMetadata from "../models/moments/moment_metadata-model"
+import MomentMidia from "../models/moments/moment_midia-model"
+import MomentStatistic from "../models/moments/moment_statistic-model"
+import MomentTag from "../models/moments/moment_tag-model"
 import Notification from "../models/notification/notification-model"
 import NotificationToken from "../models/notification/notification_token-model"
 import Preference from "../models/preference/preference-model"
-import Tag from "../models/tags/tag-model"
-import Block from "../models/user/block-model.js"
-import Contact from "../models/user/contact-model.js"
-import Coordinate from "../models/user/coordinate-model"
-import Follow from "../models/user/follow-model"
-import Metadata from "../models/user/metadata-model.js"
+import ProfileClick from "../models/moments/profile_click-model"
 import ProfilePicture from "../models/user/profilepicture-model"
 import Relation from "../models/user/relation-model"
-import Report from "../models/user/report-model.js"
+import Report from "../models/user/report-model"
+import Sequelize from "sequelize"
+import Share from "../models/moments/share-model"
+import Skip from "../models/moments/skip-model"
 import Statistic from "../models/user/statistic-model"
+import Tag from "../models/tags/tag-model"
 import User from "../models/user/user-model"
+import View from "../models/moments/view-model"
+import db_config from "../config/database.js"
+
 //mysql database connection
 
 const DB_CONFIG =
@@ -55,34 +56,34 @@ try {
 
 //models connections
 User.initialize(connection)
-Metadata.init(connection)
+Metadata.initialize(connection)
 ProfilePicture.initialize(connection)
 Statistic.initialize(connection)
-Contact.init(connection)
-Block.init(connection)
+Contact.initialize(connection)
+Block.initialize(connection)
 Coordinate.initialize(connection)
 Follow.initialize(connection)
-Report.init(connection)
+Report.initialize(connection)
 Relation.initialize(connection)
 Notification.initialize(connection)
 Moment.initialize(connection)
 Tag.initialize(connection)
-MomentStatistic.init(connection)
-MomentMidia.init(connection)
-MomentTag.init(connection)
-MomentMetadata.init(connection)
-Comment.init(connection)
-CommentLike.init(connection)
-CommentStatistic.init(connection)
+MomentStatistic.initialize(connection)
+MomentMidia.initialize(connection)
+MomentTag.initialize(connection)
+MomentMetadata.initialize(connection)
+Comment.initialize(connection)
+CommentLike.initialize(connection)
+CommentStatistic.initialize(connection)
 Memory.initialize(connection)
 MemoryMoment.initialize(connection)
 Like.initialize(connection)
-View.init(connection)
-Share.init(connection)
-Skip.init(connection)
-ProfileClick.init(connection)
-MomentInteraction.init(connection)
-NotificationToken.init(connection)
+View.initialize(connection)
+Share.initialize(connection)
+Skip.initialize(connection)
+ProfileClick.initialize(connection)
+MomentInteraction.initialize(connection)
+NotificationToken.initialize(connection)
 Preference.initialize(connection)
 
 //models associations
