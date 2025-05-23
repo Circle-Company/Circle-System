@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { CreationOptional, InferAttributes, InferCreationAttributes, Model } from "sequelize"
 import {
     FindMomentStatisticsViewProps,
@@ -22,7 +23,6 @@ import MomentStatistic from "@models/moments/moment_statistic-model"
 import MomentTags from "../../models/moments/moment_tag-model.js"
 import { Op } from "sequelize"
 import ProfilePicture from "../../models/user/profilepicture-model"
-// @ts-nocheck
 import { SwipeEngine } from "@swipe-engine/index"
 import Tag from "../../models/tags/tag-model"
 import User from "../../models/user/user-model"
@@ -443,11 +443,10 @@ export async function find_user_moments_tiny_exclude_memory({
 export async function find_moment_comments({ moment_id, user_id, page, pageSize }) {
     const offset = (page - 1) * pageSize
 
-    // @ts-ignore
     const { count, rows: comments } = await Comment.findAndCountAll({
         where: { moment_id },
         attributes: ["id", "content", "createdAt"],
-        order: [["createdAt", "DESC"]], // Corrigido o nome do campo para "createdAt"
+        order: [["createdAt", "DESC"]],
         include: [
             {
                 model: User,
@@ -473,7 +472,6 @@ export async function find_moment_comments({ moment_id, user_id, page, pageSize 
 
     const comments_formatted = await Promise.all(
         comments.map(async (comment: any) => {
-            // @ts-ignore
             const liked = await CommentLike.findOne({
                 where: { user_id, comment_id: comment.id },
             })
