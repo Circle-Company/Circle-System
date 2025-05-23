@@ -1,10 +1,12 @@
-import { InternalServerError } from "@errors/index"
-import MomentInteraction from "@models/moments/moment_interaction-model"
-import cold_start_algorithm from "./src/modules/cold_start/index"
 import {
     calcule_one_negative_interaction_rate,
     calcule_one_positive_interaction_rate,
 } from "./src/modules/positive_interaction_rate"
+
+import { InternalServerError } from "@errors/index"
+import MomentInteraction from "@models/moments/moment_interaction-model"
+import cold_start_algorithm from "./src/modules/cold_start/index"
+
 export type InteractionTypeProp =
     | "like"
     | "share"
