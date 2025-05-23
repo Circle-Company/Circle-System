@@ -510,7 +510,6 @@ export async function find_moment_statistics_view({
     moment_id,
     user_id,
 }: FindMomentStatisticsViewProps) {
-    // @ts-ignore
     const statistic = (await MomentStatistic.findOne({
         where: { moment_id },
         attributes: [
@@ -543,8 +542,8 @@ export async function find_moment_statistics_view({
         total_comments_num: statistic.total_comments_num,
     }
 }
+
 export async function find_moment_tags({ moment_id }: FindMomentTagsProps) {
-    // @ts-ignore
     const tags_arr = await MomentTags.findAll({
         where: { moment_id },
         attributes: [],
