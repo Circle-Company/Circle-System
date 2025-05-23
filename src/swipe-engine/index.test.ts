@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+// Importar mocks depois de definir vi.mock
+import cold_start_algorithm from "./src/modules/cold_start/index"
 import { getMoments } from "./index"
 
 // Mock do cold_start_algorithm
@@ -8,8 +11,6 @@ vi.mock("./src/modules/cold_start/index", () => {
     }
 })
 
-// Importar mocks depois de definir vi.mock
-import cold_start_algorithm from "./src/modules/cold_start/index"
 
 describe("SwipeEngine.getMoments", () => {
     beforeEach(() => {
@@ -22,7 +23,7 @@ describe("SwipeEngine.getMoments", () => {
 
     it("deve chamar cold_start_algorithm com parâmetros válidos", async () => {
         // Mock de retorno do cold_start_algorithm
-        const mockMoments = [101, 102, 103]
+        const mockMoments = [101n, 102n, 103n]
         vi.mocked(cold_start_algorithm).mockResolvedValueOnce(mockMoments)
 
         const result = await getMoments()
