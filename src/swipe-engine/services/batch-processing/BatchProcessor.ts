@@ -5,11 +5,11 @@
  * coordenando tarefas periódicas como atualização de embeddings e recálculo de clusters.
  */
 
+import { ClusterRecalculator } from "./ClusterRecalculator"
 import { PostEmbeddingService } from "../../core/embeddings/PostEmbeddingService"
+import { SystemWideUpdater } from "./SystemWideUpdater"
 import { UserEmbeddingService } from "../../core/embeddings/UserEmbeddingService"
 import { getLogger } from "../../core/utils/logger"
-import { ClusterRecalculator } from "./ClusterRecalculator"
-import { SystemWideUpdater } from "./SystemWideUpdater"
 
 /**
  * Configuração para o processador em lote
@@ -81,36 +81,13 @@ export class BatchProcessor {
      * Inicializa os serviços de embedding
      */
     private initEmbeddingServices(): void {
-        const { repositories } = this.config
+        // Inicializar serviço de embedding de usuário
+        this.userEmbeddingService = new UserEmbeddingService()
+        this.logger.info("Serviço de embedding de usuário inicializado")
 
-        if (
-            repositories.interactionRepository
-        ) {
-            this.userEmbeddingService = new UserEmbeddingService(
-                128,
-                "models/user_embedding_model",
-                repositories.userRepository,
-                repositories.interactionRepository,
-            )
-            this.logger.info("Serviço de embedding de usuário inicializado")
-        }
-
-        if (repositories.postRepository && repositories.postEmbeddingRepository) {
-            // Assumindo que temos um repositório de tags ou usando null temporariamente
-            //@ts-ignore
-            const tagRepository = repositories.tagRepository || {
-                findTagsForPost: async () => [],
-            }
-
-            this.postEmbeddingService = new PostEmbeddingService(
-                128,
-                "models/post_embedding_model",
-                repositories.postRepository,
-                repositories.postEmbeddingRepository,
-                tagRepository
-            )
-            this.logger.info("Serviço de embedding de post inicializado")
-        }
+        // Inicializar serviço de embedding de post
+        this.postEmbeddingService = new PostEmbeddingService()
+        this.logger.info("Serviço de embedding de post inicializado")
     }
 
     /**
