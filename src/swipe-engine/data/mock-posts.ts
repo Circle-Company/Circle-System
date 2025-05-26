@@ -1,6 +1,6 @@
 import { Candidate, EmbeddingVector, InteractionType, UserEmbedding } from "../core/types"
 
-const createMockEmbedding = (): EmbeddingVector => ({
+export const createMockEmbedding = (): EmbeddingVector => ({
     dimension: 128,
     values: Array(128).fill(0).map(() => Math.random() * 2 - 1),
     createdAt: new Date(),
