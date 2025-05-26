@@ -1,17 +1,18 @@
-import { Op } from "sequelize"
-import { connection } from "../../../database"
-import Moment from "../../../models/moments/moment-model"
+import { InteractionType, PostEmbeddingProps, Recommendation, RecommendationOptions } from "../types"
+
 import InteractionEvent from "../../models/InteractionEvent"
+import Moment from "../../../models/moments/moment-model"
+import { Op } from "sequelize"
 import PostCluster from "../../models/PostCluster"
 import PostEmbedding from "../../models/PostEmbedding"
-import UserClusterRank from "../../models/UserClusterRank"
-import UserEmbedding from "../../models/UserEmbedding"
-import { PostEmbeddingBuilder } from "../embeddings/builders/PostEmbeddingBuilder"
-import { UserEmbeddingService } from "../embeddings/UserEmbeddingService"
-import { InteractionType, PostEmbeddingProps, Recommendation, RecommendationOptions } from "../types"
-import { getLogger } from "../utils/logger"
+import { PostEmbeddingService } from "../embeddings/PostEmbeddingService"
 import { RankingService } from "./RankingService"
 import { RecommendationEngine } from "./RecommendationEngine"
+import UserClusterRank from "../../models/UserClusterRank"
+import UserEmbedding from "../../models/UserEmbedding"
+import { UserEmbeddingService } from "../embeddings/UserEmbeddingService"
+import { connection } from "../../../database"
+import { getLogger } from "../utils/logger"
 
 /**.
  * Coordenador principal que gerencia o fluxo completo de recomendação
@@ -20,66 +21,14 @@ import { RecommendationEngine } from "./RecommendationEngine"
 export class RecommendationCoordinator {
     private readonly engine: RecommendationEngine
     private readonly userEmbeddingService: UserEmbeddingService
-    private readonly postEmbeddingBuilder: PostEmbeddingBuilder
+    private readonly postEmbeddingService: PostEmbeddingService
     private readonly rankingService: RankingService
     private readonly logger = getLogger("RecommendationCoordinator")
 
     constructor() {
         // Inicializa os componentes necessários
-        this.userEmbeddingService = new UserEmbeddingService(
-            128,
-            "models/user_embedding_model",
-            {
-                findByUserId: async (userId, limit) => {
-                    const events = await InteractionEvent.findAll({
-                        where: { userId: userId.toString() },
-                        limit: limit || 100,
-                        order: [["timestamp", "DESC"]],
-                    })
-
-                    // Converter eventos para o formato UserInteraction
-                    return events.map((event) => ({
-                        id: event.id.toString(),
-                        userId: BigInt(event.userId),
-                        entityId: BigInt(event.entityId),
-                        entityType: event.entityType,
-                        type: event.type,
-                        timestamp: event.timestamp,
-                        metadata: event.metadata,
-                    }))
-                },
-            },
-            {
-                findByUserId: async (userId) => {
-                    const embedding = await UserEmbedding.findOne({
-                        where: { userId: userId.toString() },
-                    })
-                    return embedding
-                        ? {
-                              userId,
-                              embedding: JSON.parse(embedding.vector).values || [],
-                              lastUpdated: embedding.updatedAt,
-                              version: 1, // Versão padrão
-                              metadata: embedding.metadata,
-                          }
-                        : null
-                },
-                saveOrUpdate: async (data) => {
-                    const vectorData = JSON.stringify({
-                        values: data.embedding,
-                        dimension: data.embedding.length,
-                    })
-
-                    await UserEmbedding.upsert({
-                        userId: data.userId.toString(),
-                        vector: vectorData,
-                        dimension: data.embedding.length,
-                        metadata: data.metadata || {},
-                    })
-                },
-            }
-        )
-        this.postEmbeddingBuilder = new PostEmbeddingBuilder()
+        this.userEmbeddingService = new UserEmbeddingService()
+        this.postEmbeddingService = new PostEmbeddingService()
         this.rankingService = new RankingService()
 
         // Inicializa o motor de recomendação com todos os componentes necessários
@@ -295,16 +244,15 @@ export class RecommendationCoordinator {
                     attributes: ['title']
                 }]
             })
+            
             if (!post) {
                 throw new Error(`Post ${postId} não encontrado`)
             }
 
-            // 2. Gerar embedding com validações de tipo
+            // 2. Preparar dados do post para o embedding
             const description = post.getDataValue('description') as string | null
             const userId = post.getDataValue('user_id') as bigint
-            const createdAt = post.createdAt // Usando o campo createdAt gerado automaticamente pelo Sequelize
-
-            // Extrair títulos das tags
+            const createdAt = post.createdAt
             const tagTitles = (post as any).tags?.map((tag: any) => tag.getDataValue('title')) || []
 
             const postData: PostEmbeddingProps = {
@@ -321,12 +269,57 @@ export class RecommendationCoordinator {
                 authorId: userId,
                 createdAt: createdAt
             }
-            await this.postEmbeddingBuilder.build(postData)
 
-            // 3. Associar a clusters (em produção seria um job em background)
+            // 3. Gerar embedding usando o PostEmbeddingService
+            const embedding = await this.postEmbeddingService.build(postData)
+
+            // 4. Salvar o embedding
+            await PostEmbedding.upsert({
+                postId: postId.toString(),
+                vector: JSON.stringify(embedding.values),
+                dimension: embedding.dimension,
+                metadata: embedding.metadata ?? {}
+            })
+
+            // 5. Associar a clusters
             await this.assignPostToClusters(postId)
+
+            this.logger.info(`Embedding gerado e salvo para post ${postId}`)
         } catch (error: any) {
             this.logger.error(`Erro ao processar novo post: ${error.message}`)
+            throw error
+        }
+    }
+
+    /**
+     * Atualiza o embedding de um post existente
+     */
+    public async updatePostEmbedding(postId: string | bigint, newData: Partial<PostEmbeddingProps>): Promise<void> {
+        try {
+            const currentEmbedding = await PostEmbedding.findOne({
+                where: { postId: postId.toString() }
+            })
+
+            if (!currentEmbedding) {
+                throw new Error(`Embedding não encontrado para post ${postId}`)
+            }
+
+            const updatedEmbedding = await this.postEmbeddingService.generateEmbedding(newData as PostEmbeddingProps)
+
+            await currentEmbedding.update({
+                vector: JSON.stringify(updatedEmbedding),
+                metadata: {
+                    updatedAt: new Date().toISOString(),
+                    ...currentEmbedding.metadata
+                }
+            })
+
+            await this.assignPostToClusters(postId)
+
+            this.logger.info(`Embedding atualizado para post ${postId}`)
+        } catch (error: any) {
+            this.logger.error(`Erro ao atualizar embedding do post: ${error.message}`)
+            throw error
         }
     }
 
