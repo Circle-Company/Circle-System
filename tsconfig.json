@@ -1,5 +1,5 @@
 {
-    "include": ["src/**/*.ts", "src/**/*.tsx", "src/config/database.js", "src/**/*"],
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/config/database.js", "src/**/*", "models/index.js"],
     "exclude": ["node_modules"],
     "compilerOptions": {
         "target": "es2020",
