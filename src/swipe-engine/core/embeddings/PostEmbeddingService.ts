@@ -2,12 +2,14 @@
  * Serviço de embedding para posts/conteúdos
  */
 
-import { EngagementMetrics, PostEmbedding, PostEmbeddingProps, UpdatedPostStats } from "../types"
+import { EmbeddingVector, EngagementMetrics, PostEmbeddingProps, PostEmbedding as PostEmbeddingType, UpdatedPostStats } from "../types"
+import { combineVectors, resizeVector } from "../utils/vector-operations"
+
+import { Op } from "sequelize"
+import { EmbeddingParams as Params } from "../../params"
+import PostEmbedding from "../../models/PostEmbedding"
 import { getLogger } from "../utils/logger"
 import { normalizeL2 } from "../utils/normalization"
-import { combineVectors, resizeVector } from "../utils/vector-operations"
-import { BaseEmbeddingService } from "./BaseEmbeddingService"
-import { EmbeddingParams as Params } from "../../params"
 
 // Definição das interfaces para repositórios
 export interface IPostRepository {
@@ -42,53 +44,33 @@ export interface ITagRepository {
 /**
  * Serviço para gerar e gerenciar embeddings de posts/conteúdos
  */
-export class PostEmbeddingService extends BaseEmbeddingService<
-    PostEmbeddingProps,
-    UpdatedPostStats
-> {
-    private postRepository: IPostRepository
-    private postEmbeddingRepository: IPostEmbeddingRepository
-    private tagRepository: ITagRepository
+export class PostEmbeddingService {
     private readonly logger = getLogger("PostEmbeddingService")
+    private model: any = null
+    private readonly dimension: number
 
     // Pesos para diferentes componentes do embedding
     private readonly WEIGHT_TEXT = Params.weights.content.text
     private readonly WEIGHT_TAGS = Params.weights.content.tags
     private readonly WEIGHT_ENGAGEMENT = Params.weights.content.engagement
 
-    constructor(
-        dimension: number = Params.dimensions.embedding,
-        modelPath: string = "models/post_embedding_model",
-        postRepository: IPostRepository,
-        postEmbeddingRepository: IPostEmbeddingRepository,
-        tagRepository: ITagRepository
-    ) {
-        super(dimension, modelPath)
-        this.postRepository = postRepository
-        this.postEmbeddingRepository = postEmbeddingRepository
-        this.tagRepository = tagRepository
+    constructor(dimension: number = Params.dimensions.embedding) {
+        this.dimension = dimension
     }
 
-    /**
-     * Implementação do método abstrato para carregar o modelo
-     */
-    protected async loadModelImplementation(): Promise<any> {
-        // Em uma implementação real, carregaria um modelo de NLP como TensorFlow.js
-        // Por enquanto, simulamos um modelo simples
-        this.logger.info("Carregando modelo de embedding de posts...")
-        return {
-            embed: (text: string) => {
-                // Simulação simplificada de embedding - em produção, usaríamos um modelo real
-                const hash = this.simpleHash(text)
-                const embedding = new Array(this.dimension).fill(0)
-
-                // Preenchemos o vetor com valores baseados em hash
-                for (let i = 0; i < this.dimension; i++) {
-                    embedding[i] = (Math.sin(hash * (i + 1)) + 1) / 2 // Valor entre 0 e 1
-                }
-
-                return normalizeL2(embedding)
-            },
+    protected async loadModel(): Promise<void> {
+        if (!this.model) {
+            this.logger.info("Carregando modelo de embedding de posts...")
+            this.model = {
+                embed: (text: string) => {
+                    const hash = this.simpleHash(text)
+                    const embedding = new Array(this.dimension).fill(0)
+                    for (let i = 0; i < this.dimension; i++) {
+                        embedding[i] = (Math.sin(hash * (i + 1)) + 1) / 2
+                    }
+                    return normalizeL2(embedding)
+                },
+            }
         }
     }
 
@@ -126,32 +108,43 @@ export class PostEmbeddingService extends BaseEmbeddingService<
      * @returns Embedding atualizado
      */
     public async updateEmbedding(
-        currentEmbedding: number[],
-        updates: UpdatedPostStats
-    ): Promise<number[]> {
-        // Se temos novas métricas de engajamento, atualizamos o embedding
-        if (updates.engagementMetrics) {
-            // 1. Extrair nova embedding de engajamento
-            const newEngagementEmbedding = this.extractEngagementEmbedding(
-                updates.engagementMetrics
-            )
-
-            // 2. Calcular o peso da atualização (mais recente = mais peso)
-            const updateWeight = this.calculateUpdateWeight(updates.lastInteraction)
-
-            // 3. Combinar o embedding atual com o novo embedding de engajamento
-            const updatedEmbedding = currentEmbedding.map(
-                (val, idx) =>
-                    val * (1 - updateWeight * this.WEIGHT_ENGAGEMENT) +
-                    newEngagementEmbedding[idx] * (updateWeight * this.WEIGHT_ENGAGEMENT)
-            )
-
-            // 4. Normalizar e retornar
-            return normalizeL2(updatedEmbedding)
+        currentEmbedding: EmbeddingVector,
+        newData: Partial<PostEmbeddingProps>
+    ): Promise<EmbeddingVector> {
+        const completeData: PostEmbeddingProps = {
+            textContent: newData.textContent || "",
+            tags: newData.tags || [],
+            engagementMetrics: newData.engagementMetrics || {
+                views: 0,
+                likes: 0,
+                comments: 0,
+                shares: 0,
+                saves: 0,
+                engagementRate: 0
+            },
+            authorId: newData.authorId ? BigInt(newData.authorId) : BigInt(0),
+            createdAt: newData.createdAt || new Date()
         }
 
-        // Se não há novas métricas, retornamos o embedding atual
-        return currentEmbedding
+        const newEmbedding = await this.build(completeData)
+
+        // Combinar embeddings com peso maior para o embedding atual
+        const updatedVector = combineVectors(
+            [currentEmbedding.values, newEmbedding.values],
+            [0.7, 0.3] // 70% do embedding atual, 30% do novo
+        )
+
+        return {
+            values: updatedVector,
+            dimension: this.dimension,
+            metadata: {
+                ...currentEmbedding.metadata,
+                ...newEmbedding.metadata,
+                lastUpdated: new Date().toISOString(),
+            },
+            createdAt: currentEmbedding.createdAt,
+            updatedAt: new Date()
+        }
     }
 
     /**
@@ -159,49 +152,36 @@ export class PostEmbeddingService extends BaseEmbeddingService<
      * @param postId ID do post
      * @returns Objeto PostEmbedding
      */
-    public async getPostEmbedding(postId: bigint): Promise<PostEmbedding> {
+    public async getPostEmbedding(postId: bigint): Promise<PostEmbeddingType> {
         try {
-            // 1. Tentar recuperar embedding existente
-            const storedEmbedding = await this.postEmbeddingRepository.findByPostId(postId)
+            // Buscar embedding existente
+            const storedEmbedding = await PostEmbedding.findOne({
+                where: { postId: String(postId) }
+            })
 
-            // 2. Se existir e for recente, retornar
-            if (storedEmbedding && this.isEmbeddingRecent(storedEmbedding.lastUpdated)) {
-                return {
-                    postId: String(postId),
-                    vector: this.createEmbeddingVector(storedEmbedding.embedding),
-                    metadata: storedEmbedding.metadata,
-                }
+            // Se existir e for recente, retornar
+            if (storedEmbedding && this.isEmbeddingRecent(storedEmbedding.updatedAt)) {
+                return storedEmbedding.toPostEmbeddingType()
             }
 
-            // 3. Se não existir ou for antigo, gerar um novo
-            // 3.1 Buscar dados do post
+            // Se não existir ou for antigo, gerar um novo
             const postData = await this.collectPostData(postId)
-
-            // 3.2 Gerar novo embedding
             const newEmbedding = await this.generateEmbedding(postData)
 
-            // 3.3 Criar objeto de embedding
-            const postEmbedding: PostEmbedding = {
+            // Criar ou atualizar o embedding no banco
+            const [embedding] = await PostEmbedding.upsert({
                 postId: String(postId),
-                vector: this.createEmbeddingVector(newEmbedding),
+                vector: JSON.stringify(newEmbedding),
+                dimension: this.dimension,
                 metadata: {
                     createdAt: new Date().toISOString(),
                     contentTopics: postData.tags,
                     contentLength: postData.textContent.length,
                     authorId: String(postData.authorId),
-                },
-            }
-
-            // 3.4 Persistir o novo embedding
-            await this.postEmbeddingRepository.saveOrUpdate({
-                postId,
-                embedding: newEmbedding,
-                lastUpdated: new Date(),
-                version: storedEmbedding ? storedEmbedding.version + 1 : 1,
-                metadata: postEmbedding.metadata,
+                }
             })
 
-            return postEmbedding
+            return embedding.toPostEmbeddingType()
         } catch (error: any) {
             this.logger.error(`Erro ao obter embedding do post ${postId}: ${error.message}`)
             throw new Error(`Falha ao obter embedding do post: ${error.message}`)
@@ -213,11 +193,10 @@ export class PostEmbeddingService extends BaseEmbeddingService<
      * @param postIds Lista de IDs de posts
      * @returns Mapa de IDs para objetos PostEmbedding
      */
-    public async batchGenerateEmbeddings(postIds: bigint[]): Promise<Map<string, PostEmbedding>> {
-        const results = new Map<string, PostEmbedding>()
-
-        // Processar em lotes para não sobrecarregar o sistema
+    public async batchGenerateEmbeddings(postIds: bigint[]): Promise<Map<string, PostEmbeddingType>> {
+        const results = new Map<string, PostEmbeddingType>()
         const batchSize = Params.batchProcessing.size
+
         for (let i = 0; i < postIds.length; i += batchSize) {
             const batch = postIds.slice(i, i + batchSize)
             const batchPromises = batch.map(async (postId) => {
@@ -317,45 +296,52 @@ export class PostEmbeddingService extends BaseEmbeddingService<
      * Coleta dados de um post para gerar seu embedding
      */
     private async collectPostData(postId: bigint): Promise<PostEmbeddingProps> {
-        // Em uma implementação real, buscaríamos no banco de dados
-        const post = await this.postRepository.findById(postId)
-        const tags = await this.tagRepository.findTagsForPost(postId)
-
+        const post = await PostEmbedding.sequelize?.models.Moment.findByPk(postId, {
+            include: [
+                { association: 'tags' },
+                { association: 'moment_statistics' },
+                { association: 'moment_interactions' }
+            ]
+        }) as any; // Usar type assertion temporário
+        
         if (!post) {
             throw new Error(`Post não encontrado: ${postId}`)
         }
 
+        // Acessar propriedades via getDataValue
+        const stats = post.getDataValue('moment_statistics') || {}
+        const interactions = post.getDataValue('moment_interactions') || {}
+
         return {
-            textContent: post.content || "",
-            tags: tags || [],
+            textContent: post.getDataValue('description') || "",
+            tags: post.tags?.map((tag: any) => tag.getDataValue('name')) || [],
             engagementMetrics: {
-                views: post.viewCount || 0,
-                likes: post.likeCount || 0,
-                comments: post.commentCount || 0,
-                shares: post.shareCount || 0,
-                saves: post.saveCount || 0,
-                engagementRate: this.calculateEngagementRate(post),
+                views: stats.view_count || 0,
+                likes: stats.like_count || 0,
+                comments: stats.comment_count || 0,
+                shares: stats.share_count || 0,
+                saves: stats.save_count || 0,
+                engagementRate: this.calculateEngagementRate(stats),
             },
-            authorId: post.authorId,
-            createdAt: post.createdAt,
+            authorId: post.getDataValue('user_id'),
+            createdAt: post.getDataValue('createdAt'),
         }
     }
 
     /**
      * Calcula a taxa de engajamento de um post
      */
-    private calculateEngagementRate(post: any): number {
-        if (!post.viewCount || post.viewCount === 0) {
-            return 0
-        }
+    private calculateEngagementRate(stats: any): number {
+        const viewCount = stats.view_count || 0
+        if (viewCount === 0) return 0
 
-        const engagements =
-            (post.likeCount || 0) +
-            (post.commentCount || 0) +
-            (post.shareCount || 0) +
-            (post.saveCount || 0)
+        const engagements = 
+            (stats.like_count || 0) +
+            (stats.comment_count || 0) +
+            (stats.share_count || 0) +
+            (stats.save_count || 0)
 
-        return engagements / post.viewCount
+        return engagements / viewCount
     }
 
     /**
@@ -387,41 +373,44 @@ export class PostEmbeddingService extends BaseEmbeddingService<
         minSimilarity: number = Params.similarity.minimumThreshold
     ): Promise<Array<{ id: bigint; similarity: number }>> {
         try {
-            // 1. Obter embedding do post de referência
             const referenceEmbedding = await this.getPostEmbedding(postId)
-
             if (!referenceEmbedding) {
                 throw new Error(`Post não encontrado: ${postId}`)
             }
 
-            // 2. Em uma implementação real, usaríamos um serviço de busca vetorial
-            // Como simplificação, vamos buscar os últimos N posts e calcular similaridade
-            const recentPostIds = await this.postRepository.findRecentPostIds(limit * 10)
+            // Buscar embeddings recentes
+            const recentEmbeddings = await PostEmbedding.findAll({
+                where: {
+                    postId: {
+                        [Op.ne]: String(postId)
+                    },
+                    updatedAt: {
+                        [Op.gte]: new Date(Date.now() - Params.timeWindows.recentEmbeddingUpdate)
+                    }
+                },
+                limit: limit * 10,
+                order: [['updatedAt', 'DESC']]
+            })
 
-            // Filtrar o próprio post
-            const candidateIds = recentPostIds.filter((id) => id !== postId)
-
-            // 3. Calcular similaridades
             const similarities: Array<{ id: bigint; similarity: number }> = []
 
-            for (const candidateId of candidateIds) {
-                const candidateEmbedding = await this.getPostEmbedding(candidateId)
-
-                if (!candidateEmbedding) continue
-
-                // Calcular similaridade de cosseno
+            for (const candidateEmbedding of recentEmbeddings) {
                 const similarity = this.calculateCosineSimilarity(
                     referenceEmbedding.vector.values,
-                    candidateEmbedding.vector.values
+                    JSON.parse(candidateEmbedding.vector)
                 )
 
                 if (similarity >= minSimilarity) {
-                    similarities.push({ id: candidateId, similarity })
+                    similarities.push({ 
+                        id: BigInt(candidateEmbedding.postId), 
+                        similarity 
+                    })
                 }
             }
 
-            // 4. Ordenar e limitar resultados
-            return similarities.sort((a, b) => b.similarity - a.similarity).slice(0, limit)
+            return similarities
+                .sort((a, b) => b.similarity - a.similarity)
+                .slice(0, limit)
         } catch (error: any) {
             this.logger.error(`Erro ao buscar posts similares: ${error.message}`)
             return []
@@ -451,5 +440,78 @@ export class PostEmbeddingService extends BaseEmbeddingService<
         }
 
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB))
+    }
+
+    private createEmbeddingVector(embedding: number[]): { values: number[]; dimension: number } {
+        return {
+            values: embedding,
+            dimension: this.dimension
+        }
+    }
+
+    /**
+     * Constrói um novo embedding para um post
+     */
+    public async build(data: PostEmbeddingProps): Promise<EmbeddingVector> {
+        try {
+            if (!this.validateData(data)) {
+                throw new Error("Dados inválidos para construção do embedding")
+            }
+
+            await this.loadModel()
+
+            // 1. Extrair embedding do texto
+            const textEmbedding = await this.extractTextEmbedding(data.textContent)
+
+            // 2. Extrair embedding das tags
+            const tagsEmbedding = await this.extractTagsEmbedding(data.tags)
+
+            // 3. Extrair embedding baseado no engajamento
+            const engagementEmbedding = this.extractEngagementEmbedding(data.engagementMetrics)
+
+            // 4. Combinar os embeddings com pesos
+            const combinedEmbedding = combineVectors(
+                [textEmbedding, tagsEmbedding, engagementEmbedding],
+                [this.WEIGHT_TEXT, this.WEIGHT_TAGS, this.WEIGHT_ENGAGEMENT]
+            )
+
+            // 5. Normalizar o resultado
+            const normalizedVector = normalizeL2(combinedEmbedding)
+
+            // 6. Criar o embedding final
+            return {
+                values: normalizedVector,
+                dimension: this.dimension,
+                metadata: {
+                    contentTopics: data.tags,
+                    contentLength: data.textContent.length,
+                    authorId: data.authorId.toString(),
+                    createdAt: new Date().toISOString(),
+                    modelVersion: "1.0",
+                    engagementStats: {
+                        totalViews: data.engagementMetrics.views,
+                        totalLikes: data.engagementMetrics.likes,
+                        totalComments: data.engagementMetrics.comments,
+                        engagementRate: data.engagementMetrics.engagementRate
+                    }
+                },
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
+        } catch (error) {
+            this.logger.error(`Erro ao construir embedding: ${error}`)
+            throw error
+        }
+    }
+
+    private validateData(data: PostEmbeddingProps): boolean {
+        return (
+            typeof data.textContent === "string" &&
+            Array.isArray(data.tags) &&
+            typeof data.engagementMetrics === "object" &&
+            data.engagementMetrics !== null &&
+            typeof data.authorId === "bigint" &&
+            data.createdAt instanceof Date
+        )
     }
 }
