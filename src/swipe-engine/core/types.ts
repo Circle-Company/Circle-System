@@ -171,48 +171,23 @@ export interface RecommendationReason {
  * Representa um vetor de embedding
  */
 export interface EmbeddingVector {
-    /** Dimensão do vetor */
     dimension: number
-
-    /** Valores do vetor */
     values: number[]
-
-    /** Timestamp de quando o embedding foi gerado */
     createdAt: Date
-
-    /** Timestamp da última atualização do embedding */
     updatedAt: Date
-
-    /** Metadados adicionais sobre o embedding */
     metadata?: Record<string, any>
 }
-
-/**
- * Embedding vetorial de um usuário
- */
 export interface UserEmbedding {
-    /** ID do usuário */
     userId: string
-
-    /** Vetor de embedding do usuário */
     vector: EmbeddingVector
-
-    /** Metadados adicionais sobre o embedding */
     metadata?: Record<string, any>
 }
 
-/**
- * Embedding vetorial de um post/conteúdo
- */
 export interface PostEmbedding {
-    /** ID do post */
     postId: string
-
-    /** Vetor de embedding do post */
     vector: EmbeddingVector
-
-    /** Metadados adicionais sobre o embedding */
     metadata?: Record<string, any>
+    createdAt: Date
 }
 
 /**
