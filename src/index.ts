@@ -1,11 +1,7 @@
-import bodyParser from "body-parser"
-import express from "express"
 import "express-async-errors"
 import "module-alias/register"
-import config from "./config/index"
-import { RP } from "./config/routes_prefix"
 import "./database/index"
-import { UserAuthenticationValidator } from "./middlewares/UserAuthenticationValidator"
+
 import { router as AccountRouter } from "./routes/account-router"
 import { router as AdminRouter } from "./routes/admin-router"
 import { router as AuthRouter } from "./routes/auth-router"
@@ -15,8 +11,13 @@ import { router as MomentRouter } from "./routes/moment-router"
 import { router as MomentRouterV2 } from "./routes/moment-router-v2"
 import { router as NotificationRouter } from "./routes/notification-router"
 import { router as PreferencesRouter } from "./routes/preferences-router"
+import { RP } from "./config/routes_prefix"
 import { router as ReportRouter } from "./routes/report-router"
+import { UserAuthenticationValidator } from "./middlewares/UserAuthenticationValidator"
 import { router as UserRouter } from "./routes/user-router"
+import bodyParser from "body-parser"
+import config from "./config/index"
+import express from "express"
 import { initSwipeEngineV2 } from "./swipe-engine/init"
 
 declare module "express-serve-static-core" {
@@ -59,7 +60,6 @@ app.use(PREFERENCES_PREFIX, UserAuthenticationValidator, PreferencesRouter)
 
 app.listen(config.PORT, async () => {
     console.log("🚀 circle-system (server) - running on port: " + config.PORT)
-        await initSwipeEngineV2()
 })
 
 export default app
