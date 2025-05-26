@@ -240,4 +240,55 @@ export class VideoController {
             })
         }
     }
+}
+
+// Exemplo de uso com moment-store-service
+export async function createVideoMomentExample() {
+    try {
+        // Simular dados de um momento de vídeo
+        const videoMoment = {
+            id: BigInt(Date.now()),
+            description: "Meu primeiro vídeo no Circle!",
+            midia: {
+                content_type: "VIDEO" as const,
+                base64: "data:video/mp4;base64,UklGRnoGAABXQVZFZm10..." // Base64 do vídeo
+            },
+            metadata: {
+                duration: 30, // 30 segundos
+                file_name: "video_momento.mov",
+                file_size: 25000000, // 25MB
+                file_type: "video/mov" as const,
+                resolution_width: 1920,
+                resolution_height: 1080
+            },
+            tags: [
+                { title: "viagem" },
+                { title: "natureza" },
+                { title: "aventura" }
+            ],
+            statistic: {
+                is_trend: false,
+                total_likes_num: 0,
+                total_views_num: 0,
+                total_shares_num: 0,
+                total_reports_num: 0,
+                total_skips_num: 0,
+                total_comments_num: 0,
+                total_profile_clicks_num: 0
+            }
+        }
+
+        // Usar a função store_new_moment_video
+        // const result = await store_new_moment_video({
+        //     user_id: BigInt(123),
+        //     moment: videoMoment
+        // })
+
+        console.log("Exemplo de estrutura para momento de vídeo:", videoMoment)
+        
+        return videoMoment
+    } catch (error) {
+        console.error("Erro no exemplo de momento de vídeo:", error)
+        throw error
+    }
 } 

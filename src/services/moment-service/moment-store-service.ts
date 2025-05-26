@@ -1,5 +1,6 @@
 import { InternalServerError, ValidationError } from "../../errors"
 import { StoreNewMomentsProps, TagProps } from "./types"
+import { generateOptimizedThumbnails, processAndUploadVideo } from "../../utils/video"
 import { processInteraction, processNewPost } from "../../swipe-engine/services"
 
 import CONFIG from "../../config"
@@ -185,6 +186,188 @@ export async function store_moment_interaction({
     } catch (err) {
         throw new InternalServerError({
             message: "error when searching for moments in swipe-engine-api",
+        })
+    }
+}
+
+export async function store_new_moment_video({ user_id, moment }: StoreNewMomentsProps) {
+    let fullhd_video_aws_s3_url, nhd_video_aws_s3_url
+    let fullhd_thumbnail_aws_s3_url, nhd_thumbnail_aws_s3_url
+
+    try {
+        // Processar vídeo - conversão, compressão e upload
+        const videoProcessingResult = await processAndUploadVideo({
+            videoBase64: moment.midia.base64,
+            fileName: moment.metadata.file_name,
+            bucketName: CONFIG.AWS_MIDIA_BUCKET,
+            options: {
+                compressionLevel: "medium",
+                targetSizeMB: 50, // Limite de 50MB para vídeos
+                maxDurationSeconds: 300 // Máximo 5 minutos
+            }
+        })
+
+        fullhd_video_aws_s3_url = videoProcessingResult.uploadResult.url
+
+        // Gerar versão comprimida adicional para NHD
+        const nhdVideoProcessingResult = await processAndUploadVideo({
+            videoBase64: moment.midia.base64,
+            fileName: "nhd_" + moment.metadata.file_name,
+            bucketName: CONFIG.AWS_MIDIA_BUCKET,
+            options: {
+                compressionLevel: "high",
+                targetSizeMB: 15, // Versão mais comprimida para NHD
+                maxDurationSeconds: 300
+            }
+        })
+
+        nhd_video_aws_s3_url = nhdVideoProcessingResult.uploadResult.url
+
+        // Gerar thumbnails do vídeo
+        const thumbnails = await generateOptimizedThumbnails({
+            videoBase64: moment.midia.base64,
+            timeOffset: 1 // Capturar thumbnail no segundo 1
+        })
+
+        // Comprimir e fazer upload dos thumbnails
+        const compressed_fullhd_thumbnail = await image_compressor({
+            imageBase64: thumbnails.fullhd.thumbnailBase64,
+            quality: 80,
+            img_width: thumbnails.fullhd.width,
+            resolution: "FULL_HD",
+            isMoment: true
+        })
+
+        const compressed_nhd_thumbnail = await image_compressor({
+            imageBase64: thumbnails.nhd.thumbnailBase64,
+            quality: 70,
+            img_width: thumbnails.nhd.width,
+            resolution: "NHD",
+            isMoment: true
+        })
+
+        // Upload dos thumbnails para S3
+        fullhd_thumbnail_aws_s3_url = await upload_image_AWS_S3({
+            imageBase64: compressed_fullhd_thumbnail,
+            bucketName: CONFIG.AWS_MIDIA_BUCKET,
+            fileName: "thumbnail_fullhd_" + moment.metadata.file_name.replace(/\.[^/.]+$/, ".jpg"),
+        })
+
+        nhd_thumbnail_aws_s3_url = await upload_image_AWS_S3({
+            imageBase64: compressed_nhd_thumbnail,
+            bucketName: CONFIG.AWS_MIDIA_BUCKET,
+            fileName: "thumbnail_nhd_" + moment.metadata.file_name.replace(/\.[^/.]+$/, ".jpg"),
+        })
+
+        // Sanitizar descrição
+        const sanitization = new SecurityToolKit().sanitizerMethods.sanitizeSQLInjection(
+            moment.description
+        )
+
+        if (sanitization.isDangerous) {
+            throw new ValidationError({
+                message:
+                    "Characters that are considered malicious have been identified in the description.",
+                action: 'Please remove characters like "]})*&',
+            })
+        }
+
+        // Criar momento no banco de dados
+        const new_moment = await Moment.create({
+            user_id: user_id,
+            description: sanitization.sanitized,
+            visible: true,
+            blocked: false,
+        })
+
+        await UserStatistic.increment("total_moments_num", { by: 1, where: { user_id } })
+
+        // Criar registro de mídia do vídeo
+        // @ts-ignore
+        await MomentMidia.create({
+            moment_id: new_moment.id,
+            content_type: moment.midia.content_type, // "VIDEO"
+            fullhd_resolution: fullhd_video_aws_s3_url,
+            nhd_resolution: nhd_video_aws_s3_url,
+            // Adicionar URLs dos thumbnails como campos extras
+            fullhd_thumbnail: fullhd_thumbnail_aws_s3_url,
+            nhd_thumbnail: nhd_thumbnail_aws_s3_url,
+        })
+
+        // @ts-ignore
+        await Statistic.create({ moment_id: new_moment.id })
+
+        // @ts-ignore
+        await Metadata.create({
+            moment_id: new_moment.id,
+            duration: Math.trunc(moment.metadata.duration),
+            file_name: moment.metadata.file_name,
+            file_size: Math.trunc(videoProcessingResult.uploadResult.size / (1024 * 1024)), // Converter para MB
+            file_type: "video/mp4", // Sempre MP4 após processamento
+            resolution_width: Math.trunc(moment.metadata.resolution_width),
+            resolution_height: Math.trunc(moment.metadata.resolution_height),
+        })
+
+        // Processar tags
+        await Tag.AutoAdd({ moment_id: new_moment.id, tags: moment.tags })
+
+        try {
+            logger.info(`Gerando embedding para novo momento de vídeo ${new_moment.id}`)
+            
+            // Extrair tags para o embedding
+            const tagTitles = moment.tags.map((tag: TagProps) => tag.title)
+            
+            // Gerar embedding para o novo momento de vídeo
+            const embeddingData = {
+                textContent: sanitization.sanitized,
+                tags: tagTitles,
+                engagementMetrics: {
+                    views: 0,
+                    likes: 0,
+                    comments: 0,
+                    shares: 0,
+                    saves: 0,
+                    engagementRate: 0
+                },
+                authorId: BigInt(user_id),
+                createdAt: new Date()
+            }
+            
+            // Gerar embedding
+            const embedding = await postEmbeddingService.build(embeddingData)
+            
+            // Salvar embedding no banco de dados
+            await PostEmbedding.upsert({
+                postId: new_moment.id.toString(),
+                vector: JSON.stringify(embedding.values),
+                dimension: embedding.dimension,
+                metadata: embedding.metadata || {}
+            })
+            
+            // Associar o momento a clusters apropriados
+            try {
+                logger.info(`Processando momento de vídeo ${new_moment.id} para atribuição a clusters`)
+                await processNewPost(new_moment.id)
+                logger.info(`Momento de vídeo ${new_moment.id} processado e atribuído a clusters`)
+            } catch (clusterError) {
+                logger.warn(`Não foi possível atribuir o momento de vídeo ${new_moment.id} a clusters: ${clusterError}`)
+            }
+            
+        } catch (error) {
+            logger.error(`Erro ao processar embedding para momento de vídeo ${new_moment.id}: ${error}`)
+            // Não lançamos erro para não interromper o fluxo principal
+        }
+
+        logger.info(`Momento de vídeo ${new_moment.id} criado com sucesso`)
+        logger.info(`Vídeo processado: ${videoProcessingResult.processingStats.compressionRatio}% de compressão`)
+        
+        return new_moment
+
+    } catch (error: any) {
+        logger.error(`Erro ao criar momento de vídeo: ${error.message}`)
+        throw new InternalServerError({
+            message: `Erro ao processar momento de vídeo: ${error.message}`,
+            action: "Verifique o formato do vídeo e tente novamente."
         })
     }
 }

@@ -43,7 +43,7 @@ export interface MetadataProps {
     duration: number
     file_name: string
     file_size: number
-    file_type: "image/png" | "image/heic" | "image/jpg"
+    file_type: "image/png" | "image/heic" | "image/jpg" | "video/mp4" | "video/mov" | "video/3gp" | "video/webm" | "video/avi"
     resolution_width: number
     resolution_height: number
 }

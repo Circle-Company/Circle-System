@@ -19,6 +19,14 @@ export {
     getVideoInfo 
 } from "./processor"
 
+// Exportar funções de thumbnail
+export {
+    generateVideoThumbnail,
+    generateMultipleThumbnails,
+    generateOptimizedThumbnails,
+    getVideoMetadata
+} from "./thumbnail"
+
 // Tipos principais para facilitar o uso
 export type VideoQuality = "low" | "medium" | "high" | "ultra"
 export type CompressionLevel = "low" | "medium" | "high" | "ultra" | "adaptive"
