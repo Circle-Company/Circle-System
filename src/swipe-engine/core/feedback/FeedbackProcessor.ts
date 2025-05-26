@@ -5,14 +5,15 @@
  * atualizando os embeddings de usuários e posts com base no comportamento real.
  */
 
+import { InteractionType, UserInteraction } from "../types"
+
+import { Logger } from "../utils/logger"
+import { EmbeddingParams as Params } from "../../params"
 import { PostEmbeddingService } from "../embeddings/PostEmbeddingService"
 import { UserEmbeddingService } from "../embeddings/UserEmbeddingService"
-import { InteractionType, UserInteraction } from "../types"
-import { Logger } from "../utils/logger"
-import { normalizeVector } from "../utils/vector-operations"
-import { EmbeddingParams as Params } from "../../params"
 import UserInteractionHistory from "../../models/UserInteractionHistory"
 import UserInteractionSummary from "../../models/UserInteractionSummary"
+import { normalizeVector } from "../utils/vector-operations"
 
 export class FeedbackProcessor {
     private readonly userEmbeddingService: UserEmbeddingService
@@ -56,8 +57,8 @@ export class FeedbackProcessor {
         try {
             // Registrar a interação no histórico
             await UserInteractionHistory.create({
-                userId: interaction.userId.toString(),
-                entityId: interaction.entityId.toString(),
+                userId: interaction.userId,
+                entityId: interaction.entityId,
                 interactionType: interaction.type,
                 interactionDate: interaction.timestamp,
                 metadata: interaction.metadata || {},
@@ -320,12 +321,26 @@ export class FeedbackProcessor {
                     const normalizedPostVector = normalizeVector(newPostVector)
 
                     // Salvar o embedding atualizado
-                    await this.postEmbeddingService.updateEmbedding(
-                        this.getVectorValues(postEmbedding),
-                        {
-                            lastInteraction: new Date(),
-                        }
-                    )
+                    await this.postEmbeddingService.updateEmbedding({
+                        values: this.getVectorValues(postEmbedding),
+                        dimension: postEmbedding.vector.dimension,
+                        metadata: postEmbedding.metadata ?? {},
+                        createdAt: postEmbedding.createdAt,
+                        updatedAt: new Date()
+                    }, {
+                        textContent: "", // Mantém o conteúdo atual
+                        tags: [], // Mantém as tags atuais
+                        engagementMetrics: {
+                            views: 0,
+                            likes: 0,
+                            comments: 0,
+                            shares: 0,
+                            saves: 0,
+                            engagementRate: 0
+                        },
+                        authorId: BigInt(0), // Mantém o autor atual
+                        createdAt: postEmbedding.createdAt
+                    })
                 }
             } catch (error) {
                 this.logger.error("Erro ao atualizar embedding do post", {
@@ -405,12 +420,26 @@ export class FeedbackProcessor {
 
                     // Normalizar e salvar
                     const normalizedVector = normalizeVector(newVector)
-                    await this.postEmbeddingService.updateEmbedding(
-                        this.getVectorValues(similarPostEmbedding),
-                        {
-                            lastInteraction: new Date(),
-                        }
-                    )
+                    await this.postEmbeddingService.updateEmbedding({
+                        values: this.getVectorValues(similarPostEmbedding),
+                        dimension: similarPostEmbedding.vector.dimension,
+                        createdAt: similarPostEmbedding.createdAt,
+                        updatedAt: new Date(),
+                        metadata: similarPostEmbedding.metadata ?? {}
+                    }, {
+                        textContent: "", // Mantém o conteúdo atual
+                        tags: [], // Mantém as tags atuais
+                        engagementMetrics: {
+                            views: 0,
+                            likes: 0,
+                            comments: 0,
+                            shares: 0,
+                            saves: 0,
+                            engagementRate: 0
+                        },
+                        authorId: BigInt(0), // Mantém o autor atual
+                        createdAt: similarPostEmbedding.createdAt
+                    })
                 }
             } catch (error) {
                 this.logger.error("Erro ao processar efeitos de rede", {
@@ -613,6 +642,6 @@ export class FeedbackProcessor {
             group: ["entityId"],
         })
 
-        return interactions.map((i) => i.entityId)
+        return interactions.map((i) => i.entityId.toString())
     }
 }
