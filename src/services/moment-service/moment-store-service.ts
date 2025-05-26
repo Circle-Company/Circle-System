@@ -1,17 +1,26 @@
-import SecurityToolKit from "security-toolkit"
-import CONFIG from "../../config"
 import { InternalServerError, ValidationError } from "../../errors"
-import { Tag } from "../../helpers/tag"
-import Moment from "../../models/moments/moment-model"
-import Metadata from "../../models/moments/moment_metadata-model.js"
-import MomentMidia from "../../models/moments/moment_midia-model.js"
-import Statistic from "../../models/moments/moment_statistic-model.js"
-import UserStatistic from "../../models/user/statistic-model"
-import { SwipeEngine } from "../../swipe-engine/index"
-import { image_compressor } from "../../utils/image/compressor"
+import { StoreNewMomentsProps, TagProps } from "./types"
+import { processInteraction, processNewPost } from "../../swipe-engine/services"
+
+import CONFIG from "../../config"
 import { HEICtoJPEG } from "../../utils/image/conversor"
+import Metadata from "../../models/moments/moment_metadata-model.js"
+import Moment from "../../models/moments/moment-model"
+import MomentMidia from "../../models/moments/moment_midia-model.js"
+import PostEmbedding from "../../swipe-engine/models/PostEmbedding"
+import { PostEmbeddingService } from "../../swipe-engine/core/embeddings/PostEmbeddingService"
+import { RecommendationCoordinator } from "../../swipe-engine/core/recommendation/RecommendationCoordinator"
+import SecurityToolKit from "security-toolkit"
+import Statistic from "../../models/moments/moment_statistic-model.js"
+import { Tag } from "../../helpers/tag"
+import UserStatistic from "../../models/user/statistic-model"
+import { getLogger } from "../../swipe-engine/core/utils/logger"
+import { image_compressor } from "../../utils/image/compressor"
 import { upload_image_AWS_S3 } from "../../utils/image/upload"
-import { StoreNewMomentsProps } from "./types"
+
+// Inicializar serviços
+const postEmbeddingService = new PostEmbeddingService()
+const logger = getLogger("moment-store-service")
 
 export async function store_new_moment({ user_id, moment }: StoreNewMomentsProps) {
     let midia_base64
@@ -25,14 +34,12 @@ export async function store_new_moment({ user_id, moment }: StoreNewMomentsProps
         imageBase64: midia_base64,
         quality: 40,
         img_width: moment.metadata.resolution_width,
-        img_height: moment.metadata.resolution_height,
         resolution: "FULL_HD",
     })
     const compressed_nhd_base64 = await image_compressor({
         imageBase64: midia_base64,
         quality: 25,
         img_width: moment.metadata.resolution_width,
-        img_height: moment.metadata.resolution_height,
         resolution: "NHD",
     })
 
@@ -86,7 +93,57 @@ export async function store_new_moment({ user_id, moment }: StoreNewMomentsProps
         resolution_width: Math.trunc(moment.metadata.resolution_width),
         resolution_height: Math.trunc(moment.metadata.resolution_height),
     })
-    Tag.AutoAdd({ moment_id: new_moment.id, tags: moment.tags })
+    
+    // Processar tags
+    await Tag.AutoAdd({ moment_id: new_moment.id, tags: moment.tags })
+    
+    try {
+        logger.info(`Gerando embedding para novo momento ${new_moment.id}`)
+        
+        // Extrair tags para o embedding
+        const tagTitles = moment.tags.map((tag: TagProps) => tag.title)
+        
+        // Gerar embedding para o novo momento
+        const embeddingData = {
+            textContent: sanitization.sanitized,
+            tags: tagTitles,
+            engagementMetrics: {
+                views: 0,
+                likes: 0,
+                comments: 0,
+                shares: 0,
+                saves: 0,
+                engagementRate: 0
+            },
+            authorId: BigInt(user_id),
+            createdAt: new Date()
+        }
+        
+        // Gerar embedding
+        const embedding = await postEmbeddingService.build(embeddingData)
+        
+        // Salvar embedding no banco de dados
+        await PostEmbedding.upsert({
+            postId: new_moment.id.toString(),
+            vector: JSON.stringify(embedding.values),
+            dimension: embedding.dimension,
+            metadata: embedding.metadata || {}
+        })
+        
+        // Associar o momento a clusters apropriados usando o serviço da API
+        try {
+            logger.info(`Processando momento ${new_moment.id} para atribuição a clusters`)
+            await processNewPost(new_moment.id)
+            logger.info(`Momento ${new_moment.id} processado e atribuído a clusters`)
+        } catch (clusterError) {
+            logger.warn(`Não foi possível atribuir o momento ${new_moment.id} a clusters: ${clusterError}`)
+        }
+        
+    } catch (error) {
+        logger.error(`Erro ao processar embedding para momento ${new_moment.id}: ${error}`)
+        // Não lançamos erro para não interromper o fluxo principal
+    }
+    
     return new_moment
 }
 
@@ -114,18 +171,17 @@ export async function store_moment_interaction({
                 message: "This moment has already been previously deleted",
                 action: "Make sure this moment has visible to be interacted.",
             })
-        await SwipeEngine.storeMomentInteraction({
-            interaction,
-            user_id,
-            moment_id,
-            moment_owner_id: moment.user_id,
-        })
-            .then(function (response) {
-                return response
+        // Processar a interação (adaptado para a nova estrutura)
+        try {
+            const momentOwnerId = moment.user_id
+            await processInteraction(user_id, moment_id, interaction.type, {
+                momentOwnerId,
+                details: interaction
             })
-            .catch(function (error) {
-                console.log(error)
-            })
+        } catch (error) {
+            logger.error(`Erro ao processar interação com o momento ${moment_id}: ${error}`)
+            console.log(error)
+        }
     } catch (err) {
         throw new InternalServerError({
             message: "error when searching for moments in swipe-engine-api",

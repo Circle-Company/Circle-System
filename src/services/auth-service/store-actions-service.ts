@@ -1,16 +1,23 @@
-import SecurityToolKit from "security-toolkit"
-import { Username } from "../../classes/username"
-import config from "../../config"
-import { InternalServerError, ValidationError } from "../../errors"
 import { DecryptPassword, EncriptedPassword } from "../../helpers/encrypt-decrypt-password"
-import { jwtEncoder } from "../../jwt/encode"
-import Preference from "../../models/preference/preference-model"
+import { InternalServerError, ValidationError } from "../../errors"
+
 import Contact from "../../models/user/contact-model.js"
 import Coordinate from "../../models/user/coordinate-model"
+import Preference from "../../models/preference/preference-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
+import SecurityToolKit from "security-toolkit"
 import Statistic from "../../models/user/statistic-model"
-import User from "../../models/user/user-model"
 import { StoreNewUserProps } from "./types"
+import User from "../../models/user/user-model"
+import { UserEmbeddingService } from "../../swipe-engine/core/embeddings/UserEmbeddingService"
+import { Username } from "../../classes/username"
+import config from "../../config"
+import { getLogger } from "../../swipe-engine/core/utils/logger"
+import { jwtEncoder } from "../../jwt/encode"
+
+// Inicializar serviços
+const userEmbeddingService = new UserEmbeddingService()
+const logger = getLogger("store-actions-service")
 
 export async function store_new_user({ username, password }: StoreNewUserProps) {
     const validUsername = await new Username(username).validate()
@@ -74,6 +81,32 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
                     throw new InternalServerError({ message: "Failed to create user contact." })
                 }),
             ])
+
+            // Gerar embedding para o novo usuário
+            try {
+                logger.info(`Gerando embedding inicial para o usuário ${user_id}`)
+                
+                // Extrair informações de preferência que possam ser úteis para o perfil inicial
+                const initialProfile = {
+                    preferredLanguages: ["pt"], // Idioma padrão é português
+                    initialInterests: [], // Sem interesses iniciais
+                    demographicInfo: {
+                        ageRange: "", // Sem faixa etária definida inicialmente
+                        location: "" // Sem localização definida inicialmente
+                    }
+                }
+                
+                // Usar o método específico para geração de embeddings iniciais
+                await userEmbeddingService.generateInitialEmbedding(
+                    BigInt(user_id),
+                    initialProfile
+                )
+                
+                logger.info(`Embedding inicial gerado com sucesso para o usuário ${user_id}`)
+            } catch (embeddingError) {
+                // Apenas logar o erro, não interromper o fluxo de criação do usuário
+                logger.error(`Erro ao gerar embedding inicial para usuário ${user_id}: ${embeddingError}`)
+            }
 
             console.log(
                 `Usuário criado com sucesso. ID: ${user_id}, Preferências criadas: ${

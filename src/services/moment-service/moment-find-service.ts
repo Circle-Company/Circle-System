@@ -1,23 +1,3 @@
-//@ts-nocheck
-import { SwipeEngine } from "../../swipe-engine/index"
-import { Op } from "sequelize"
-import { InternalServerError, UnauthorizedError } from "../../errors"
-import { populateMoment } from "../../helpers/populate-moments"
-import Comment from "../../models/comments/comment-model.js"
-import CommentLike from "../../models/comments/comment_likes-model.js"
-import CommentStatistic from "../../models/comments/comment_statistics-model.js"
-import MemoryMoment from "../../models/memories/memory_moments-model"
-import Like from "../../models/moments/like-model"
-import Moment from "../../models/moments/moment-model"
-import Statistic from "../../models/moments/moment_statistic-model.js"
-import MomentTags from "../../models/moments/moment_tag-model.js"
-import Tag from "../../models/tags/tag-model"
-import Follow from "../../models/user/follow-model"
-import ProfilePicture from "../../models/user/profilepicture-model"
-import User from "../../models/user/user-model"
-import { getRecommendations, processInteraction } from "../../swipe-engine/services"
-import { processResponseItems } from "../../swipe-engine/helpers/processResponseItems"
-import { FeedRecommendationParams as Params } from "../../swipe-engine/params"
 import {
     FindMomentStatisticsViewProps,
     FindMomentTagsProps,
@@ -27,36 +7,140 @@ import {
     MomentProps,
     UserType,
 } from "./types"
+import { InternalServerError, UnauthorizedError } from "../../errors"
 
-export async function find_user_feed_moments({ user_id }: FindUserFeedMomentsProps) {
+import Comment from "../../models/comments/comment-model"
+import CommentLike from "../../models/comments/comment_likes-model"
+import CommentStatistic from "../../models/comments/comment_statistics-model"
+import Like from "../../models/moments/like-model"
+import MemoryMoment from "../../models/memories/memory_moments-model"
+import Moment from "../../models/moments/moment-model"
+import MomentTags from "../../models/moments/moment_tag-model"
+import { Op } from "sequelize"
+import { FeedRecommendationParams as Params } from "../../swipe-engine/params"
+import ProfilePicture from "../../models/user/profilepicture-model"
+import Statistic from "../../models/moments/moment_statistic-model"
+import Tag from "../../models/tags/tag-model"
+import User from "../../models/user/user-model"
+import { getLogger } from "../../swipe-engine/core/utils/logger"
+import { getRecommendations } from "../../swipe-engine/services"
+import { populateMoment } from "../../helpers/populate-moments"
+import { processResponseItems } from "./processResponseItems"
+
+// Logger para o serviço de feed
+const logger = getLogger("moment-find-service")
+
+// Função para enriquecer resultados do feed com métricas de recomendação
+async function enrichFeedResults(results, recommendations, userId) {
+    if (!results || !recommendations || results.length === 0) {
+        return results;
+    }
+
+    // Mapear recomendações por ID para acesso rápido
+    const recMap = new Map();
+    recommendations.forEach(rec => {
+        recMap.set(rec.entityId.toString(), rec);
+    });
+
+    // Enriquecer cada momento com informações de recomendação
+    return results.map(moment => {
+        const rec = recMap.get(moment.id.toString());
+        if (rec) {
+            // Adicionar métricas de recomendação ao momento
+            return {
+                ...moment,
+                recommendation: {
+                    score: rec.score,
+                    relevance: rec.metadata?.relevance || 0,
+                    recency: rec.metadata?.recency || 0,
+                    popularity: rec.metadata?.popularity || 0,
+                }
+            };
+        }
+        return moment;
+    });
+}
+
+export async function find_user_feed_moments({ user_id, interaction_queue = [] }: FindUserFeedMomentsProps) {
     try {
-        // Usar as opções de recomendação definidas nos parâmetros
+        logger.info(`Gerando feed personalizado para usuário ${user_id}`)
+        
+        // Processar interações recentes que ainda não foram rastreadas
+        if (interaction_queue && interaction_queue.length > 0) {
+            logger.info(`Processando ${interaction_queue.length} interações pendentes`)
+            // Comentado temporariamente até que a funcionalidade esteja disponível
+            /*
+            for (const interaction of interaction_queue) {
+                try {
+                    await trackUserInteraction(user_id, {
+                        entityId: interaction.entity_id,
+                        entityType: interaction.entity_type,
+                        type: interaction.type,
+                        timestamp: interaction.timestamp || new Date().toISOString(),
+                        metadata: interaction.metadata || {}
+                    })
+                } catch (err) {
+                    logger.error(`Erro ao processar interação: ${err}`)
+                    // Continuar processando as outras interações mesmo se uma falhar
+                }
+            }
+            */
+        }
+
+        // Configurar contexto de recomendação com mais informações
+        const now = new Date()
         const recommendationOptions = {
             ...Params.defaultOptions,
             context: {
-                timeOfDay: new Date().getHours(),
-                dayOfWeek: new Date().getDay(),
+                timeOfDay: now.getHours(),
+                dayOfWeek: now.getDay(),
+                weekday: now.getDay() >= 1 && now.getDay() <= 5,
+                weekend: now.getDay() === 0 || now.getDay() === 6,
+                morning: now.getHours() >= 5 && now.getHours() < 12,
+                afternoon: now.getHours() >= 12 && now.getHours() < 18,
+                evening: now.getHours() >= 18 && now.getHours() < 22,
+                night: now.getHours() >= 22 || now.getHours() < 5,
+                timestamp: now.toISOString()
             },
+            diversityWeight: 0.3, // Aumentar diversidade de conteúdo
+            recencyWeight: 0.4,   // Priorizar conteúdo recente
+            relevanceWeight: 0.3, // Manter relevância para o usuário
+            limit: 30,            // Número de recomendações a retornar
+            excludeViewed: true,  // Excluir conteúdos já vistos
+            excludeIds: [],       // IDs para excluir especificamente
         }
 
-        // Usar o novo sistema de recomendação v2
+        // Obter recomendações do swipe engine
+        logger.info(`Solicitando recomendações com parâmetros: ${JSON.stringify(recommendationOptions)}`)
         const recommendations = await getRecommendations(user_id, recommendationOptions)
-
+        
+        // Registrar estatísticas de recomendação
+        logger.info(`Recebidas ${recommendations.length} recomendações para o usuário ${user_id}`)
+        
         // Extrair IDs dos momentos recomendados
         const moment_ids = recommendations
             .filter((rec) => rec.entityType === "post") // Filtra apenas por posts
             .map((rec) => rec.entityId.toString())
-
+        
         // Se não houver recomendações, retornar array vazio
         if (moment_ids.length === 0) {
+            logger.warn(`Nenhum momento recomendado para o usuário ${user_id}`)
             return []
         }
 
-        return await processResponseItems(moment_ids, user_id)
+        // Processar e retornar os itens recomendados
+        const results = await processResponseItems(moment_ids, user_id)
+        
+        // Enriquecer resultados com informações de recomendação
+        const enrichedResults = await enrichFeedResults(results, recommendations, user_id);
+        
+        logger.info(`Retornando ${enrichedResults.length} momentos processados para o usuário ${user_id}`)
+        
+        return enrichedResults
     } catch (err) {
-        console.error("Erro ao obter recomendações:", err)
+        logger.error(`Erro ao obter recomendações: ${err}`)
         throw new InternalServerError({
-            message: "Falha ao obter recomendações de conteúdo",
+            message: "Falha ao obter recomendações de conteúdo"
         })
     }
 }
@@ -363,4 +447,63 @@ export async function find_moment_tags({ moment_id }: FindMomentTagsProps) {
     return tags_arr.map((i: any) => {
         return { id: i.tag.id, title: i.tag.title }
     })
+}
+
+// Interface para feedback de recomendação
+interface RecommendationFeedbackProps {
+    user_id: string | bigint;
+    moment_id: string | bigint;
+    feedback_type: 'like' | 'dislike' | 'not_interested' | 'save' | 'share';
+    timestamp?: string;
+}
+
+/**
+ * Processa feedback explícito do usuário sobre uma recomendação
+ * Útil para melhorar o algoritmo de recomendação com o tempo
+ */
+export async function process_recommendation_feedback({
+    user_id,
+    moment_id,
+    feedback_type,
+    timestamp
+}: RecommendationFeedbackProps) {
+    try {
+        logger.info(`Processando feedback de recomendação: usuário ${user_id}, momento ${moment_id}, tipo ${feedback_type}`)
+        
+        // Verificar se o momento existe
+        const moment = await Moment.findOne({
+            where: { id: moment_id.toString() },
+            attributes: ['id', 'user_id']
+        })
+        
+        if (!moment) {
+            logger.warn(`Momento ${moment_id} não encontrado para feedback`)
+            return { success: false, message: "Momento não encontrado" }
+        }
+        
+        // Registrar o feedback no log
+        logger.info(`Feedback registrado: ${feedback_type} para momento ${moment_id} pelo usuário ${user_id}`)
+        
+        // Conforme o tipo de feedback, podemos realizar ações diferentes
+        if (feedback_type === 'like') {
+            // Adicionar registro de like em uma implementação futura
+            logger.info(`Like registrado para momento ${moment_id}`);
+        } else if (feedback_type === 'dislike' || feedback_type === 'not_interested') {
+            // Registrar conteúdo não interessante em uma implementação futura
+            logger.info(`Usuário ${user_id} não tem interesse no momento ${moment_id}`);
+        } else if (feedback_type === 'save' || feedback_type === 'share') {
+            // Registrar salvamento/compartilhamento em uma implementação futura
+            logger.info(`Usuário ${user_id} ${feedback_type === 'save' ? 'salvou' : 'compartilhou'} o momento ${moment_id}`);
+        }
+        
+        return {
+            success: true,
+            message: `Feedback '${feedback_type}' registrado com sucesso`
+        }
+    } catch (err) {
+        logger.error(`Erro ao processar feedback de recomendação: ${err}`)
+        throw new InternalServerError({
+            message: "Falha ao processar feedback de recomendação"
+        })
+    }
 }

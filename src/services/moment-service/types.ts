@@ -96,7 +96,14 @@ export interface TagsProps {
 }
 
 export interface FindUserFeedMomentsProps {
-    user_id: bigint
+    user_id: string;
+    interaction_queue?: Array<{
+        entity_id: string;
+        entity_type: string;
+        type: string;
+        timestamp?: string;
+        metadata?: Record<string, any>;
+    }>;
 }
 
 export interface FindUserMomentsProps {
