@@ -1,5 +1,3 @@
-import { getLogger } from "../../core/utils/logger"
-import { UserEmbeddingService } from "../embeddings/UserEmbeddingService"
 import {
     ClusterInfo,
     MatchResult,
@@ -9,9 +7,14 @@ import {
     UserEmbedding,
     UserProfile,
 } from "../types"
+
 import { CandidateSelector } from "./CandidateSelector"
 import { ClusterMatcher } from "./ClusterMatcher"
+import PostCluster from "../../models/PostCluster"
+import PostClusterRank from "../../models/PostClusterRank"
 import { RankingService } from "./RankingService"
+import { UserEmbeddingService } from "../embeddings/UserEmbeddingService"
+import { getLogger } from "../../core/utils/logger"
 
 export class RecommendationEngine {
     private userEmbeddingService: UserEmbeddingService | null = null
@@ -80,7 +83,7 @@ export class RecommendationEngine {
             })
 
             // 4. Ranquear candidatos
-            const rankedCandidates = await this.rankingService.rankCandidates(candidates, {
+            const rankedCandidates = this.rankingService.rankCandidates(candidates, {
                 userEmbedding,
                 userProfile,
                 limit,
@@ -121,8 +124,178 @@ export class RecommendationEngine {
      * @returns Lista de clusters
      */
     private async getOrCreateClusters(): Promise<ClusterInfo[]> {
-        // TODO: Implementar lógica para obter clusters de um repositório
-        // Por enquanto, retornamos clusters de exemplo (isso seria substituído por dados reais)
+        try {
+            this.logger.info("Buscando clusters do banco de dados")
+            
+            // Buscar todos os clusters ativos no banco de dados
+            const dbClusters = await PostCluster.findAll({
+                where: {
+                    // Pode adicionar condições se necessário, como clusters ativos
+                },
+                order: [
+                    ["size", "DESC"] // Ordenar por tamanho (opcional)
+                ],
+                limit: 100, // Limitar número de clusters por questão de performance
+                include: [
+                    {
+                        model: PostClusterRank,
+                        as: "postRanks",
+                        required: false,
+                        where: {
+                            isActive: true
+                        },
+                        attributes: ["score", "relevanceScore", "engagementScore"]
+                    }
+                ]
+            })
+            
+            // Converter para o formato ClusterInfo
+            const clusters: ClusterInfo[] = dbClusters.map(cluster => {
+                const clusterInfo = cluster.toClusterInfo();
+                
+                // Enriquecer com métricas de PostClusterRank, se disponíveis
+                // Usar acesso seguro com any para evitar erros de tipo
+                const postRanks = (cluster as any).postRanks || [];
+                
+                if (postRanks.length > 0) {
+                    // Calcular métricas agregadas dos ranks
+                    const avgScore = postRanks.reduce((sum: number, rank: any) => sum + (rank.score || 0), 0) / postRanks.length;
+                    const avgRelevance = postRanks.reduce((sum: number, rank: any) => sum + (rank.relevanceScore || 0), 0) / postRanks.length;
+                    const avgEngagement = postRanks.reduce((sum: number, rank: any) => sum + (rank.engagementScore || 0), 0) / postRanks.length;
+                    
+                    // Adicionar aos metadados
+                    clusterInfo.metadata = {
+                        ...clusterInfo.metadata,
+                        avgScore,
+                        avgRelevance,
+                        avgEngagement,
+                        totalRanks: postRanks.length
+                    };
+                }
+                
+                return clusterInfo;
+            });
+            
+            this.logger.info(`Encontrados ${clusters.length} clusters no banco de dados`)
+            
+            // Se não houver clusters no banco de dados, criar alguns padrão
+            if (clusters.length === 0) {
+                this.logger.warn("Nenhum cluster encontrado, criando clusters padrão")
+                return await this.createDefaultClusters()
+            }
+            
+            return clusters
+        } catch (error) {
+            this.logger.error(`Erro ao buscar clusters: ${error}`)
+            
+            // Em caso de erro, retornar clusters padrão como fallback
+            this.logger.warn("Usando clusters padrão como fallback devido a erro")
+            return this.getDefaultClusters()
+        }
+    }
+    
+    /**
+     * Cria clusters padrão no banco de dados
+     * @returns Lista de clusters padrão
+     */
+    private async createDefaultClusters(): Promise<ClusterInfo[]> {
+        try {
+            const defaultClusters = [
+                {
+                    name: "Tecnologia e Programação",
+                    centroid: JSON.stringify({
+                        dimension: 16,
+                        values: new Array(16).fill(0).map((_, i) => (i % 2 === 0 ? 0.1 : -0.1)),
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    }),
+                    topics: ["tecnologia", "programação", "desenvolvimento", "software"],
+                    category: "tecnologia",
+                    tags: ["tech", "code", "dev", "programming"],
+                    size: 100,
+                    density: 0.8,
+                    avgEngagement: 0.5,
+                    metadata: {
+                        description: "Conteúdo relacionado a tecnologia e programação",
+                        recommendationPriority: "high"
+                    }
+                },
+                {
+                    name: "Esportes e Fitness",
+                    centroid: JSON.stringify({
+                        dimension: 16,
+                        values: new Array(16).fill(0).map((_, i) => (i % 3 === 0 ? 0.15 : -0.05)),
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    }),
+                    topics: ["esportes", "fitness", "saúde", "bem-estar"],
+                    category: "esportes",
+                    tags: ["sports", "fitness", "health", "workout"],
+                    size: 150,
+                    density: 0.7,
+                    avgEngagement: 0.6,
+                    metadata: {
+                        description: "Conteúdo relacionado a esportes e atividades físicas",
+                        recommendationPriority: "medium"
+                    }
+                },
+                {
+                    name: "Arte e Cultura",
+                    centroid: JSON.stringify({
+                        dimension: 16,
+                        values: new Array(16).fill(0).map((_, i) => (i % 4 === 0 ? 0.2 : -0.1)),
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    }),
+                    topics: ["arte", "cultura", "música", "cinema"],
+                    category: "arte",
+                    tags: ["art", "culture", "music", "cinema"],
+                    size: 120,
+                    density: 0.65,
+                    avgEngagement: 0.45,
+                    metadata: {
+                        description: "Conteúdo relacionado a artes e manifestações culturais",
+                        recommendationPriority: "medium"
+                    }
+                }
+            ]
+            
+            // Criar os clusters no banco de dados
+            const createdClusters: ClusterInfo[] = []
+            
+            for (const cluster of defaultClusters) {
+                const newCluster = await PostCluster.create({
+                    name: cluster.name,
+                    centroid: cluster.centroid,
+                    topics: cluster.topics,
+                    memberIds: [],
+                    category: cluster.category,
+                    tags: cluster.tags,
+                    size: cluster.size,
+                    density: cluster.density,
+                    avgEngagement: cluster.avgEngagement,
+                    metadata: cluster.metadata
+                })
+                
+                createdClusters.push(newCluster.toClusterInfo())
+            }
+            
+            this.logger.info(`Criados ${createdClusters.length} clusters padrão`)
+            return createdClusters
+            
+        } catch (error) {
+            this.logger.error(`Erro ao criar clusters padrão: ${error}`)
+            return this.getDefaultClusters()
+        }
+    }
+    
+    /**
+     * Retorna clusters padrão em memória (sem persistir no banco de dados)
+     * Usado como último recurso quando não é possível acessar ou criar clusters no banco
+     */
+    private getDefaultClusters(): ClusterInfo[] {
+        this.logger.warn("Usando clusters padrão em memória")
+        
         return [
             {
                 id: "cluster-1",
