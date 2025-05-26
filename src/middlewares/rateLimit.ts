@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express"
+
 import { TooManyRequestsError } from "../errors" // Import the custom error class
 
 // Configuration for rate limiting
