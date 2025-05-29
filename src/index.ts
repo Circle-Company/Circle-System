@@ -15,10 +15,14 @@ import { RP } from "./config/routes_prefix"
 import { router as ReportRouter } from "./routes/report-router"
 import { UserAuthenticationValidator } from "./middlewares/UserAuthenticationValidator"
 import { router as UserRouter } from "./routes/user-router"
+<<<<<<< HEAD
 import bodyParser from "body-parser"
 import config from "./config/index"
 import express from "express"
 import { initSwipeEngineV2 } from "./swipe-engine/init"
+=======
+import { router as NearRouter } from "./routes/near-router"
+>>>>>>> origin/main
 
 declare module "express-serve-static-core" {
     interface Request {
@@ -40,7 +44,7 @@ const MOMENTS_PREFIX_V2 = RP.API_VERISON + RP.MOMENTS
 const NOTIFICATION_PREFIX = RP.API_VERISON + RP.NOTIFICATION
 const PREFERENCES_PREFIX = RP.API_VERISON + RP.PREFERENCES
 const REPORT_PREFIX = RP.API_VERISON + RP.REPORT
-
+const NEAR_PREFIX = RP.API_VERISON + RP.NEAR
 const app = express()
 
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -57,6 +61,7 @@ app.use(MOMENT_PREFIX, UserAuthenticationValidator, MomentRouter)
 app.use(MOMENTS_PREFIX_V2, UserAuthenticationValidator, MomentRouterV2)
 app.use(NOTIFICATION_PREFIX, UserAuthenticationValidator, NotificationRouter)
 app.use(PREFERENCES_PREFIX, UserAuthenticationValidator, PreferencesRouter)
+app.use(NEAR_PREFIX, UserAuthenticationValidator, NearRouter)
 
 app.listen(config.PORT, async () => {
     console.log("🚀 circle-system (server) - running on port: " + config.PORT)

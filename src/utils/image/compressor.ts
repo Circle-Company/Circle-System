@@ -1,12 +1,12 @@
-import sharp from "sharp"
 import { ServiceError } from "../../errors"
+import sharp from "sharp"
 
 type ImageCompressorProps = {
     imageBase64: string
     quality: number
     img_width: number
     isMoment?: boolean
-    resolution: "FULL_HD" | "NHD"
+    resolution: "FULL_HD" | "NHD" | "PREVIEW"
 }
 
 export async function image_compressor({
@@ -41,7 +41,15 @@ export async function image_compressor({
                 .jpeg({ quality }) // Definir qualidade JPEG
                 .toBuffer()
             return compressedImageBuffer.toString("base64")
-        } else return imageBase64
+        }
+        if (resolution == "PREVIEW") {
+            const compressedImageBuffer = await sharp(imageBuffer)
+                .resize({ width: 496, height: 280, fit: "cover" })
+                .jpeg({ quality })
+                .toBuffer()
+            return compressedImageBuffer.toString("base64")
+        }
+        else return imageBase64
     } catch (err: any) {
         throw new ServiceError({ message: err.message })
     }

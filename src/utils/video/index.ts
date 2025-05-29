@@ -24,6 +24,7 @@ export {
     generateVideoThumbnail,
     generateMultipleThumbnails,
     generateOptimizedThumbnails,
+    generatePreviewThumbnail,
     getVideoMetadata
 } from "./thumbnail"
 

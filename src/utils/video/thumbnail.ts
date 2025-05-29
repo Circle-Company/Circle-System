@@ -236,4 +236,27 @@ export async function getVideoMetadata(videoBase64: string): Promise<{
             message: `Erro ao obter metadados do vídeo: ${error.message}` 
         })
     }
+}
+
+// Função para gerar thumbnail de preview em 280p
+export async function generatePreviewThumbnail({
+    videoBase64,
+    timeOffset = 0.1, // Pega o primeiro frame (quase início)
+    width = 496, // 280p (16:9) => 496x280
+    height = 280,
+    quality = 60
+}: {
+    videoBase64: string
+    timeOffset?: number
+    width?: number
+    height?: number
+    quality?: number
+}): Promise<ThumbnailResult> {
+    return generateVideoThumbnail({
+        videoBase64,
+        timeOffset,
+        width,
+        height,
+        quality
+    })
 } 

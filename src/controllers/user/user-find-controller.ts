@@ -1,5 +1,6 @@
-import { NextFunction, Request, Response } from "express"
 import { InternalServerError, UnauthorizedError, ValidationError } from "../../errors"
+import { NextFunction, Request, Response } from "express"
+
 import { UserService } from "../../services/user-service"
 
 export async function find_user_by_username(req: Request, res: Response) {
@@ -83,8 +84,9 @@ export async function search_user(req: Request, res: Response) {
 export async function recommender_users(req: Request, res: Response) {
     const { user_id } = req.body
 
-    const recommendations = await UserService.UserFind.RecommenderUsers({ user_id })
-    res.status(200).json(recommendations)
+    // TODO: Implementar esta funcionalidade
+    // const recommendations = await UserService.UserFind.RecommenderUsers({ user_id })
+    res.status(501).json({ message: "Esta funcionalidade ainda não está implementada." })
 }
 
 export async function find_user_followers(req: Request, res: Response) {

@@ -96,12 +96,20 @@ export async function uploadVideoAWSS3({
             ContentDisposition: `inline; filename="${fileName}"`
         }
 
-        // Enviar o vídeo para o S3
-        const uploadResult = await AWS_S3.upload(params).promise()
+        // Enviar o vídeo para o S3 com timeout de 30 segundos
+        const uploadPromise = AWS_S3.upload(params).promise()
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new ServiceError({ message: "Upload do vídeo excedeu o tempo limite de 30 segundos." })), 30000)
+        )
+        const uploadResult = await Promise.race([uploadPromise, timeoutPromise])
+        if (!uploadResult || typeof (uploadResult as any).Location !== 'string' || typeof (uploadResult as any).Key !== 'string') {
+            throw new ServiceError({ message: "Falha no upload do vídeo ou timeout." })
+        }
+        const s3Result = uploadResult as { Location: string, Key: string }
         
         return {
-            url: uploadResult.Location,
-            key: uploadResult.Key,
+            url: s3Result.Location,
+            key: s3Result.Key,
             size: videoBuffer.length,
             contentType: finalContentType
         }

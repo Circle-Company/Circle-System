@@ -1,6 +1,6 @@
 import { InternalServerError, ValidationError } from "../../errors"
 import { StoreNewMomentsProps, TagProps } from "./types"
-import { generateOptimizedThumbnails, processAndUploadVideo } from "../../utils/video"
+import { generateOptimizedThumbnails, generatePreviewThumbnail, processAndUploadVideo } from "../../utils/video"
 import { processInteraction, processNewPost } from "../../swipe-engine/services"
 
 import CONFIG from "../../config"
@@ -95,14 +95,26 @@ export async function store_new_moment({ user_id, moment }: StoreNewMomentsProps
         resolution_height: Math.trunc(moment.metadata.resolution_height),
     })
     
+    // Sanitizar tags individualmente
+    const sanitizedTags = moment.tags.map((tag: TagProps) => {
+        const tagSanitization = new SecurityToolKit().sanitizerMethods.sanitizeSQLInjection(tag.title)
+        if (tagSanitization.isDangerous) {
+            throw new ValidationError({
+                message: `Tag considerada maliciosa: ${tag.title}`,
+                action: 'Remova caracteres como "]})*& nas tags.'
+            })
+        }
+        return { ...tag, title: tagSanitization.sanitized }
+    })
+    
     // Processar tags
-    await Tag.AutoAdd({ moment_id: new_moment.id, tags: moment.tags })
+    await Tag.AutoAdd({ moment_id: new_moment.id, tags: sanitizedTags })
     
     try {
         logger.info(`Gerando embedding para novo momento ${new_moment.id}`)
         
         // Extrair tags para o embedding
-        const tagTitles = moment.tags.map((tag: TagProps) => tag.title)
+        const tagTitles = sanitizedTags.map((tag: TagProps) => tag.title)
         
         // Gerar embedding para o novo momento
         const embeddingData = {
@@ -191,72 +203,49 @@ export async function store_moment_interaction({
 }
 
 export async function store_new_moment_video({ user_id, moment }: StoreNewMomentsProps) {
-    let fullhd_video_aws_s3_url, nhd_video_aws_s3_url
-    let fullhd_thumbnail_aws_s3_url, nhd_thumbnail_aws_s3_url
+    let fullhd_video_aws_s3_url
+    let preview_thumbnail_aws_s3_url
 
     try {
-        // Processar vídeo - conversão, compressão e upload
+        // Processar vídeo - conversão, compressão e upload (apenas FULL_HD, máx 30s)
         const videoProcessingResult = await processAndUploadVideo({
             videoBase64: moment.midia.base64,
             fileName: moment.metadata.file_name,
-            bucketName: CONFIG.AWS_MIDIA_BUCKET,
+            bucketName: CONFIG.AWS_VIDEO_BUCKET,
             options: {
-                compressionLevel: "medium",
+                compressionLevel: "high",
                 targetSizeMB: 50, // Limite de 50MB para vídeos
-                maxDurationSeconds: 300 // Máximo 5 minutos
+                maxDurationSeconds: 30, // Máximo 30 segundos
+                // Forçar resolução máxima FULL_HD
+                // O compressor já limita para 1920x1080 em 'high', mas garantimos aqui
+                // Se o vídeo for maior, será redimensionado
+                // O processador/conversor já trata scale, mas pode ser reforçado no compressor
+                // Se quiser garantir, pode passar um parâmetro extra para scale
             }
         })
 
         fullhd_video_aws_s3_url = videoProcessingResult.uploadResult.url
 
-        // Gerar versão comprimida adicional para NHD
-        const nhdVideoProcessingResult = await processAndUploadVideo({
+        // Gerar thumbnail de preview (primeiro frame, 280p)
+        const previewThumbnail = await generatePreviewThumbnail({
             videoBase64: moment.midia.base64,
-            fileName: "nhd_" + moment.metadata.file_name,
-            bucketName: CONFIG.AWS_MIDIA_BUCKET,
-            options: {
-                compressionLevel: "high",
-                targetSizeMB: 15, // Versão mais comprimida para NHD
-                maxDurationSeconds: 300
-            }
+            timeOffset: 0.1 // quase início
         })
 
-        nhd_video_aws_s3_url = nhdVideoProcessingResult.uploadResult.url
-
-        // Gerar thumbnails do vídeo
-        const thumbnails = await generateOptimizedThumbnails({
-            videoBase64: moment.midia.base64,
-            timeOffset: 1 // Capturar thumbnail no segundo 1
-        })
-
-        // Comprimir e fazer upload dos thumbnails
-        const compressed_fullhd_thumbnail = await image_compressor({
-            imageBase64: thumbnails.fullhd.thumbnailBase64,
-            quality: 80,
-            img_width: thumbnails.fullhd.width,
-            resolution: "FULL_HD",
+        // Compressão do preview
+        const compressed_preview_thumbnail = await image_compressor({
+            imageBase64: previewThumbnail.thumbnailBase64,
+            quality: 50,
+            img_width: previewThumbnail.width,
+            resolution: "PREVIEW",
             isMoment: true
         })
 
-        const compressed_nhd_thumbnail = await image_compressor({
-            imageBase64: thumbnails.nhd.thumbnailBase64,
-            quality: 70,
-            img_width: thumbnails.nhd.width,
-            resolution: "NHD",
-            isMoment: true
-        })
-
-        // Upload dos thumbnails para S3
-        fullhd_thumbnail_aws_s3_url = await upload_image_AWS_S3({
-            imageBase64: compressed_fullhd_thumbnail,
-            bucketName: CONFIG.AWS_MIDIA_BUCKET,
-            fileName: "thumbnail_fullhd_" + moment.metadata.file_name.replace(/\.[^/.]+$/, ".jpg"),
-        })
-
-        nhd_thumbnail_aws_s3_url = await upload_image_AWS_S3({
-            imageBase64: compressed_nhd_thumbnail,
-            bucketName: CONFIG.AWS_MIDIA_BUCKET,
-            fileName: "thumbnail_nhd_" + moment.metadata.file_name.replace(/\.[^/.]+$/, ".jpg"),
+        // Upload do preview para S3
+        preview_thumbnail_aws_s3_url = await upload_image_AWS_S3({
+            imageBase64: compressed_preview_thumbnail,
+            bucketName: CONFIG.AWS_VIDEO_PREVIEW_BUCKET,
+            fileName: "preview_" + moment.metadata.file_name.replace(/\.[^/.]+$/, ".jpg"),
         })
 
         // Sanitizar descrição
@@ -288,10 +277,7 @@ export async function store_new_moment_video({ user_id, moment }: StoreNewMoment
             moment_id: new_moment.id,
             content_type: moment.midia.content_type, // "VIDEO"
             fullhd_resolution: fullhd_video_aws_s3_url,
-            nhd_resolution: nhd_video_aws_s3_url,
-            // Adicionar URLs dos thumbnails como campos extras
-            fullhd_thumbnail: fullhd_thumbnail_aws_s3_url,
-            nhd_thumbnail: nhd_thumbnail_aws_s3_url,
+            preview_thumbnail: preview_thumbnail_aws_s3_url,
         })
 
         // @ts-ignore
@@ -308,14 +294,26 @@ export async function store_new_moment_video({ user_id, moment }: StoreNewMoment
             resolution_height: Math.trunc(moment.metadata.resolution_height),
         })
 
+        // Sanitizar tags individualmente
+        const sanitizedTags = moment.tags.map((tag: TagProps) => {
+            const tagSanitization = new SecurityToolKit().sanitizerMethods.sanitizeSQLInjection(tag.title)
+            if (tagSanitization.isDangerous) {
+                throw new ValidationError({
+                    message: `Tag considerada maliciosa: ${tag.title}`,
+                    action: 'Remova caracteres como "]})*& nas tags.'
+                })
+            }
+            return { ...tag, title: tagSanitization.sanitized }
+        })
+        
         // Processar tags
-        await Tag.AutoAdd({ moment_id: new_moment.id, tags: moment.tags })
+        await Tag.AutoAdd({ moment_id: new_moment.id, tags: sanitizedTags })
 
         try {
             logger.info(`Gerando embedding para novo momento de vídeo ${new_moment.id}`)
             
             // Extrair tags para o embedding
-            const tagTitles = moment.tags.map((tag: TagProps) => tag.title)
+            const tagTitles = sanitizedTags.map((tag: TagProps) => tag.title)
             
             // Gerar embedding para o novo momento de vídeo
             const embeddingData = {

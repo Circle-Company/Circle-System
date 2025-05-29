@@ -6,6 +6,7 @@ const API_VERISON_PREFIX = "/" + "v" + config.API_VERSION
 export const RP = {
     API_VERISON: API_VERISON_PREFIX,
     API_V2: "/v2",
+    NEAR: "/near",
     AUTH: "/auth",
     USER: "/user",
     USERS: "/users",
