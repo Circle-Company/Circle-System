@@ -1,10 +1,11 @@
-import { DBSCANClustering, DBSCANConfig } from "../core/clustering"
-import { getLogger } from "../core/utils/logger"
-import { Entity, ClusteringResult, ClusterInfo } from "../core/types"
-import { connection } from "../../database"
-import PostEmbedding from "../models/PostEmbedding"
+import { ClusterInfo, ClusteringResult, Entity } from "../core/types"
+
+import { DBSCANClustering } from "../core/clustering"
 import PostCluster from "../models/PostCluster"
 import PostClusterRank from "../models/PostClusterRank"
+import PostEmbedding from "../models/PostEmbedding"
+import { connection } from "../../database"
+import { getLogger } from "../core/utils/logger"
 import { mockPosts } from "../data/mock-posts"
 
 const logger = getLogger("test-post-clustering")
@@ -171,7 +172,7 @@ export async function testPostClustering() {
         }
 
         // Configurar algoritmo DBSCAN
-        const config: DBSCANConfig = {
+        const config = {
             epsilon: 0.3,
             minPoints: 2,
             distanceFunction: "cosine",
@@ -183,13 +184,21 @@ export async function testPostClustering() {
         // Executar clustering
         logger.info("Executando clustering com DBSCAN...")
         const clustering = new DBSCANClustering()
-        const result = await clustering.cluster(vectors, entities, config)
+        // Configurar propriedades do clustering antes de chamar cluster
+        Object.assign(clustering, { 
+            epsilon: config.epsilon,
+            minPoints: config.minPoints,
+            distanceFunction: config.distanceFunction
+        });
+
+        const startTime = Date.now();
+        const result = await clustering.cluster(vectors, entities)
 
         // Exibir resultados
         logger.info("\nResultados do Clustering:")
         logger.info(`Número de clusters: ${result.clusters.length}`)
-        logger.info(`Tempo de execução: ${result.elapsedTime}ms`)
-        logger.info(`Convergiu: ${result.converged}`)
+        logger.info(`Tempo de execução: ${Date.now() - startTime}ms`)
+        logger.info(`Convergiu: ${result.clusters.length > 0 ? "sim" : "não"}`)
 
         // Detalhes de cada cluster
         result.clusters.forEach((cluster, index) => {
