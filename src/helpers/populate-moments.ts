@@ -1,9 +1,9 @@
 import { InternalServerError } from "../errors"
-import Moment from "../models/moments/moment-model"
 import Metadata from "../models/moments/moment_metadata-model.js"
+import Moment from "../models/moments/moment-model"
 import MomentMidia from "../models/moments/moment_midia-model.js"
-import Statistic from "../models/moments/moment_statistic-model.js"
 import MomentTag from "../models/moments/moment_tag-model.js"
+import Statistic from "../models/moments/moment_statistic-model.js"
 import Tag from "../models/tags/tag-model"
 
 type PopulateMomentsProps = {
@@ -16,8 +16,8 @@ type PopulateMomentsProps = {
     tags?: boolean
 }
 
-interface MomentType extends Moment {
-    createdAt: string
+interface MomentType extends Omit<Moment, 'createdAt'> {
+    createdAt: Date;
 }
 
 export async function populateMoment({
@@ -38,7 +38,7 @@ export async function populateMoment({
     if (!moment) throw new InternalServerError({ message: "Can't possible find moment." })
     momentData.id = moment.id
     momentData.description = moment.description
-    momentData.created_at = moment.createdAt
+    momentData.created_at = moment.createdAt instanceof Date ? moment.createdAt.toISOString() : moment.createdAt
 
     if (stats) {
         const momentStats = await Moment.findOne({
