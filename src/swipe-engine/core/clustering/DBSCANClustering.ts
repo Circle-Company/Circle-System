@@ -60,8 +60,11 @@ export class DBSCANClustering {
         clusters: Array<{
             id: string,
             centroid: number[],
-            members: Entity[],
-            size: number
+            members: string[],
+            entities: Entity[],
+            size: number,
+            density?: number, // Propriedade opcional para métricas de densidade
+            memberIds?: string[] // Alias para 'members' para retrocompatibilidade
         }>,
         assignments: Record<string, number>
     }> {
@@ -188,8 +191,11 @@ export class DBSCANClustering {
         clusters: Array<{
             id: string,
             centroid: number[],
-            members: Entity[],
-            size: number
+            members: string[],
+            entities: Entity[],
+            size: number,
+            density?: number,
+            memberIds?: string[]
         }>,
         assignments: Record<string, number>
     } {
@@ -210,19 +216,26 @@ export class DBSCANClustering {
         const clusters: Array<{
             id: string,
             centroid: number[],
-            members: Entity[],
-            size: number
+            members: string[],
+            entities: Entity[],
+            size: number,
+            density?: number,
+            memberIds?: string[]
         }> = []
         const assignments: Record<string, number> = {}
 
         clusterMap.forEach((data, clusterId) => {
             const centroid = this.calculateCentroid(data.embeddings)
+            const membersList = data.entities.map(entity => String(entity.id))
             
             clusters.push({
                 id: `dbscan-${clusterId}`,
                 centroid,
-                members: data.entities,
-                size: data.entities.length
+                members: membersList,
+                entities: data.entities,
+                size: data.entities.length,
+                density: data.embeddings.length / (Math.PI * Math.pow(this.epsilon, 2)), // Cálculo aproximado de densidade
+                memberIds: membersList // Alias para manter compatibilidade
             })
 
             data.entities.forEach(entity => {
