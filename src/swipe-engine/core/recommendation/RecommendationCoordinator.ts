@@ -343,11 +343,17 @@ export class RecommendationCoordinator {
 
             // 3. Calcular similaridade com cada cluster e atribuir aos mais relevantes
             const postEmbedding = postEmbeddingRecord.toPostEmbeddingType()
-            const vectorValues = postEmbedding.vector.values
+            const vectorValues = Array.isArray(postEmbedding.vector.values) 
+                ? postEmbedding.vector.values 
+                : Array.isArray(postEmbedding.vector) 
+                    ? postEmbedding.vector 
+                    : [];
 
             for (const cluster of clusters) {
                 const clusterInfo = cluster.toClusterInfo()
-                const centroidValues = clusterInfo.centroid.values
+                const centroidValues = Array.isArray(clusterInfo.centroid.values) 
+                    ? clusterInfo.centroid.values 
+                    : []
 
                 // Calcular similaridade usando similaridade de cosseno
                 const similarity = this.calculateCosineSimilarity(vectorValues, centroidValues)
