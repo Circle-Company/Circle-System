@@ -1,5 +1,6 @@
 import { DataTypes, Model, Sequelize } from "sequelize"
-import { PostEmbedding as PostEmbeddingType } from "../core/types"
+
+import { PostEmbedding as PostEmbeddingType } from "../core/types/index"
 import SnowflakeID from "snowflake-id"
 
 const snowflake = new SnowflakeID()
@@ -33,7 +34,7 @@ class PostEmbedding
     public readonly updatedAt!: Date
 
     // Converte para o tipo PostEmbedding do core
-    public toPostEmbeddingType(): PostEmbeddingType {
+    public toPostEmbeddingType(): any {
         const vectorData = JSON.parse(this.vector) as number[]
         return {
             postId: this.postId,
@@ -41,9 +42,10 @@ class PostEmbedding
                 dimension: this.dimension,
                 values: vectorData,
                 createdAt: this.createdAt,
-                updatedAt: this.updatedAt,
+                updatedAt: this.updatedAt
             },
             metadata: this.metadata,
+            createdAt: this.createdAt
         }
     }
 
