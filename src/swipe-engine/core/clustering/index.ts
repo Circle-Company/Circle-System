@@ -23,8 +23,11 @@ export async function performClustering(
     clusters: Array<{
         id: string,
         centroid: number[],
-        members: Entity[],
-        size: number
+        members: string[],
+        entities: Entity[],
+        size: number,
+        density?: number,
+        memberIds?: string[]
     }>,
     assignments: Record<string, number>
 }> {
