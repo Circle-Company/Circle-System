@@ -1,9 +1,11 @@
 import * as fs from "fs"
 import * as path from "path"
 
-import { InteractionType, UserInteraction } from "../core/types"
+import { InteractionType, UserEmbedding, UserInteraction } from "../core/types"
 import { mockUserEmbeddings, mockUserInteractions, mockUsers } from "../data/mock-users"
 
+import PostEmbeddingModel from "../models/PostEmbedding"
+import UserEmbeddingModel from "../models/UserEmbedding"
 import { UserEmbeddingService } from "../core/embeddings/UserEmbeddingService"
 import { getLogger } from "../core/utils/logger"
 import { v4 as uuidv4 } from "uuid"
@@ -44,50 +46,7 @@ export async function testUserEmbeddings() {
 
         // Inicializar o serviço de embedding de usuários
         logger.info("Inicializando serviço de embedding de usuários...")
-        const userEmbeddingService = new UserEmbeddingService(
-            128, // dimensão do vetor de embedding
-            "models/user_embedding_model",
-            {
-                // Mock do repositório de interações
-                findByUserId: async (userId, limit) => {
-                    const userInteractionData = mockUserInteractions.find(
-                        ui => ui.userId === userId.toString()
-                    )
-                    
-                    return userInteractionData?.interactionHistory.map(i => ({
-                        id: uuidv4(),
-                        userId: BigInt(userId),
-                        entityId: BigInt(i.contentId),
-                        entityType: "post",
-                        type: i.type as InteractionType,
-                        timestamp: i.timestamp,
-                        metadata: {
-                            duration: i.duration
-                        }
-                    })) || []
-                }
-            },
-            {
-                // Mock do repositório de embeddings
-                findByUserId: async (userId) => {
-                    const userEmbedding = mockUserEmbeddings.find(
-                        ue => ue.userId === userId.toString()
-                    )
-                    if (!userEmbedding) return null
-
-                    return {
-                        userId: BigInt(userId),
-                        embedding: userEmbedding.vector.values,
-                        lastUpdated: new Date(),
-                        version: 1,
-                        metadata: userEmbedding.metadata
-                    }
-                },
-                saveOrUpdate: async (data) => {
-                    logger.info(`Atualizando embedding para usuário ${data.userId}`)
-                }
-            }
-        )
+        const userEmbeddingService = new UserEmbeddingService()
 
         // Testar geração de embeddings para cada usuário mock
         logger.info("\nTestando geração de embeddings para usuários...")
@@ -101,53 +60,67 @@ export async function testUserEmbeddings() {
             logger.info(`Usuário: ${user.id}`)
             logger.info(`Metadata: ${JSON.stringify(userEmbedding.metadata)}`)
 
-            // Buscar embedding atual do usuário
-            const currentEmbedding = await userEmbeddingService.getUserEmbedding(BigInt(user.id))
-            
+            // Buscar embedding atual do usuário no banco
+            const currentEmbeddingInstance = await UserEmbeddingModel.findOne({ where: { userId: user.id } })
+            let currentEmbeddingData: UserEmbedding | null = null
+            if (currentEmbeddingInstance) {
+                currentEmbeddingData = currentEmbeddingInstance.toUserEmbeddingType()
+            }
+
             // Armazenar resultados do usuário
             const userResult = {
                 userId: user.id,
                 username: user.username,
                 generatedEmbedding: {
                     vector: userEmbedding.vector.values,
-                    metadata: userEmbedding.metadata
+                    metadata: userEmbedding.metadata || {}
                 },
-                currentEmbedding: currentEmbedding ? {
-                    vector: currentEmbedding.vector.values,
-                    metadata: currentEmbedding.metadata
+                currentEmbedding: currentEmbeddingData ? {
+                    vector: currentEmbeddingData.vector.values,
+                    metadata: currentEmbeddingData.metadata || {}
                 } : null
             }
             testResults.users.push(userResult)
 
-            if (currentEmbedding) {
+            if (currentEmbeddingData) {
                 logger.info("\nEmbedding atual:")
-                logger.info(`Vector: ${currentEmbedding.vector.values.length} dimensões`)
-                logger.info(`Metadata: ${JSON.stringify(currentEmbedding.metadata)}`)
+                logger.info(`Vector: ${currentEmbeddingData.vector.values.length} dimensões`)
+                logger.info(`Metadata: ${JSON.stringify(currentEmbeddingData.metadata || {})}`)
             }
+
+            // Salvar embedding gerado no banco
+            await UserEmbeddingModel.upsert({
+                userId: user.id,
+                vector: JSON.stringify(userEmbedding.vector),
+                dimension: userEmbedding.vector.dimension,
+                metadata: userEmbedding.metadata || {}
+            })
         }
 
         // Testar atualização de embeddings
         logger.info("\nTestando atualização de embeddings...")
         const testUserId = BigInt(mockUsers[0].id)
-        
         // Processar a atualização dos embeddings
-        const updatedCount = await userEmbeddingService.updateUserEmbeddings(1)
-        logger.info(`Embeddings atualizados: ${updatedCount}`)
-
+        await userEmbeddingService.updateUserEmbeddings(testUserId)
+        logger.info(`Embeddings atualizados para usuário: ${testUserId}`)
         // Verificar o estado final do embedding
-        const finalEmbedding = await userEmbeddingService.getUserEmbedding(testUserId)
-        if (finalEmbedding) {
-            logger.info("\nEstado final do embedding:")
-            logger.info(`Vector: ${finalEmbedding.vector.values.length} dimensões`)
-            logger.info(`Metadata: ${JSON.stringify(finalEmbedding.metadata)}`)
+        const finalEmbeddingInstance = await UserEmbeddingModel.findOne({ where: { userId: testUserId.toString() } })
+        let finalEmbeddingData: UserEmbedding | null = null
+        if (finalEmbeddingInstance) {
+            finalEmbeddingData = finalEmbeddingInstance.toUserEmbeddingType()
+        }
 
+        if (finalEmbeddingData) {
+            logger.info("\nEstado final do embedding:")
+            logger.info(`Vector: ${finalEmbeddingData.vector.values.length} dimensões`)
+            logger.info(`Metadata: ${JSON.stringify(finalEmbeddingData.metadata || {})}`)
             // Adicionar resultado da atualização
             testResults.updateResult = {
                 userId: testUserId.toString(),
-                updatedCount,
+                updatedCount: 1,
                 finalEmbedding: {
-                    vector: finalEmbedding.vector.values,
-                    metadata: finalEmbedding.metadata
+                    vector: finalEmbeddingData.vector.values,
+                    metadata: finalEmbeddingData.metadata || {}
                 }
             }
         }
