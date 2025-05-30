@@ -161,7 +161,10 @@ export class PostEmbeddingService {
 
             // Se existir e for recente, retornar
             if (storedEmbedding && this.isEmbeddingRecent(storedEmbedding.updatedAt)) {
-                return storedEmbedding.toPostEmbeddingType()
+                const embedType = storedEmbedding.toPostEmbeddingType();
+                // Adicionar propriedade createdAt para compatibilidade com PostEmbedding do core/types.ts
+                (embedType as any).createdAt = storedEmbedding.createdAt;
+                return embedType;
             }
 
             // Se não existir ou for antigo, gerar um novo
@@ -181,7 +184,10 @@ export class PostEmbeddingService {
                 }
             })
 
-            return embedding.toPostEmbeddingType()
+            const embedType = embedding.toPostEmbeddingType();
+            // Adicionar propriedade createdAt para compatibilidade
+            (embedType as any).createdAt = embedding.createdAt;
+            return embedType;
         } catch (error: any) {
             this.logger.error(`Erro ao obter embedding do post ${postId}: ${error.message}`)
             throw new Error(`Falha ao obter embedding do post: ${error.message}`)
