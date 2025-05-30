@@ -1,4 +1,3 @@
-import { InternalServerError, UnauthorizedError } from "../../errors"
 import {
     CommentOnMomentProps,
     DeleteMomentProps,
@@ -9,23 +8,24 @@ import {
     UnhideMomentProps,
     UnlikeCommentProps,
 } from "./types"
+import { InternalServerError, UnauthorizedError } from "../../errors"
 
-import SecurityToolKit from "security-toolkit"
-import { Notification } from "../../helpers/notification"
-import { Relation } from "../../helpers/relation"
 import Comment from "../../models/comments/comment-model.js"
 import CommentLike from "../../models/comments/comment_likes-model.js"
 import CommentStatistic from "../../models/comments/comment_statistics-model.js"
+import Like from "../../models/moments/like-model"
 import Memory from "../../models/memories/memory-model"
 import MemoryMoment from "../../models/memories/memory_moments-model"
-import Like from "../../models/moments/like-model"
 import Moment from "../../models/moments/moment-model"
 import MomentStatistic from "../../models/moments/moment_statistic-model.js"
+import { Notification } from "../../helpers/notification"
 import ProfileClick from "../../models/moments/profile_click-model.js"
+import { Relation } from "../../helpers/relation"
+import SecurityToolKit from "security-toolkit"
 import Share from "../../models/moments/share-model.js"
 import Skip from "../../models/moments/skip-model.js"
-import View from "../../models/moments/view-model.js"
 import UserStatistic from "../../models/user/statistic-model"
+import View from "../../models/moments/view-model.js"
 
 export async function like_moment({ moment_id, user_id }) {
     try {
@@ -152,7 +152,7 @@ export async function comment_on_moment({ moment_id, content, user_id }: Comment
             user_id,
             moment_id,
             content: sanitization.sanitized,
-            parent_comment_id: null,
+            parent_comment_id: undefined,
         })
         // @ts-ignore
         await CommentStatistic.create({ comment_id: comment.id })
@@ -185,7 +185,7 @@ export async function reply_comment_on_moment({
             user_id,
             moment_id,
             content: sanitization.sanitized,
-            parent_comment_id,
+            parent_comment_id: BigInt(parent_comment_id),
         })
         // @ts-ignore
         await MomentStatistic.increment("total_comments_num", { by: 1, where: { moment_id } })
