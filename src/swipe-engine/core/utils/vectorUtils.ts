@@ -262,13 +262,16 @@ export function calculateDistance(
     vecB: number[] | EmbeddingVector,
     distanceFunction: string = "euclidean"
 ): number {
+    const valuesA = extractVectorValues(vecA);
+    const valuesB = extractVectorValues(vecB);
+    
     switch (distanceFunction.toLowerCase()) {
         case "euclidean":
-            return euclideanDistance(vecA, vecB)
+            return euclideanDistance(valuesA, valuesB)
         case "cosine":
-            return 1 - cosineSimilarity(vecA, vecB)
+            return 1 - cosineSimilarity(valuesA, valuesB)
         case "manhattan":
-            return manhattanDistance(vecA, vecB)
+            return manhattanDistance(valuesA, valuesB)
         default:
             throw new Error(`Função de distância desconhecida: ${distanceFunction}`)
     }
