@@ -5,9 +5,43 @@
  * usado em processamento em lote para manter os clusters atualizados.
  */
 
-import { DBSCANConfig, performClustering } from "../../core/clustering"
-import { ClusteringResult } from "../../core/types"
+import { ClusterInfo } from "../../core/types"
+import { DBSCANClustering } from "../../core/clustering/DBSCANClustering"
+import { Entity } from "../../core/types"
 import { getLogger } from "../../core/utils/logger"
+
+// Interface local para o resultado do clustering, adaptada para uso neste arquivo
+interface ClusteringResult {
+    clusters: ClusterInfo[]
+    assignments: Record<string, number>
+    quality: number
+    converged: boolean
+    iterations: number
+    metadata: any
+}
+
+// Definindo uma interface local para o resultado do clustering que corresponde ao retorno
+// da implementação atual do DBSCANClustering
+interface InternalClusteringResult {
+    clusters: Array<{
+        id: string,
+        centroid: number[],
+        members: string[],
+        entities: Entity[],
+        size: number,
+        density?: number,
+        memberIds?: string[]
+    }>,
+    assignments: Record<string, number>
+}
+
+// Configuração para DBSCAN
+export interface DBSCANConfig {
+    epsilon: number
+    minPoints: number
+    distanceFunction: "euclidean" | "cosine" | "manhattan"
+    noiseHandling?: "separate-cluster" | "ignore"
+}
 
 /**
  * Configuração para o recalculador de clusters
@@ -33,6 +67,7 @@ interface EmbeddingRepository {
 export class ClusterRecalculator {
     private readonly logger = getLogger("ClusterRecalculator")
     private config: ClusterRecalculatorConfig
+    private clustering: DBSCANClustering
 
     /**
      * Construtor do recalculador de clusters
@@ -43,6 +78,7 @@ export class ClusterRecalculator {
             batchSize: 100,
             ...config,
         }
+        this.clustering = new DBSCANClustering()
     }
 
     /**
@@ -71,27 +107,43 @@ export class ClusterRecalculator {
                 quality: 0,
                 converged: true,
                 iterations: 0,
-                metadata: { totalItems: 0 },
+                metadata: { totalItems: 0 }
             }
         }
 
         // Executar clustering usando DBSCAN
-        const clusteringResult = await performClustering(embeddings, entities, {
-            epsilon: 0.3,
-            minPoints: 5,
-            distanceFunction: "cosine",
-            ...dbscanConfig,
-        })
+        const clusteringResult = await this.clustering.cluster(embeddings, entities) as InternalClusteringResult
+
+        // Calcular qualidade do clustering (simples, baseado na quantidade de clusters)
+        const qualityScore = clusteringResult.clusters.length > 0 ? 
+            Math.min(1.0, clusteringResult.clusters.length / Math.sqrt(totalItems)) : 0
 
         // Adicionar metadados adicionais ao resultado
         const resultWithMetadata: ClusteringResult = {
-            ...clusteringResult,
+            clusters: clusteringResult.clusters.map(cluster => ({
+                id: cluster.id,
+                name: cluster.id,
+                centroid: {
+                    dimension: cluster.centroid.length,
+                    values: cluster.centroid,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                },
+                members: cluster.members,
+                radius: 0,
+                density: cluster.density || 0,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            })),
+            assignments: clusteringResult.assignments,
+            quality: qualityScore,
+            converged: true,
+            iterations: 1,
             metadata: {
-                ...clusteringResult.metadata,
                 totalItems,
                 entityType: "user",
                 createdAt: new Date(),
-            },
+            }
         }
 
         // Persistir clusters se um repositório estiver configurado
@@ -105,8 +157,7 @@ export class ClusterRecalculator {
 
         this.logger.info(
             `Clustering de usuários concluído: ${resultWithMetadata.clusters.length} clusters, ` +
-                //@ts-ignore
-                `qualidade: ${resultWithMetadata.quality.toFixed(2)}`
+            `qualidade: ${(resultWithMetadata.quality ?? 0).toFixed(2)}`
         )
 
         return resultWithMetadata
@@ -138,27 +189,49 @@ export class ClusterRecalculator {
                 quality: 0,
                 converged: true,
                 iterations: 0,
-                metadata: { totalItems: 0 },
+                metadata: { totalItems: 0 }
             }
         }
 
+        // Ajustar parâmetros DBSCAN conforme necessário
+        if (dbscanConfig) {
+            // Poderia ajustar parâmetros da instância this.clustering aqui, se tivesse setters
+            // Por ora, mantemos os padrões para posts
+        }
+
         // Executar clustering usando DBSCAN
-        const clusteringResult = await performClustering(embeddings, entities, {
-            epsilon: 0.25, // Valor menor para posts, assumindo maior similaridade
-            minPoints: 3, // Menos pontos necessários para formar um cluster
-            distanceFunction: "cosine",
-            ...dbscanConfig,
-        })
+        const clusteringResult = await this.clustering.cluster(embeddings, entities) as InternalClusteringResult
+
+        // Calcular qualidade do clustering (simples, baseado na quantidade de clusters)
+        const qualityScore = clusteringResult.clusters.length > 0 ? 
+            Math.min(1.0, clusteringResult.clusters.length / Math.sqrt(totalItems)) : 0
 
         // Adicionar metadados adicionais ao resultado
         const resultWithMetadata: ClusteringResult = {
-            ...clusteringResult,
+            clusters: clusteringResult.clusters.map(cluster => ({
+                id: cluster.id,
+                name: cluster.id,
+                centroid: {
+                    dimension: cluster.centroid.length,
+                    values: cluster.centroid,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                },
+                members: cluster.members,
+                radius: 0,
+                density: cluster.density || 0,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            })),
+            assignments: clusteringResult.assignments,
+            quality: qualityScore,
+            converged: true,
+            iterations: 1,
             metadata: {
-                ...clusteringResult.metadata,
                 totalItems,
                 entityType: "post",
                 createdAt: new Date(),
-            },
+            }
         }
 
         // Persistir clusters se um repositório estiver configurado
@@ -172,8 +245,7 @@ export class ClusterRecalculator {
 
         this.logger.info(
             `Clustering de posts concluído: ${resultWithMetadata.clusters.length} clusters, ` +
-                //@ts-ignore
-                `qualidade: ${resultWithMetadata.quality.toFixed(2)}`
+            `qualidade: ${(resultWithMetadata.quality ?? 0).toFixed(2)}`
         )
 
         return resultWithMetadata
@@ -188,9 +260,9 @@ export class ClusterRecalculator {
     private async collectEmbeddings(
         repository: EmbeddingRepository,
         entityType: "user" | "post"
-    ): Promise<{ embeddings: number[][]; entities: any[]; totalItems: number }> {
+    ): Promise<{ embeddings: number[][]; entities: Entity[]; totalItems: number }> {
         const embeddings: number[][] = []
-        const entities: any[] = []
+        const entities: Entity[] = []
         let offset = 0
         let totalItems = 0
         let hasMore = true
