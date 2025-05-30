@@ -263,16 +263,16 @@ export async function report_moment(req: Request, res: Response) {
         if (!req.body.report_type) {
             throw new InternalServerError({
                 message: "report_type is missing.",
-                action: "Informe o tipo de report (ex: SPAM, ABUSO, etc)",
+                action: "Informe o tipo de report (ex: SPAM, VIOLENCE, etc)",
             })
         }
-        const report = await Report.create({
+        await Report.create({
             user_id: req.user_id,
-            reported_content_id: req.params.id,
+            reported_content_id: BigInt(req.params.id),
             reported_content_type: 'MOMENT',
             report_type: req.body.report_type
         })
-        res.status(StatusCodes.ACCEPTED).json({ success: true, report })
+        res.status(StatusCodes.ACCEPTED).json({ success: true })
     } catch (err: unknown) {
         console.error("Error when reporting moment:", err)
         res.status(500).json({ error: "Erro ao reportar momento.", message: (err as any).message })

@@ -36,6 +36,8 @@ router.post("/:id/interactions/create", MomentController.StoreMomentInteraction)
 // Create a comment on specific moment
 router.post("/:id/comments/create", MomentController.CommentOnMoment)
 
+router.post("/:id/report", MomentController.ReportMoment)
+
 // Likes a specific comment
 router.post("/comments/:id/like", MomentController.LikeComment)
 
