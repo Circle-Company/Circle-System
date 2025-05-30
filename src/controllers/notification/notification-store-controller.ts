@@ -1,4 +1,5 @@
 import { Request, Response } from "express"
+
 import NotificationToken from "../../models/notification/notification_token-model.js"
 
 export async function storeToken(req: Request, res: Response) {
@@ -19,7 +20,7 @@ export async function storeToken(req: Request, res: Response) {
     else {
         // @ts-ignore
         await NotificationToken.create({
-            user_id: req.user_id,
+            user_id: req.user_id ?? BigInt(0),
             token,
         })
     }
