@@ -30,14 +30,10 @@ import Skip from "../models/moments/skip-model"
 import Statistic from "../models/user/statistic-model"
 import Tag from "../models/tags/tag-model"
 import User from "../models/user/user-model"
-<<<<<<< HEAD
+import View from "../models/moments/view-model"
+import db_config from "../config/database"
 // swipe-engine models
 import { initializeModels as initializeSwipeEngineModels } from "../swipe-engine"
-=======
-import View from "../models/moments/view-model"
-import db_config from "../config/database.js"
-
->>>>>>> origin/main
 //mysql database connection
 
 const DB_CONFIG =
@@ -62,14 +58,15 @@ try {
 // Inicializar modelos do Swipe Engine primeiro
 initializeSwipeEngineModels()
 
-//models connections
+// Inicializar modelos na ordem correta
+// Primeiro inicializar os modelos básicos sem dependências
 User.initialize(connection)
+Coordinate.initialize(connection) // Garantir que Coordinate seja inicializado antes de ser usado
 Metadata.initialize(connection)
 ProfilePicture.initialize(connection)
 Statistic.initialize(connection)
 Contact.initialize(connection)
 Block.initialize(connection)
-Coordinate.initialize(connection)
 Follow.initialize(connection)
 Report.initialize(connection)
 Relation.initialize(connection)
@@ -99,14 +96,14 @@ User.ensureFullTextIndex(connection).catch(error => {
     console.error("❌ Erro ao criar índice FULLTEXT:", error)
 })
 
-//models associations
+// Configurar associações APÓS todos os modelos serem inicializados
 User.associate(connection.models)
+Coordinate.associate(connection.models) // Garantir que Coordinate associe corretamente
 Metadata.associate(connection.models)
 ProfilePicture.associate(connection.models)
 Statistic.associate(connection.models)
 Contact.associate(connection.models)
 Block.associate(connection.models)
-Coordinate.associate(connection.models)
 Follow.associate(connection.models)
 Report.associate(connection.models)
 Relation.associate(connection.models)
