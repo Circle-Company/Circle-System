@@ -9,20 +9,17 @@ import { router as MemoryRouter } from "./routes/memory-router"
 import { router as ModeratorRouter } from "./routes/moderator-router"
 import { router as MomentRouter } from "./routes/moment-router"
 import { router as MomentRouterV2 } from "./routes/moment-router-v2"
+import { router as NearRouter } from "./routes/near-router"
 import { router as NotificationRouter } from "./routes/notification-router"
 import { router as PreferencesRouter } from "./routes/preferences-router"
 import { RP } from "./config/routes_prefix"
 import { router as ReportRouter } from "./routes/report-router"
 import { UserAuthenticationValidator } from "./middlewares/UserAuthenticationValidator"
 import { router as UserRouter } from "./routes/user-router"
-<<<<<<< HEAD
 import bodyParser from "body-parser"
 import config from "./config/index"
 import express from "express"
 import { initSwipeEngineV2 } from "./swipe-engine/init"
-=======
-import { router as NearRouter } from "./routes/near-router"
->>>>>>> origin/main
 
 declare module "express-serve-static-core" {
     interface Request {
