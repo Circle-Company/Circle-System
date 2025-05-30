@@ -15,77 +15,9 @@ export async function testMockRecommendation() {
     try {
         // Inicializar serviços necessários
         logger.info("Inicializando serviços...")
-        const userEmbeddingService = new UserEmbeddingService(
-            128,
-            "models/user_embedding_model",
-            {
-                findByUserId: async (userId, limit) => {
-                    return mockInteractions
-                        .filter(i => i.userId === userId.toString())
-                        .map(i => ({
-                            id: uuidv4(),
-                            userId: BigInt(i.userId),
-                            entityId: BigInt(i.entityId),
-                            entityType: "post",
-                            type: i.type as InteractionType,
-                            timestamp: i.timestamp,
-                            metadata: i.metadata
-                        }))
-                },
-            },
-            {
-                findByUserId: async (userId) => {
-                    const post = mockPosts.find(p => p.user_id === userId.toString())
-                    if (!post?.embedding) return null
-                    return {
-                        userId: BigInt(userId),
-                        embedding: post.embedding.vector.values,
-                        lastUpdated: new Date(),
-                        version: 1,
-                        metadata: post.embedding.metadata
-                    }
-                },
-                saveOrUpdate: async (data) => {
-                    logger.info(`Atualizando embedding para usuário ${data.userId}`)
-                }
-            }
-        )
+        const userEmbeddingService = new UserEmbeddingService(128)
 
-        const postEmbeddingService = new PostEmbeddingService(
-            128,
-            "models/post_embedding_model",
-            {
-                findById: async (postId) => {
-                    const post = mockPosts.find(p => p.id === postId.toString())
-                    return post || null
-                },
-                findRecentPostIds: async (limit) => {
-                    return mockPosts.slice(0, limit).map(p => BigInt(p.id))
-                }
-            },
-            {
-                findByPostId: async (postId) => {
-                    const post = mockPosts.find(p => p.id === postId.toString())
-                    if (!post?.embedding) return null
-                    return {
-                        postId: BigInt(postId),
-                        embedding: post.embedding.vector.values,
-                        lastUpdated: new Date(),
-                        version: 1,
-                        metadata: post.embedding.metadata
-                    }
-                },
-                saveOrUpdate: async (data) => {
-                    logger.info(`Atualizando embedding para post ${data.postId}`)
-                }
-            },
-            {
-                findTagsForPost: async (postId) => {
-                    const post = mockPosts.find(p => p.id === postId.toString())
-                    return post?.tags || []
-                }
-            }
-        )
+        const postEmbeddingService = new PostEmbeddingService(128)
 
         // Inicializar o sistema
         logger.info("Inicializando sistema de recomendação...")
