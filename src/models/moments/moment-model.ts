@@ -6,6 +6,7 @@ import {
     Model,
     Sequelize,
 } from "sequelize"
+
 import SnowflakeID from "snowflake-id"
 
 const snowflake = new SnowflakeID()
@@ -17,12 +18,9 @@ class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Mome
     declare deleted: CreationOptional<boolean>
     declare blocked: CreationOptional<boolean>
     declare user_id: bigint
-<<<<<<< HEAD
     declare createdAt: CreationOptional<Date>
     declare updatedAt: CreationOptional<Date>
-=======
     declare created_at?: CreationOptional<Date>
->>>>>>> origin/main
 
     static initialize(sequelize: Sequelize): void {
         Moment.init(
