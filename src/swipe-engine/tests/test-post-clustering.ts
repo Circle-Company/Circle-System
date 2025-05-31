@@ -10,30 +10,6 @@ import { mockPosts } from "../data/mock-posts"
 
 const logger = getLogger("test-post-clustering")
 
-// Interface para o tipo do post com suas associações
-interface PostWithAssociations {
-    id: bigint
-    user_id: bigint
-    description: string | null
-    visible: boolean
-    deleted: boolean
-    blocked: boolean
-    createdAt: Date
-    updatedAt: Date
-    PostEmbedding?: {
-        vector: string
-    }
-    moment_statistics?: {
-        total_views_num: number
-        total_likes_num: number
-        total_comments_num: number
-        total_shares_num: number
-    }
-    tags?: Array<{
-        id: bigint
-        title: string
-    }>
-}
 
 // Interface para garantir que metadata sempre existe
 interface EntityWithMetadata extends Entity {
