@@ -39,7 +39,7 @@ export const DEFAULT_VIDEO_CONFIG = {
     outputFormat: "mp4" as const,
     quality: "medium" as VideoQuality,
     maxSizeMB: 50,
-    maxDurationSeconds: 300 // 5 minutos
+    maxDurationSeconds: 30 // 30 segundos
 }
 
 // Formatos suportados
