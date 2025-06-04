@@ -1,10 +1,20 @@
 import { InternalServerError, UnauthorizedError } from "../../errors"
 import { Request, Response } from "express"
 
+// Importações para integração Swipe Engine
+import { FeedbackProcessor } from "../../swipe-engine/core/feedback/FeedbackProcessor"
 import { MomentService } from "../../services/moment-service"
+import { PostEmbeddingService } from "../../swipe-engine/core/embeddings/PostEmbeddingService"
 import Report from '../../models/user/report-model.js'
 import { StatusCodes } from "http-status-codes"
+import { UserEmbeddingService } from "../../swipe-engine/core/embeddings/UserEmbeddingService"
 import { ValidationError } from "sequelize"
+import { getLogger } from "../../swipe-engine/core/utils/logger"
+
+const logger = getLogger("moment-actions-controller")
+const userEmbeddingService = new UserEmbeddingService()
+const postEmbeddingService = new PostEmbeddingService()
+const feedbackProcessor = new FeedbackProcessor(userEmbeddingService, postEmbeddingService, logger)
 
 export async function view_moment(req: Request, res: Response) {
     const result = await MomentService.Actions.View({
@@ -272,6 +282,20 @@ export async function report_moment(req: Request, res: Response) {
             reported_content_type: 'MOMENT',
             report_type: req.body.report_type
         })
+        // Integração Swipe Engine: registrar interação de report
+        try {
+            await feedbackProcessor.processInteraction({
+                id: `${req.user_id}-${req.params.id}-${Date.now()}`,
+                userId: BigInt(req.user_id),
+                entityId: BigInt(req.params.id),
+                entityType: "post",
+                type: "report",
+                timestamp: new Date(),
+                metadata: { report_type: req.body.report_type }
+            })
+        } catch (feedbackErr) {
+            logger.error("Erro ao atualizar embedding (report_moment)", feedbackErr)
+        }
         res.status(StatusCodes.ACCEPTED).json({ success: true })
     } catch (err: unknown) {
         console.error("Error when reporting moment:", err)
