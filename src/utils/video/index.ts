@@ -28,6 +28,9 @@ export {
     getVideoMetadata
 } from "./thumbnail"
 
+// Exportar classe utilitária de upload modular
+export { VideoUpload, VideoUploadOptions, CompressResult } from "./video-upload"
+
 // Tipos principais para facilitar o uso
 export type VideoQuality = "low" | "medium" | "high" | "ultra"
 export type CompressionLevel = "low" | "medium" | "high" | "ultra" | "adaptive"
