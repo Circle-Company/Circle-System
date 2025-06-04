@@ -28,7 +28,7 @@ const getConversionSettings = (quality: string): ConversionSettings => {
             return {
                 videoBitrate: "500k",
                 audioBitrate: "64k",
-                fps: 24,
+                fps: 28,
                 scale: "640:360",
                 crf: 28
             }
