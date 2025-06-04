@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Reportar Conteúdo</title>
+        <title>Reportar Conta</title>
         <!-- Importando a fonte Poppins do Google Fonts -->
         <link
             href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
@@ -27,24 +27,24 @@
             }
             .container {
                 background: #fff;
-                padding: 2.5rem;
-                border-radius: 12px;
-                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
-                width: 90%;
-                max-width: 420px;
-                animation: fadeIn 0.6s ease-in-out;
+                padding: 2.5rem 2rem;
+                border-radius: 14px;
+                box-shadow: 0 10px 24px rgba(0,0,0,0.13);
+                width: 100%;
+                max-width: 440px;
+                animation: fadeIn 0.7s cubic-bezier(.4,0,.2,1);
             }
             h1 {
                 text-align: center;
-                margin-bottom: 1.5rem;
-                font-size: 1.75rem;
-                color: #333;
+                margin-bottom: 1.7rem;
+                font-size: 2rem;
+                color: #222;
             }
             label {
                 display: block;
                 margin-bottom: 0.5rem;
                 font-weight: 600;
-                color: #555;
+                color: #444;
             }
             .input-container {
                 position: relative;
@@ -75,7 +75,7 @@
             select:focus,
             textarea:focus {
                 border-color: #007bff;
-                box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+                box-shadow: 0 0 8px rgba(0,123,255,0.18);
                 outline: none;
             }
             textarea {
@@ -84,7 +84,7 @@
             }
             button {
                 width: 100%;
-                padding: 0.85rem;
+                padding: 0.95rem;
                 border: none;
                 border-radius: 6px;
                 background-color: #007bff;
@@ -94,26 +94,37 @@
                 cursor: pointer;
                 transition: background-color 0.3s, transform 0.3s;
             }
-            button:hover {
+            button:disabled {
+                background: #b3d1fa;
+                cursor: not-allowed;
+            }
+            button:hover:not(:disabled) {
                 background-color: #0056b3;
                 transform: translateY(-2px);
             }
+            .feedback {
+                margin-top: 1rem;
+                text-align: center;
+                font-size: 1.05rem;
+                min-height: 24px;
+            }
+            .feedback.success { color: #1ca97a; }
+            .feedback.error { color: #e74c3c; }
+            .feedback.loading { color: #007bff; }
             @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(20px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            @media (max-width: 600px) {
+                .container { padding: 1.2rem 0.5rem; }
+                h1 { font-size: 1.3rem; }
             }
         </style>
     </head>
     <body>
         <div class="container">
             <h1>Reportar Conta</h1>
-            <form id="reportForm">
+            <form id="reportForm" autocomplete="off">
                 <div class="input-container">
                     <label for="username">Nome de Usuário:</label>
                     <span class="at-symbol">@</span>
@@ -123,46 +134,22 @@
                         name="username"
                         placeholder="@username de quem deseja reportar"
                         required
+                        pattern="^[a-zA-Z0-9_.-]{3,32}$"
+                        maxlength="32"
                     />
                 </div>
                 <div>
-                    <label for="reason">Motivo da Denúncia:</label>
-                    <select id="reason" name="reason" required>
+                    <label for="type">Motivo da Denúncia:</label>
+                    <select id="type" name="type" required>
                         <option value="">Selecione um motivo</option>
-                        <option value="abuso" title="Comportamento abusivo ou agressivo">
-                            Abuso
-                        </option>
-                        <option value="violencia" title="Conteúdo que incita ou exibe violência">
-                            Violência
-                        </option>
-                        <option value="spam" title="Publicidades indesejadas ou repetitivas">
-                            Spam
-                        </option>
-                        <option
-                            value="discurso"
-                            title="Linguagem ofensiva, racista ou discriminatória"
-                        >
-                            Discurso de Ódio
-                        </option>
-                        <option
-                            value="informacao"
-                            title="Notícias ou informações falsas e enganosas"
-                        >
-                            Informação Falsa
-                        </option>
-                        <option
-                            value="conteudo-improprio"
-                            title="Material inapropriado para a plataforma"
-                        >
-                            Conteúdo Inapropriado
-                        </option>
-                        <option
-                            value="plagio"
-                            title="Uso não autorizado de conteúdo protegido por direitos autorais"
-                        >
-                            Plágio
-                        </option>
-                        <option value="outro" title="Outro motivo, não listado acima">Outro</option>
+                        <option value="abuso">Abuso</option>
+                        <option value="violencia">Violência</option>
+                        <option value="spam">Spam</option>
+                        <option value="discurso">Discurso de Ódio</option>
+                        <option value="informacao">Informação Falsa</option>
+                        <option value="conteudo-improprio">Conteúdo Inapropriado</option>
+                        <option value="plagio">Plágio</option>
+                        <option value="outro">Outro</option>
                     </select>
                 </div>
                 <div>
@@ -171,37 +158,62 @@
                         id="details"
                         name="details"
                         placeholder="Forneça mais informações, se desejar"
+                        maxlength="500"
                     ></textarea>
                 </div>
-                <button type="submit">Enviar Denúncia</button>
+                <button type="submit" id="submitBtn">Enviar Denúncia</button>
+                <div class="feedback" id="feedback"></div>
             </form>
         </div>
 
         <script>
-            document
-                .getElementById("reportForm")
-                .addEventListener("submit", async function (event) {
-                    event.preventDefault()
-                    const username = document.getElementById("username").value
-                    const reason = document.getElementById("reason").value
-                    const details = document.getElementById("details").value
-                    const data = { username, reason, details }
-                    try {
-                        const response = await fetch("http://circlecompany.com.br/report/account", {
-                            // Substitua pela URL real da sua API
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(data),
-                        })
-                        if (!response.ok) throw new Error("Erro ao enviar denúncia")
-                        const result = await response.json()
-                        alert("Denúncia enviada com sucesso!")
-                        document.getElementById("reportForm").reset()
-                    } catch (error) {
-                        console.error("Erro:", error)
-                        alert("Ocorreu um erro ao enviar a denúncia.")
+            const form = document.getElementById("reportForm")
+            const feedback = document.getElementById("feedback")
+            const submitBtn = document.getElementById("submitBtn")
+
+            form.addEventListener("submit", async function (event) {
+                event.preventDefault()
+                feedback.textContent = "Enviando denúncia..."
+                feedback.className = "feedback loading"
+                submitBtn.disabled = true
+
+                // Validação extra JS
+                const username = form.username.value.trim().replace(/^@/, "")
+                const type = form.type.value
+                const details = form.details.value.trim()
+                if (!username || username.length < 3 || username.length > 32) {
+                    feedback.textContent = "Usuário inválido."
+                    feedback.className = "feedback error"
+                    submitBtn.disabled = false
+                    return
+                }
+                if (!type) {
+                    feedback.textContent = "Selecione um motivo."
+                    feedback.className = "feedback error"
+                    submitBtn.disabled = false
+                    return
+                }
+                try {
+                    const response = await fetch("/api/report/account", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username, type, details })
+                    })
+                    const result = await response.json()
+                    if (response.ok && result && result.type === "success") {
+                        feedback.textContent = result.message || "Denúncia enviada com sucesso!"
+                        feedback.className = "feedback success"
+                        form.reset()
+                    } else {
+                        feedback.textContent = result.message || "Erro ao enviar denúncia."
+                        feedback.className = "feedback error"
                     }
-                })
+                } catch (error) {
+                    feedback.textContent = "Erro de conexão. Tente novamente."
+                    feedback.className = "feedback error"
+                }
+                submitBtn.disabled = false
+            })
         </script>
     </body>
 </html>
