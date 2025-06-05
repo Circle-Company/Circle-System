@@ -302,3 +302,48 @@ export async function report_moment(req: Request, res: Response) {
         res.status(500).json({ error: "Erro ao reportar momento.", message: (err as any).message })
     }
 }
+
+export async function report_comment_on_moment(req: Request, res: Response) {
+    try {
+        if (!req.user_id) {
+            throw new UnauthorizedError({
+                message: "User ID is missing. You must be authenticated to access this resource.",
+            })
+        }
+        if (!req.params.id)
+            throw new InternalServerError({
+                message: "req.params.id is missing.",
+                action: "Verifique se o parâmetro id do comentário está sendo passado corretamente.",
+            })
+        if (!req.body.report_type) {
+            throw new InternalServerError({
+                message: "report_type is missing.",
+                action: "Informe o tipo de report (ex: SPAM, VIOLENCE, etc)",
+            })
+        }
+        await Report.create({
+            user_id: req.user_id,
+            reported_content_id: BigInt(req.params.id),
+            reported_content_type: 'COMMENT',
+            report_type: req.body.report_type
+        })
+        // Integração Swipe Engine: registrar interação de report para comentário
+        try {
+            await feedbackProcessor.processInteraction({
+                id: `${req.user_id}-${req.params.id}-${Date.now()}`,
+                userId: BigInt(req.user_id),
+                entityId: BigInt(req.params.id),
+                entityType: "post",
+                type: "report",
+                timestamp: new Date(),
+                metadata: { report_type: req.body.report_type }
+            })
+        } catch (feedbackErr) {
+            logger.error("Erro ao atualizar embedding (report_comment_on_moment)", feedbackErr)
+        }
+        res.status(StatusCodes.ACCEPTED).json({ success: true })
+    } catch (err: unknown) {
+        console.error("Error when reporting comment:", err)
+        res.status(500).json({ error: "Erro ao reportar comentário.", message: (err as any).message })
+    }
+}
