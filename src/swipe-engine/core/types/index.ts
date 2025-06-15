@@ -53,10 +53,11 @@ export interface Vector {
 }
 
 export interface UserEmbedding {
+    id: string
     userId: string
     vector: number[]
-    timestamp: Date
-    version: string
+    updatedAt: Date
+    interests?: string[]
 }
 
 export interface PostEmbedding {
@@ -68,18 +69,15 @@ export interface PostEmbedding {
 
 export interface ClusterInfo {
     id: string
-    name: string
-    centroid: EmbeddingVector
-    members: string[]
-    radius: number
-    density: number
+    name?: string
+    centroid: number[]
+    size: number
     topics?: string[]
-    activeTimeOfDay?: [number, number][]
-    geographicFocus?: string
-    dominantLanguages?: string[]
-    metrics?: ClusterMetrics
+    contentIds?: string[]
     createdAt: Date
     updatedAt: Date
+    coherence?: number
+    density?: number
 }
 
 export interface MatchResult {
@@ -90,24 +88,49 @@ export interface MatchResult {
 }
 
 export interface UserProfile {
+    id: string
     userId: string
     interests?: string[]
+    interactions?: UserInteraction[]
+    preferences?: UserPreferences
+    demographics?: UserDemographics
+}
+
+export interface UserInteraction {
+    id: string
+    userId: string
+    entityId: string
+    entityType: string
+    contentId?: string
+    type: string
+    timestamp: Date
+    topics?: string[]
+    duration?: number
+    score?: number
+    postIds?: string[]
+}
+
+export interface UserPreferences {
+    contentTypes?: string[]
+    topicPreferences?: Record<string, number>
+    timeOfDayPreferences?: Record<string, number>
+    creator_preferences?: Record<string, number>
+}
+
+export interface UserDemographics {
+    age?: number
+    gender?: string
+    location?: string
     language?: string
-    activityLevel?: "low" | "medium" | "high"
-    engagementPatterns?: {
-        postsPerDay?: number
-        commentsPerDay?: number
-        likesPerDay?: number
-    }
-    topicPreferences?: Map<string, number>
 }
 
 export interface RecommendationContext {
-    timeOfDay?: number // Hora do dia em formato 24h (0-23)
-    dayOfWeek?: number
+    timeOfDay?: number // Hora do dia (0-23)
+    dayOfWeek?: number // Dia da semana (0-6, com 0 = Domingo)
     location?: string
-    deviceType?: "mobile" | "desktop" | "tablet"
-    sessionDuration?: number
+    device?: string
+    sessionId?: string
+    requestType?: string
 }
 
 export interface ClusteringOptions {
@@ -188,4 +211,23 @@ export interface DetailedClusteringResult {
     elapsedTime: number
     iterations: number
     hasConverged: boolean
+}
+
+export interface ContentMetadata {
+    id: string
+    type: string
+    topics: string[]
+    creator: string
+    createdAt: Date
+    duration?: number
+    engagement?: ContentEngagement
+}
+
+export interface ContentEngagement {
+    views: number
+    likes: number
+    comments: number
+    shares: number
+    saves: number
+    avgWatchTime?: number
 }
