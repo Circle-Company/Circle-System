@@ -592,3 +592,385 @@ export const RankingParams = {
     // Configurações gerais
     maxTags: 10, // Número máximo de tags para normalização
 }
+
+export const ClusterRankingParams = {
+    /**
+     * Configurações para o algoritmo de ranqueamento de clusters
+     * - Define todos os parâmetros fixos usados no ClusterRankingAlgorithm
+     * - Controla o comportamento das métricas e ajustes contextuais
+     */
+    
+    // Fatores de engajamento
+    engagementFactors: {
+        recency: {
+            halfLifeHours: {
+                /**
+                 * Meia-vida para visualizações (48 horas)
+                 * - Tempo para o peso de uma visualização cair pela metade
+                 * - Visualizações são sinais fracos, decaem rapidamente
+                 */
+                view: 48,
+                
+                /**
+                 * Meia-vida para likes (168 horas = 7 dias)
+                 * - Tempo para o peso de um like cair pela metade
+                 * - Likes são sinais moderados, mantêm relevância por mais tempo
+                 */
+                like: 168,
+                
+                /**
+                 * Meia-vida para comentários (336 horas = 14 dias)
+                 * - Tempo para o peso de um comentário cair pela metade
+                 * - Comentários são sinais fortes, mantêm relevância por mais tempo
+                 */
+                comment: 336,
+                
+                /**
+                 * Meia-vida para compartilhamentos (336 horas = 14 dias)
+                 * - Tempo para o peso de um compartilhamento cair pela metade
+                 * - Compartilhamentos são sinais muito fortes
+                 */
+                share: 336,
+                
+                /**
+                 * Meia-vida para salvamentos (720 horas = 30 dias)
+                 * - Tempo para o peso de um salvamento cair pela metade
+                 * - Salvamentos indicam intenção de revisitar, mantêm relevância por muito tempo
+                 */
+                save: 720
+            }
+        },
+        
+        interactionWeights: {
+            /**
+             * Peso de uma visualização (1.0)
+             * - Impacto base de uma visualização no score de engajamento
+             * - Sinal mais fraco, mas ainda relevante
+             */
+            view: 1.0,
+            
+            /**
+             * Peso de um like (2.0)
+             * - Impacto de um like no score de engajamento
+             * - Sinal positivo claro, dobro do peso de uma visualização
+             */
+            like: 2.0,
+            
+            /**
+             * Peso de um comentário (3.0)
+             * - Impacto de um comentário no score de engajamento
+             * - Sinal forte de engajamento ativo
+             */
+            comment: 3.0,
+            
+            /**
+             * Peso de um compartilhamento (4.0)
+             * - Impacto de um compartilhamento no score de engajamento
+             * - Sinal muito forte de endosso do conteúdo
+             */
+            share: 4.0,
+            
+            /**
+             * Peso de um salvamento (5.0)
+             * - Impacto de salvar conteúdo no score de engajamento
+             * - Sinal mais forte, indica intenção de revisitar
+             */
+            save: 5.0
+        },
+        
+        /**
+         * Fator de decaimento temporal (0.9)
+         * - Taxa de decaimento aplicada ao peso das interações ao longo do tempo
+         * - Valores mais baixos fazem as interações decaírem mais rapidamente
+         */
+        timeDecayFactor: 0.9,
+        
+        /**
+         * Máximo de interações por usuário (100)
+         * - Limite de interações consideradas por usuário para evitar viés
+         * - Interações além deste limite são ignoradas ou ponderadas
+         */
+        maxInteractionsPerUser: 100,
+        
+        /**
+         * Fator de normalização (0.1)
+         * - Fator aplicado para normalizar scores de engajamento
+         * - Ajuda a manter os scores em uma escala gerenciável
+         */
+        normalizationFactor: 0.1
+    },
+    
+    // Fatores de novidade
+    noveltyFactors: {
+        /**
+         * Peso do conteúdo já visualizado (0.7)
+         * - Importância de evitar conteúdo já visto pelo usuário
+         * - Valores mais altos penalizam mais conteúdo repetitivo
+         */
+        viewedContentWeight: 0.7,
+        
+        /**
+         * Peso da novidade de tópicos (0.3)
+         * - Importância de introduzir novos tópicos para o usuário
+         * - Valores mais altos priorizam exploração de novos temas
+         */
+        topicNoveltyWeight: 0.3,
+        
+        /**
+         * Período de decaimento da novidade (30 dias)
+         * - Tempo após o qual conteúdo antigo não é mais considerado "novo"
+         * - Ajuda a balancear novidade vs. relevância
+         */
+        noveltyDecayPeriodDays: 30,
+        
+        /**
+         * Desconto para conteúdo similar (0.5)
+         * - Redução aplicada ao score de conteúdo muito similar ao já visto
+         * - Ajuda a evitar repetição excessiva
+         */
+        similarContentDiscount: 0.5
+    },
+    
+    // Fatores de diversidade
+    diversityFactors: {
+        /**
+         * Peso da diversidade de tópicos (0.5)
+         * - Importância de variar os tópicos dos clusters recomendados
+         * - Principal componente para evitar bolhas de filtro
+         */
+        topicDiversityWeight: 0.5,
+        
+        /**
+         * Peso da diversidade de criadores (0.3)
+         * - Importância de variar os criadores do conteúdo
+         * - Ajuda a descobrir novos criadores
+         */
+        creatorDiversityWeight: 0.3,
+        
+        /**
+         * Peso da diversidade de formatos (0.2)
+         * - Importância de variar os formatos de conteúdo (vídeo, texto, etc.)
+         * - Menor peso, mas ainda relevante para diversidade
+         */
+        formatDiversityWeight: 0.2,
+        
+        /**
+         * Número de clusters recentes a considerar (10)
+         * - Quantos clusters recentes são analisados para calcular diversidade
+         * - Ajuda a balancear diversidade vs. performance
+         */
+        recentClustersToConsider: 10
+    },
+    
+    // Fatores de qualidade
+    qualityFactors: {
+        /**
+         * Peso da coesão do cluster (0.4)
+         * - Importância da similaridade interna dos itens do cluster
+         * - Clusters mais coesos são considerados de melhor qualidade
+         */
+        cohesionWeight: 0.4,
+        
+        /**
+         * Peso do tamanho do cluster (0.2)
+         * - Importância do número de itens no cluster
+         * - Clusters muito pequenos ou muito grandes podem ter qualidade reduzida
+         */
+        sizeWeight: 0.2,
+        
+        /**
+         * Peso da densidade do cluster (0.2)
+         * - Importância da proximidade média entre itens do cluster
+         * - Clusters mais densos são considerados mais coesos
+         */
+        densityWeight: 0.2,
+        
+        /**
+         * Peso da estabilidade do cluster (0.2)
+         * - Importância da consistência do cluster ao longo do tempo
+         * - Clusters estáveis são considerados mais confiáveis
+         */
+        stabilityWeight: 0.2,
+        
+        /**
+         * Tamanho mínimo ótimo (5)
+         * - Número mínimo de itens para um cluster ser considerado de boa qualidade
+         * - Clusters menores podem ser considerados fragmentados
+         */
+        minOptimalSize: 5,
+        
+        /**
+         * Tamanho máximo ótimo (50)
+         * - Número máximo de itens para um cluster ser considerado de boa qualidade
+         * - Clusters muito grandes podem ser considerados muito genéricos
+         */
+        maxOptimalSize: 50
+    },
+    
+    // Ajustes contextuais baseados no perfil do usuário
+    userProfileAdjustments: {
+        /**
+         * Limiar de interações para ajuste de pesos (100)
+         * - Número de interações acima do qual os pesos são ajustados
+         * - Usuários com muitas interações recebem mais diversidade
+         */
+        highInteractionThreshold: 100,
+        
+        /**
+         * Ajuste de diversidade para usuários ativos (+0.1)
+         * - Aumento no peso de diversidade para usuários com muitas interações
+         * - Ajuda a evitar bolhas de filtro em usuários ativos
+         */
+        diversityIncrease: 0.1,
+        
+        /**
+         * Ajuste de afinidade para usuários ativos (-0.05)
+         * - Redução no peso de afinidade para usuários com muitas interações
+         * - Permite mais exploração de conteúdo diverso
+         */
+        affinityDecrease: 0.05,
+        
+        /**
+         * Ajuste de novidade para usuários ativos (+0.05)
+         * - Aumento no peso de novidade para usuários com muitas interações
+         * - Mantém o feed dinâmico e interessante
+         */
+        noveltyIncrease: 0.05
+    },
+    
+    // Ajustes contextuais baseados no tempo
+    temporalAdjustments: {
+        nightTime: {
+            /**
+             * Hora de início da noite (20)
+             * - Hora a partir da qual se considera período noturno
+             */
+            startHour: 20,
+            
+            /**
+             * Hora de fim da noite (5)
+             * - Hora até a qual se considera período noturno
+             */
+            endHour: 5,
+            
+            /**
+             * Ajuste de qualidade para noite (+0.1)
+             * - Aumento no peso de qualidade durante a noite
+             * - Prioriza conteúdo de alta qualidade em horários de menor engajamento
+             */
+            qualityIncrease: 0.1,
+            
+            /**
+             * Ajuste de engajamento para noite (-0.05)
+             * - Redução no peso de engajamento durante a noite
+             * - Menor foco em conteúdo viral em horários noturnos
+             */
+            engagementDecrease: 0.05
+        },
+        
+        lunchTime: {
+            /**
+             * Hora de início do horário de almoço (11)
+             * - Hora a partir da qual se considera horário de almoço
+             */
+            startHour: 11,
+            
+            /**
+             * Hora de fim do horário de almoço (14)
+             * - Hora até a qual se considera horário de almoço
+             */
+            endHour: 14,
+            
+            /**
+             * Ajuste temporal para horário de almoço (+0.1)
+             * - Aumento no peso temporal durante o horário de almoço
+             * - Prioriza conteúdo relevante para o momento
+             */
+            temporalIncrease: 0.1,
+            
+            /**
+             * Ajuste de engajamento para horário de almoço (-0.05)
+             * - Redução no peso de engajamento durante o horário de almoço
+             * - Menor foco em conteúdo viral durante pausas
+             */
+            engagementDecrease: 0.05
+        },
+        
+        weekend: {
+            /**
+             * Dias de fim de semana (0 = domingo, 6 = sábado)
+             * - Dias considerados como fim de semana
+             */
+            days: [0, 6],
+            
+            /**
+             * Ajuste de novidade para fim de semana (+0.1)
+             * - Aumento no peso de novidade durante fins de semana
+             * - Prioriza descoberta de novo conteúdo em momentos de lazer
+             */
+            noveltyIncrease: 0.1,
+            
+            /**
+             * Ajuste de qualidade para fim de semana (-0.05)
+             * - Redução no peso de qualidade durante fins de semana
+             * - Permite mais flexibilidade no tipo de conteúdo
+             */
+            qualityDecrease: 0.05
+        }
+    },
+    
+    // Configurações de confiança
+    confidence: {
+        /**
+         * Multiplicador para normalização da variância (2)
+         * - Fator usado para normalizar a variância em um score de confiança
+         * - Valores mais altos tornam o score de confiança mais sensível à variância
+         */
+        varianceMultiplier: 2
+    },
+    
+    // Configurações de estatísticas
+    statistics: {
+        /**
+         * Número de clusters top para estatísticas (5)
+         * - Quantos clusters de maior score são incluídos nas estatísticas
+         * - Ajuda a identificar os melhores clusters
+         */
+        topClustersCount: 5,
+        
+        /**
+         * Limites para distribuição de scores
+         * - Define os intervalos para categorizar scores nas estatísticas
+         */
+        scoreDistributionLimits: {
+            low: 0.2,
+            medium: 0.4,
+            high: 0.6,
+            veryHigh: 0.8
+        }
+    },
+    
+    // Configurações de fallback
+    fallback: {
+        /**
+         * Score neutro padrão (0.5)
+         * - Score usado quando não há dados suficientes para cálculo
+         * - Valor intermediário que não favorece nem prejudica
+         */
+        neutralScore: 0.5,
+        
+        /**
+         * Confiança mínima em caso de erro (0.1)
+         * - Confiança atribuída quando há erro no cálculo
+         * - Indica baixa confiabilidade no resultado
+         */
+        errorConfidence: 0.1,
+        
+        /**
+         * Número máximo de tópicos para metadados (5)
+             * - Limite de tópicos incluídos nos metadados do resultado
+             * - Ajuda a controlar o tamanho dos metadados
+             */
+        maxTopicsInMetadata: 5
+    }
+}
