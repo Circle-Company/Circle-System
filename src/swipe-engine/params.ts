@@ -605,11 +605,18 @@ export const ClusterRankingParams = {
         recency: {
             halfLifeHours: {
                 /**
-                 * Meia-vida para visualizações (48 horas)
-                 * - Tempo para o peso de uma visualização cair pela metade
-                 * - Visualizações são sinais fracos, decaem rapidamente
+                 * Meia-vida para visualizações parciais (24 horas)
+                 * - Tempo para o peso de uma visualização parcial cair pela metade
+                 * - Visualizações parciais são sinais fracos, decaem rapidamente
                  */
-                view: 48,
+                view_parcial: 24,
+                
+                /**
+                 * Meia-vida para visualizações completas (48 horas)
+                 * - Tempo para o peso de uma visualização completa cair pela metade
+                 * - Visualizações completas indicam maior interesse
+                 */
+                view_completa: 48,
                 
                 /**
                  * Meia-vida para likes (168 horas = 7 dias)
@@ -617,6 +624,13 @@ export const ClusterRankingParams = {
                  * - Likes são sinais moderados, mantêm relevância por mais tempo
                  */
                 like: 168,
+                
+                /**
+                 * Meia-vida para likes em comentários (192 horas = 8 dias)
+                 * - Tempo para o peso de um like em comentário cair pela metade
+                 * - Likes em comentários indicam engajamento mais profundo
+                 */
+                like_comment: 192,
                 
                 /**
                  * Meia-vida para comentários (336 horas = 14 dias)
@@ -643,18 +657,32 @@ export const ClusterRankingParams = {
         
         interactionWeights: {
             /**
-             * Peso de uma visualização (1.0)
-             * - Impacto base de uma visualização no score de engajamento
-             * - Sinal mais fraco, mas ainda relevante
+             * Peso de uma visualização parcial (0.5)
+             * - Impacto de uma visualização breve no score de engajamento
+             * - Sinal fraco, pode indicar desinteresse ou visualização acidental
              */
-            view: 1.0,
+            view_parcial: 0.5,
+            
+            /**
+             * Peso de uma visualização completa (1.0)
+             * - Impacto de uma visualização completa no score de engajamento
+             * - Sinal moderado, indica interesse no conteúdo
+             */
+            view_completa: 1.0,
             
             /**
              * Peso de um like (2.0)
              * - Impacto de um like no score de engajamento
-             * - Sinal positivo claro, dobro do peso de uma visualização
+             * - Sinal positivo claro, dobro do peso de uma visualização completa
              */
             like: 2.0,
+            
+            /**
+             * Peso de um like em comentário (2.5)
+             * - Impacto de um like em comentário no score de engajamento
+             * - Sinal forte, indica engajamento mais profundo com a discussão
+             */
+            like_comment: 2.5,
             
             /**
              * Peso de um comentário (3.0)
@@ -671,11 +699,11 @@ export const ClusterRankingParams = {
             share: 4.0,
             
             /**
-             * Peso de um salvamento (5.0)
+             * Peso de um salvamento (3.5)
              * - Impacto de salvar conteúdo no score de engajamento
-             * - Sinal mais forte, indica intenção de revisitar
+             * - Sinal forte, indica intenção de revisitar
              */
-            save: 5.0
+            save: 3.5
         },
         
         /**
