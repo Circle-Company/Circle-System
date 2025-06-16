@@ -5,7 +5,7 @@
  * Avalia o nível de interação dos usuários com o conteúdo do cluster.
  */
 
-import { ClusterInfo, UserInteraction } from "../../types"
+import { ClusterInfo, InteractionType, UserInteraction } from "../../types"
 
 import { getLogger } from "../../utils/logger"
 
@@ -17,8 +17,10 @@ export interface EngagementFactors {
      */
     recency: {
         halfLifeHours: {
-            view: number
+            view_parcial: number
+            view_completa: number
             like: number
+            like_comment: number
             comment: number
             share: number
             save: number
@@ -29,8 +31,10 @@ export interface EngagementFactors {
      * Pesos para diferentes tipos de interação
      */
     interactionWeights: {
-        view: number
+        view_parcial: number
+        view_completa: number
         like: number
+        like_comment: number
         comment: number
         share: number
         save: number
@@ -127,7 +131,7 @@ function calculateTemporalDecay(
     halfLifeHours: { [key: string]: number }
 ): number {
     // Obter meia-vida apropriada para o tipo de interação
-    const halfLife = halfLifeHours[interactionType] || halfLifeHours.view
+    const halfLife = halfLifeHours[interactionType] || halfLifeHours.view_completa
     
     // Aplicar função de decaimento exponencial
     return Math.exp(-Math.log(2) * ageHours / halfLife)
@@ -147,24 +151,44 @@ function getInteractionWeight(
     
     // Valores padrão para tipos não configurados
     switch (interactionType) {
-        case 'view':
+        // Visualizações
+        case 'view_parcial':
         case 'short_view':
-            return 0.2
-        case 'long_view':
-            return 0.4
-        case 'like':
             return 0.5
+        case 'view_completa':
+        case 'long_view':
+        case 'view':
+            return 1.0
+            
+        // Likes
+        case 'like':
+            return 2.0
+        case 'like_comment':
+            return 2.5
+            
+        // Comentários
+        case 'comment':
+            return 3.0
+            
+        // Compartilhamentos
+        case 'share':
+            return 4.0
+            
+        // Salvamentos
+        case 'save':
+            return 3.5
+            
+        // Ações negativas
         case 'dislike':
             return -0.5
-        case 'comment':
-        case 'like_comment':
-            return 0.8
-        case 'share':
-            return 1.0
-        case 'save':
-            return 0.7
         case 'report':
             return -1.0
+            
+        // Ações de feedback
+        case 'show_less_often':
+            return -0.6
+            
+        // Tipo padrão para ações não reconhecidas
         default:
             return 0.3
     }
@@ -245,6 +269,96 @@ export function calculateDetailedEngagementMetrics(
             engagementRate: 0,
             retentionRate: 0,
             uniqueUsers: 0
+        }
+    }
+}
+
+/**
+ * Determina o tipo de visualização baseado na duração e percentual de visualização
+ * 
+ * @param durationSeconds Duração da visualização em segundos
+ * @param watchPercentage Percentual do conteúdo visualizado (0-1)
+ * @returns Tipo de visualização ('view_parcial' ou 'view_completa')
+ */
+export function determineViewType(
+    durationSeconds: number,
+    watchPercentage: number
+): 'view_parcial' | 'view_completa' {
+    // Critérios para visualização completa:
+    // 1. Duração mínima de 30 segundos OU
+    // 2. Percentual de visualização acima de 80%
+    const isComplete = durationSeconds >= 30 || watchPercentage >= 0.8
+    
+    return isComplete ? 'view_completa' : 'view_parcial'
+}
+
+/**
+ * Processa uma interação de visualização com metadados adicionais
+ * 
+ * @param interaction Interação base
+ * @param durationSeconds Duração da visualização em segundos
+ * @param watchPercentage Percentual do conteúdo visualizado (0-1)
+ * @returns Interação processada com tipo correto
+ */
+export function processViewInteraction(
+    interaction: UserInteraction,
+    durationSeconds: number,
+    watchPercentage: number
+): UserInteraction {
+    const viewType = determineViewType(durationSeconds, watchPercentage)
+    
+    return {
+        ...interaction,
+        type: viewType as InteractionType,
+        metadata: {
+            ...interaction.metadata,
+            durationSeconds,
+            watchPercentage,
+            viewType
+        }
+    }
+}
+
+/**
+ * Processa uma interação de like em comentário
+ * 
+ * @param interaction Interação base
+ * @param commentId ID do comentário que recebeu o like
+ * @returns Interação processada como like_comment
+ */
+export function processCommentLikeInteraction(
+    interaction: UserInteraction,
+    commentId: string
+): UserInteraction {
+    return {
+        ...interaction,
+        type: 'like_comment' as InteractionType,
+        metadata: {
+            ...interaction.metadata,
+            commentId,
+            targetType: 'comment'
+        }
+    }
+}
+
+/**
+ * Processa uma interação de salvamento
+ * 
+ * @param interaction Interação base
+ * @param saveReason Motivo do salvamento (opcional)
+ * @returns Interação processada como save
+ */
+export function processSaveInteraction(
+    interaction: UserInteraction,
+    saveReason?: string
+): UserInteraction {
+    return {
+        ...interaction,
+        type: 'save' as InteractionType,
+        metadata: {
+            ...interaction.metadata,
+            saveReason,
+            targetType: 'content'
         }
     }
 } 
