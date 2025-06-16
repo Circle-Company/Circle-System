@@ -88,6 +88,7 @@ export class ClusterRankingAlgorithm {
             halfLifeHours: ClusterRankingParams.engagementFactors.recency.halfLifeHours
         },
         interactionWeights: ClusterRankingParams.engagementFactors.interactionWeights,
+        defaultInteractionWeights: ClusterRankingParams.engagementFactors.defaultInteractionWeights,
         timeDecayFactor: ClusterRankingParams.engagementFactors.timeDecayFactor,
         maxInteractionsPerUser: ClusterRankingParams.engagementFactors.maxInteractionsPerUser,
         normalizationFactor: ClusterRankingParams.engagementFactors.normalizationFactor
