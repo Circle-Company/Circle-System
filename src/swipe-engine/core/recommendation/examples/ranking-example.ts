@@ -7,6 +7,11 @@
  */
 
 import { ClusterInfo, EmbeddingVector, RecommendationContext, UserEmbedding, UserProfile } from "../../types"
+import {
+    processCommentLikeInteraction,
+    processSaveInteraction,
+    processViewInteraction
+} from "../metrics/EngagementMetrics"
 
 import { ClusterRankingAlgorithm } from "../ClusterRankingAlgorithm"
 
@@ -276,6 +281,123 @@ export async function exemploAnaliseDetalhada() {
     }
 }
 
+// Exemplo de uso das novas ações de interação
+function demonstrateNewInteractionTypes() {
+    console.log("\n=== Demonstração das Novas Ações de Interação ===")
+    
+    // 1. Visualização parcial (usuário viu pouco do conteúdo)
+    const partialViewInteraction = {
+        id: "interaction-1",
+        userId: BigInt("123"),
+        entityId: BigInt("post-456"),
+        entityType: "post" as const,
+        type: "view" as any, // Será processado
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 horas atrás
+        metadata: {}
+    }
+    
+    const processedPartialView = processViewInteraction(
+        partialViewInteraction,
+        15, // 15 segundos de visualização
+        0.3 // 30% do conteúdo visto
+    )
+    
+    console.log("Visualização parcial:", {
+        tipo: processedPartialView.type,
+        duracao: processedPartialView.metadata?.durationSeconds,
+        percentual: processedPartialView.metadata?.watchPercentage,
+        peso: "0.5 (sinal fraco)"
+    })
+    
+    // 2. Visualização completa (usuário viu a maior parte do conteúdo)
+    const completeViewInteraction = {
+        id: "interaction-2",
+        userId: BigInt("123"),
+        entityId: BigInt("post-789"),
+        entityType: "post" as const,
+        type: "view" as any, // Será processado
+        timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hora atrás
+        metadata: {}
+    }
+    
+    const processedCompleteView = processViewInteraction(
+        completeViewInteraction,
+        45, // 45 segundos de visualização
+        0.9 // 90% do conteúdo visto
+    )
+    
+    console.log("Visualização completa:", {
+        tipo: processedCompleteView.type,
+        duracao: processedCompleteView.metadata?.durationSeconds,
+        percentual: processedCompleteView.metadata?.watchPercentage,
+        peso: "1.0 (sinal moderado)"
+    })
+    
+    // 3. Like em comentário (usuário curtiu um comentário específico)
+    const commentLikeInteraction = {
+        id: "interaction-3",
+        userId: BigInt("123"),
+        entityId: BigInt("post-101"),
+        entityType: "post" as const,
+        type: "like" as any, // Será processado
+        timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutos atrás
+        metadata: {}
+    }
+    
+    const processedCommentLike = processCommentLikeInteraction(
+        commentLikeInteraction,
+        "comment-202" // ID do comentário curtido
+    )
+    
+    console.log("Like em comentário:", {
+        tipo: processedCommentLike.type,
+        comentarioId: processedCommentLike.metadata?.commentId,
+        peso: "2.5 (sinal forte de engajamento profundo)"
+    })
+    
+    // 4. Salvamento (usuário salvou o conteúdo para ver depois)
+    const saveInteraction = {
+        id: "interaction-4",
+        userId: BigInt("123"),
+        entityId: BigInt("post-303"),
+        entityType: "post" as const,
+        type: "like" as any, // Será processado
+        timestamp: new Date(Date.now() - 15 * 60 * 1000), // 15 minutos atrás
+        metadata: {}
+    }
+    
+    const processedSave = processSaveInteraction(
+        saveInteraction,
+        "interessante" // Motivo do salvamento
+    )
+    
+    console.log("Salvamento:", {
+        tipo: processedSave.type,
+        motivo: processedSave.metadata?.saveReason,
+        peso: "3.5 (sinal forte de intenção de revisitar)"
+    })
+    
+    // 5. Comparação de pesos das diferentes ações
+    console.log("\nComparação de pesos das ações:")
+    console.log("- Visualização parcial (view_parcial): 0.5")
+    console.log("- Visualização completa (view_completa): 1.0")
+    console.log("- Like: 2.0")
+    console.log("- Like em comentário (like_comment): 2.5")
+    console.log("- Comentário: 3.0")
+    console.log("- Salvamento (save): 3.5")
+    console.log("- Compartilhamento (share): 4.0")
+    
+    // 6. Comparação de meias-vidas
+    console.log("\nComparação de meias-vidas (tempo para peso cair pela metade):")
+    console.log("- Visualização parcial: 24 horas")
+    console.log("- Visualização completa: 48 horas")
+    console.log("- Like: 168 horas (7 dias)")
+    console.log("- Like em comentário: 192 horas (8 dias)")
+    console.log("- Comentário: 336 horas (14 dias)")
+    console.log("- Compartilhamento: 336 horas (14 dias)")
+    console.log("- Salvamento: 720 horas (30 dias)")
+}
+
 // Executar exemplos
 export async function executarExemplos() {
     try {
@@ -287,4 +409,7 @@ export async function executarExemplos() {
     } catch (error) {
         console.error("❌ Erro ao executar exemplos:", error)
     }
-} 
+}
+
+// Executar demonstração
+demonstrateNewInteractionTypes() 
