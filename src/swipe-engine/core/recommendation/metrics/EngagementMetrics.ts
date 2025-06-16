@@ -1,8 +1,8 @@
 /**
  * EngagementMetrics
  * 
- * Módulo responsável por calcular métricas de engajamento para clusters.
- * Avalia o nível de interação dos usuários com o conteúdo do cluster.
+ * Module responsible for calculating engagement metrics for clusters.
+ * Evaluates the level of user interaction with cluster content.
  */
 
 import { ClusterInfo, InteractionType, UserInteraction } from "../../types"
@@ -13,56 +13,70 @@ const logger = getLogger("EngagementMetrics")
 
 export interface EngagementFactors {
     /**
-     * Configurações de recência para diferentes tipos de interação
+     * Recency configurations for different interaction types
      */
     recency: {
         halfLifeHours: {
-            view_parcial: number
-            view_completa: number
+            partialView: number
+            completeView: number
             like: number
-            like_comment: number
+            likeComment: number
             comment: number
             share: number
-            save: number
         }
     }
     
     /**
-     * Pesos para diferentes tipos de interação
+     * Weights for different interaction types
      */
     interactionWeights: {
-        view_parcial: number
-        view_completa: number
+        partialView: number
+        completeView: number
         like: number
-        like_comment: number
+        likeComment: number
         comment: number
         share: number
-        save: number
     }
     
     /**
-     * Fator de decaimento temporal para engajamento
+     * Default weights for unconfigured interaction types
+     */
+    defaultInteractionWeights?: {
+        partialView: number
+        completeView: number
+        like: number
+        likeComment: number
+        comment: number
+        share: number
+        report: number
+        showLessOften: number
+        click: number
+        default: number
+    }
+    
+    /**
+     * Temporal decay factor for engagement
      */
     timeDecayFactor: number
     
     /**
-     * Número máximo de interações a considerar por usuário
+     * Maximum number of interactions to consider per user
      */
     maxInteractionsPerUser?: number
     
     /**
-     * Fator para normalizar scores de engajamento
+     * Factor to normalize engagement scores
      */
     normalizationFactor?: number
 }
 
 /**
- * Calcula um score de engajamento para um cluster com base nas interações dos usuários
+ * Calculates an engagement score for a cluster based on user interactions
  * 
- * @param cluster Informações do cluster
- * @param userInteractions Interações do usuário com conteúdo
- * @param factors Fatores de configuração para o cálculo
- * @returns Score de engajamento (0-1)
+ * @param cluster Cluster information
+ * @param userInteractions User interactions with content
+ * @param factors Configuration factors for calculation
+ * @returns Engagement score (0-1)
  */
 export function calculateEngagementScore(
     cluster: ClusterInfo,
@@ -71,131 +85,111 @@ export function calculateEngagementScore(
 ): number {
     try {
         if (!userInteractions.length || !cluster.memberIds || !cluster.memberIds.length) {
-            return 0.5 // Score neutro quando não há dados suficientes
+            return 0.5 // Neutral score when insufficient data
         }
         
-        // Extrair IDs dos conteúdos no cluster
+        // Extract content IDs from cluster
         const clusterContentIds = new Set(cluster.memberIds.map(id => id.toString()))
         
-        // Filtrar interações relevantes para este cluster
+        // Filter relevant interactions for this cluster
         const relevantInteractions = userInteractions.filter(interaction => 
             clusterContentIds.has(interaction.entityId.toString())
         )
         
         if (relevantInteractions.length === 0) {
-            return 0.4 // Score um pouco abaixo do neutro quando não há interações específicas
+            return 0.4 // Slightly below neutral score when no specific interactions
         }
         
-        // Calcular score baseado em interações, aplicando decaimento temporal
+        // Calculate score based on interactions, applying temporal decay
         let totalScore = 0
         const now = new Date()
         
-        // Limitar número de interações para evitar viés
+        // Limit number of interactions to avoid bias
         const limitedInteractions = relevantInteractions
             .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
             .slice(0, factors.maxInteractionsPerUser || relevantInteractions.length)
         
         for (const interaction of limitedInteractions) {
-            // 1. Obter peso base para o tipo de interação
+            // 1. Get base weight for interaction type
             const interactionType = interaction.type
-            const baseWeight = getInteractionWeight(interactionType, factors.interactionWeights)
+            const baseWeight = getInteractionWeight(interactionType, factors.interactionWeights, factors.defaultInteractionWeights)
             
-            // 2. Aplicar decaimento temporal
+            // 2. Apply temporal decay
             const ageHours = (now.getTime() - interaction.timestamp.getTime()) / (1000 * 60 * 60)
             const decayFactor = calculateTemporalDecay(ageHours, interactionType, factors.recency.halfLifeHours)
             
-            // 3. Calcular score para esta interação
+            // 3. Calculate score for this interaction
             const interactionScore = baseWeight * decayFactor
             
-            // 4. Adicionar ao score total
+            // 4. Add to total score
             totalScore += interactionScore
         }
         
-        // Normalizar score
+        // Normalize score
         const normalizedScore = 1 - Math.exp(-totalScore * (factors.normalizationFactor || 1))
         
-        // Garantir que o score esteja no intervalo [0, 1]
+        // Ensure score is in range [0, 1]
         return Math.max(0, Math.min(1, normalizedScore))
     } catch (error) {
-        logger.error(`Erro ao calcular score de engajamento: ${error}`)
-        return 0.5 // Valor neutro em caso de erro
+        logger.error(`Error calculating engagement score: ${error}`)
+        return 0.5 // Neutral value in case of error
     }
 }
 
 /**
- * Calcula o fator de decaimento temporal para uma interação
+ * Calculates temporal decay factor for an interaction
  */
 function calculateTemporalDecay(
     ageHours: number,
     interactionType: string,
     halfLifeHours: { [key: string]: number }
 ): number {
-    // Obter meia-vida apropriada para o tipo de interação
-    const halfLife = halfLifeHours[interactionType] || halfLifeHours.view_completa
+    // Get appropriate half-life for interaction type
+    const halfLife = halfLifeHours[interactionType] || halfLifeHours.completeView
     
-    // Aplicar função de decaimento exponencial
+    // Apply exponential decay function
     return Math.exp(-Math.log(2) * ageHours / halfLife)
 }
 
 /**
- * Obtém o peso base para um tipo de interação
+ * Gets base weight for an interaction type
  */
 function getInteractionWeight(
     interactionType: string,
-    weights: { [key: string]: number }
+    weights: { [key: string]: number },
+    defaultWeights?: { [key: string]: number }
 ): number {
-    // Verificar se o tipo existe nas configurações
+    // Check if type exists in configuration
     if (interactionType in weights) {
         return weights[interactionType]
     }
     
-    // Valores padrão para tipos não configurados
-    switch (interactionType) {
-        // Visualizações
-        case 'view_parcial':
-        case 'short_view':
-            return 0.5
-        case 'view_completa':
-        case 'long_view':
-        case 'view':
-            return 1.0
-            
-        // Likes
-        case 'like':
-            return 2.0
-        case 'like_comment':
-            return 2.5
-            
-        // Comentários
-        case 'comment':
-            return 3.0
-            
-        // Compartilhamentos
-        case 'share':
-            return 4.0
-            
-        // Salvamentos
-        case 'save':
-            return 3.5
-            
-        // Ações negativas
-        case 'dislike':
-            return -0.5
-        case 'report':
-            return -1.0
-            
-        // Ações de feedback
-        case 'show_less_often':
-            return -0.6
-            
-        // Tipo padrão para ações não reconhecidas
-        default:
-            return 0.3
+    // Use default weights if available
+    if (defaultWeights && interactionType in defaultWeights) {
+        return defaultWeights[interactionType]
     }
+    
+    // Fallback to hardcoded defaults if no default weights provided
+    const fallbackWeights = {
+        partialView: 0.5,
+        completeView: 1.0,
+        like: 2.0,
+        likeComment: 2.5,
+        comment: 3.0,
+        share: 4.0,
+        save: 3.5,
+        dislike: -0.5,
+        report: -1.0,
+        showLessOften: -0.6,
+        click: 0.3,
+        default: 0.3
+    }
+    
+    return fallbackWeights[interactionType] || fallbackWeights.default
 }
 
 /**
- * Calcula métricas de engajamento mais detalhadas para um cluster
+ * Calculates detailed engagement metrics for a cluster
  */
 export function calculateDetailedEngagementMetrics(
     cluster: ClusterInfo,
@@ -218,33 +212,33 @@ export function calculateDetailedEngagementMetrics(
             }
         }
         
-        // Extrair IDs dos conteúdos no cluster
+        // Extract content IDs from cluster
         const clusterContentIds = new Set(cluster.memberIds.map(id => id.toString()))
         
-        // Filtrar interações relevantes para este cluster
+        // Filter relevant interactions for this cluster
         const relevantInteractions = allInteractions.filter(interaction => 
             clusterContentIds.has(interaction.entityId.toString())
         )
         
-        // Contar interações por tipo
+        // Count interactions by type
         const interactionsByType: { [key: string]: number } = {}
         for (const interaction of relevantInteractions) {
             const type = interaction.type
             interactionsByType[type] = (interactionsByType[type] || 0) + 1
         }
         
-        // Contar usuários únicos
+        // Count unique users
         const uniqueUsers = new Set(relevantInteractions.map(i => i.userId.toString())).size
         
-        // Calcular taxas
+        // Calculate rates
         const totalInteractions = relevantInteractions.length
         const clusterSize = cluster.memberIds.length
         
-        // Taxa de engajamento (interações por item)
+        // Engagement rate (interactions per item)
         const engagementRate = clusterSize > 0 ? totalInteractions / clusterSize : 0
         
-        // Taxa de retenção (proporção de usuários que retornam ao cluster)
-        // Simplificação: contar usuários com mais de uma interação
+        // Retention rate (proportion of users who return to cluster)
+        // Simplification: count users with more than one interaction
         const userInteractionCounts = new Map<string, number>()
         for (const interaction of relevantInteractions) {
             const userId = interaction.userId.toString()
@@ -262,7 +256,7 @@ export function calculateDetailedEngagementMetrics(
             uniqueUsers
         }
     } catch (error) {
-        logger.error(`Erro ao calcular métricas detalhadas de engajamento: ${error}`)
+        logger.error(`Error calculating detailed engagement metrics: ${error}`)
         return {
             totalInteractions: 0,
             interactionsByType: {},
@@ -274,31 +268,31 @@ export function calculateDetailedEngagementMetrics(
 }
 
 /**
- * Determina o tipo de visualização baseado na duração e percentual de visualização
+ * Determines view type based on duration and watch percentage
  * 
- * @param durationSeconds Duração da visualização em segundos
- * @param watchPercentage Percentual do conteúdo visualizado (0-1)
- * @returns Tipo de visualização ('view_parcial' ou 'view_completa')
+ * @param durationSeconds Duration of view in seconds
+ * @param watchPercentage Percentage of content watched (0-1)
+ * @returns View type ('partialView' or 'completeView')
  */
 export function determineViewType(
     durationSeconds: number,
     watchPercentage: number
-): 'view_parcial' | 'view_completa' {
-    // Critérios para visualização completa:
-    // 1. Duração mínima de 30 segundos OU
-    // 2. Percentual de visualização acima de 80%
+): 'partialView' | 'completeView' {
+    // Criteria for complete view:
+    // 1. Minimum duration of 30 seconds OR
+    // 2. Watch percentage above 80%
     const isComplete = durationSeconds >= 30 || watchPercentage >= 0.8
     
-    return isComplete ? 'view_completa' : 'view_parcial'
+    return isComplete ? 'completeView' : 'partialView'
 }
 
 /**
- * Processa uma interação de visualização com metadados adicionais
+ * Processes a view interaction with additional metadata
  * 
- * @param interaction Interação base
- * @param durationSeconds Duração da visualização em segundos
- * @param watchPercentage Percentual do conteúdo visualizado (0-1)
- * @returns Interação processada com tipo correto
+ * @param interaction Base interaction
+ * @param durationSeconds Duration of view in seconds
+ * @param watchPercentage Percentage of content watched (0-1)
+ * @returns Processed interaction with correct type
  */
 export function processViewInteraction(
     interaction: UserInteraction,
@@ -320,11 +314,11 @@ export function processViewInteraction(
 }
 
 /**
- * Processa uma interação de like em comentário
+ * Processes a comment like interaction
  * 
- * @param interaction Interação base
- * @param commentId ID do comentário que recebeu o like
- * @returns Interação processada como like_comment
+ * @param interaction Base interaction
+ * @param commentId ID of comment that received the like
+ * @returns Processed interaction as likeComment
  */
 export function processCommentLikeInteraction(
     interaction: UserInteraction,
@@ -332,7 +326,7 @@ export function processCommentLikeInteraction(
 ): UserInteraction {
     return {
         ...interaction,
-        type: 'like_comment' as InteractionType,
+        type: 'likeComment' as InteractionType,
         metadata: {
             ...interaction.metadata,
             commentId,
@@ -342,11 +336,11 @@ export function processCommentLikeInteraction(
 }
 
 /**
- * Processa uma interação de salvamento
+ * Processes a save interaction
  * 
- * @param interaction Interação base
- * @param saveReason Motivo do salvamento (opcional)
- * @returns Interação processada como save
+ * @param interaction Base interaction
+ * @param saveReason Reason for saving (optional)
+ * @returns Processed interaction as save
  */
 export function processSaveInteraction(
     interaction: UserInteraction,
