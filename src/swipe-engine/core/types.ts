@@ -425,6 +425,8 @@ export interface RecommendationOptions {
  * Tipos de interação que um usuário pode ter com um item
  */
 export type InteractionType =
+    | "view_parcial"
+    | "view_completa"
     | "short_view"
     | "long_view"
     | "like"
