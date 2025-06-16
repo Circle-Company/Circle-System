@@ -609,14 +609,14 @@ export const ClusterRankingParams = {
                  * - Tempo para o peso de uma visualização parcial cair pela metade
                  * - Visualizações parciais são sinais fracos, decaem rapidamente
                  */
-                view_parcial: 24,
+                partialView: 24,
                 
                 /**
                  * Meia-vida para visualizações completas (48 horas)
                  * - Tempo para o peso de uma visualização completa cair pela metade
                  * - Visualizações completas indicam maior interesse
                  */
-                view_completa: 48,
+                completeView: 48,
                 
                 /**
                  * Meia-vida para likes (168 horas = 7 dias)
@@ -630,7 +630,7 @@ export const ClusterRankingParams = {
                  * - Tempo para o peso de um like em comentário cair pela metade
                  * - Likes em comentários indicam engajamento mais profundo
                  */
-                like_comment: 192,
+                likeComment: 192,
                 
                 /**
                  * Meia-vida para comentários (336 horas = 14 dias)
@@ -661,14 +661,14 @@ export const ClusterRankingParams = {
              * - Impacto de uma visualização breve no score de engajamento
              * - Sinal fraco, pode indicar desinteresse ou visualização acidental
              */
-            view_parcial: 0.5,
+            partialView: 0.5,
             
             /**
              * Peso de uma visualização completa (1.0)
              * - Impacto de uma visualização completa no score de engajamento
              * - Sinal moderado, indica interesse no conteúdo
              */
-            view_completa: 1.0,
+            completeView: 1.0,
             
             /**
              * Peso de um like (2.0)
@@ -682,7 +682,7 @@ export const ClusterRankingParams = {
              * - Impacto de um like em comentário no score de engajamento
              * - Sinal forte, indica engajamento mais profundo com a discussão
              */
-            like_comment: 2.5,
+            likeComment: 2.5,
             
             /**
              * Peso de um comentário (3.0)
@@ -697,13 +697,6 @@ export const ClusterRankingParams = {
              * - Sinal muito forte de endosso do conteúdo
              */
             share: 4.0,
-            
-            /**
-             * Peso de um salvamento (3.5)
-             * - Impacto de salvar conteúdo no score de engajamento
-             * - Sinal forte, indica intenção de revisitar
-             */
-            save: 3.5
         },
         
         /**
@@ -725,7 +718,86 @@ export const ClusterRankingParams = {
          * - Fator aplicado para normalizar scores de engajamento
          * - Ajuda a manter os scores em uma escala gerenciável
          */
-        normalizationFactor: 0.1
+        normalizationFactor: 0.1,
+        
+        /**
+         * Pesos padrão para tipos de interação não configurados
+         * - Usados quando um tipo de interação não está nas configurações principais
+         * - Garante que todas as interações tenham um peso definido
+         */
+        defaultInteractionWeights: {
+            /**
+             * Visualização parcial (0.5)
+             * - Peso padrão para visualizações breves
+             */
+            partialView: 0.5,
+            
+            /**
+             * Visualização completa (1.0)
+             * - Peso padrão para visualizações completas
+             */
+            completeView: 1.0,
+            
+            /**
+             * Like (2.0)
+             * - Peso padrão para likes
+             */
+            like: 2.0,
+            
+            /**
+             * Like em comentário (2.5)
+             * - Peso padrão para likes em comentários
+             */
+            likeComment: 2.5,
+            
+            /**
+             * Comentário (3.0)
+             * - Peso padrão para comentários
+             */
+            comment: 3.0,
+            
+            /**
+             * Compartilhamento (4.0)
+             * - Peso padrão para compartilhamentos
+             */
+            share: 4.0,
+            
+            /**
+             * Salvamento (3.5)
+             * - Peso padrão para salvamentos
+             */
+            save: 3.5,
+            
+            /**
+             * Dislike (-0.5)
+             * - Peso padrão para dislikes (negativo)
+             */
+            dislike: -0.5,
+            
+            /**
+             * Denúncia (-1.0)
+             * - Peso padrão para denúncias (muito negativo)
+             */
+            report: -1.0,
+            
+            /**
+             * Mostrar menos frequentemente (-0.6)
+             * - Peso padrão para feedback negativo
+             */
+            showLessOften: -0.6,
+            
+            /**
+             * Clique (0.3)
+             * - Peso padrão para cliques genéricos
+             */
+            click: 0.3,
+            
+            /**
+             * Tipo não reconhecido (0.3)
+             * - Peso padrão para ações não mapeadas
+             */
+            default: 0.3
+        }
     },
     
     // Fatores de novidade
