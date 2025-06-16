@@ -425,18 +425,14 @@ export interface RecommendationOptions {
  * Tipos de interação que um usuário pode ter com um item
  */
 export type InteractionType =
-    | "view_parcial"
-    | "view_completa"
-    | "short_view"
-    | "long_view"
+    | "partialView"
+    | "completeView"
     | "like"
-    | "dislike"
     | "share"
     | "comment"
-    | "like_comment"
-    | "show_less_often"
+    | "likeComment"
+    | "showLessOften"
     | "report"
-    | "save"
     | "click"
 
 /**
