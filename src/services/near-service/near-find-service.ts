@@ -3,7 +3,6 @@ import { Op, and, col, fn, literal, where } from "sequelize"
 import Coordinate from "../../models/user/coordinate-model"
 import Follow from "../../models/user/follow-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
-import Statistic from "../../models/user/statistic-model"
 import User from "../../models/user/user-model"
 import { ValidationError } from "../../errors"
 
