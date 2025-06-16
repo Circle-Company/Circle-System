@@ -43,6 +43,10 @@ const circleapis = {
     CIRCLE_SWIPE_ENGINE_API: env.CIRCLE_SWIPE_ENGINE_API,
 }
 
+const admin = {
+    CIRCLE_ADMIN_KEY: env.CIRCLE_ADMIN_KEY || "default-admin-key-change-in-production",
+}
+
 const mysql = {
     development: {
         DB_HOST: env.DEVELOPMENT_DB_HOST || "localhost",
@@ -136,4 +140,5 @@ export default {
     ...mysql,
     ...jwt,
     ...firebase,
+    ...admin,
 }
