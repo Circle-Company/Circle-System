@@ -398,3 +398,21 @@ export const temporalDecayConfig = {
         maxAgeDays: 90
     }
 }
+
+export const interactionBoosts = {
+    clickBoost: 0.2,
+    likeBoost: 0.5,
+    shareBoost: 0.8,
+    completeViewBoost: 1,
+    partialViewBoost: 0.2,
+    commentBoost: 0.6,
+    likeCommentBoost: 0.5,
+    reportBoost: -1.0,
+    showLessOftenBoost: -0.8,
+    defaultBoost: 0.1,
+}
+
+export const interactionScore = {
+    default: 0.3,
+    defaultWhenBoostZero: 0
+}
