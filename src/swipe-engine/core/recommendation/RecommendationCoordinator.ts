@@ -1,4 +1,5 @@
 import { InteractionType, PostEmbeddingProps, Recommendation, RecommendationOptions } from "../types"
+import { interactionBoosts, interactionScore } from "../../params"
 
 import InteractionEvent from "../../models/InteractionEvent"
 import Moment from "../../../models/moments/moment-model"
@@ -99,7 +100,7 @@ export class RecommendationCoordinator {
             })
 
             // Se for uma interação significativa, atualiza o embedding do usuário
-            if (type === "like" || type === "dislike" || type === "like_comment") {
+            if (type === "like" || type === "likeComment") {
                 this.logger.debug(`Agendando atualização de embedding para usuário ${userId}`)
                 // Em produção, isso seria colocado em uma fila para processamento assíncrono
                 // Exemplo: this.updateQueue.add({ userId, priority: type === 'like' ? 'high' : 'normal' })
@@ -166,26 +167,35 @@ export class RecommendationCoordinator {
                 // Calcular score de interação baseado no tipo
                 let interactionBoost = 0
                 switch (interactionType) {
+                    case "click":
+                        interactionBoost = interactionBoosts.clickBoost
+                        break
                     case "like":
-                        interactionBoost = 0.5
+                        interactionBoost = interactionBoosts.likeBoost
                         break
                     case "share":
-                        interactionBoost = 0.8
+                        interactionBoost = interactionBoosts.shareBoost
                         break
-                    case "long_view":
-                        interactionBoost = 0.3
+                    case "completeView":
+                        interactionBoost = interactionBoosts.completeViewBoost
+                        break
+                    case "partialView":
+                        interactionBoost = interactionBoosts.partialViewBoost
                         break
                     case "comment":
-                        interactionBoost = 0.6
+                        interactionBoost = interactionBoosts.commentBoost
                         break
-                    case "dislike":
-                        interactionBoost = -0.5
+                    case "likeComment":
+                        interactionBoost = interactionBoosts.likeCommentBoost
                         break
                     case "report":
-                        interactionBoost = -1.0
+                        interactionBoost = interactionBoosts.reportBoost
+                        break
+                    case "showLessOften":
+                        interactionBoost = interactionBoosts.showLessOftenBoost
                         break
                     default:
-                        interactionBoost = 0.1
+                        interactionBoost = interactionBoosts.defaultBoost
                 }
 
                 if (userClusterRank) {
@@ -205,10 +215,10 @@ export class RecommendationCoordinator {
                     await UserClusterRank.create({
                         userId: userId.toString(),
                         clusterId: cluster.id.toString(),
-                        score: interactionBoost > 0 ? 0.3 : 0,
-                        similarity: 0.3,
-                        interactionScore: interactionBoost > 0 ? 0.3 : 0,
-                        matchScore: 0.3,
+                        score: interactionBoost > 0 ?  interactionScore.default: interactionScore.defaultWhenBoostZero,
+                        similarity: interactionScore.default,
+                        interactionScore: interactionBoost > 0 ? interactionScore.default : interactionScore.defaultWhenBoostZero,
+                        matchScore: interactionScore.default,
                         isActive: true,
                         lastInteractionDate: new Date(),
                     })
