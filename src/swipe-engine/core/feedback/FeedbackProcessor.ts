@@ -76,7 +76,7 @@ export class FeedbackProcessor {
             if (
                 interaction.type === "like" ||
                 interaction.type === "share" ||
-                interaction.type === "like_comment" ||
+                interaction.type === "likeComment" ||
                 interaction.type === "report"
             ) {
                 await this.updateEmbeddings(interaction)
@@ -631,7 +631,7 @@ export class FeedbackProcessor {
      */
     public async getInteractedEntities(
         userId: string | bigint,
-        types: InteractionType[] = ["like", "long_view", "share"]
+        types: InteractionType[] = ["like", "completeView", "share"]
     ): Promise<string[]> {
         const interactions = await UserInteractionHistory.findAll({
             where: {
