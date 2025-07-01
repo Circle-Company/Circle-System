@@ -97,16 +97,13 @@ export async function unlike_moment({ moment_id, user_id }) {
         if (!like_exists)
             throw new UnauthorizedError({ message: "This user did not like at the moment" })
         await Like.destroy({ where: { liked_moment_id: moment_id, user_id } })
-        // @ts-ignore
         const momentStatistics = (await MomentStatistic.findOne({
             where: { moment_id },
             attributes: ["total_likes_num"],
         })) as any
         if (momentStatistics.total_likes_num < 0)
-            // @ts-ignore
             await MomentStatistic.update({ total_likes_num: 0 }, { where: { moment_id } })
         else if (momentStatistics.total_likes_num > 0) {
-            // @ts-ignore
             await MomentStatistic.increment("total_likes_num", { by: -1, where: { moment_id } })
             await UserStatistic.increment("total_likes_num", {
                 by: -1,
@@ -119,7 +116,7 @@ export async function unlike_moment({ moment_id, user_id }) {
                 userId: BigInt(user_id),
                 entityId: BigInt(moment_id),
                 entityType: "post",
-                type: "dislike",
+                type: "unlike",
                 timestamp: new Date(),
                 metadata: {}
             })
@@ -149,7 +146,7 @@ export async function view_moment({ moment_id, user_id }) {
                 userId: BigInt(user_id),
                 entityId: BigInt(moment_id),
                 entityType: "post",
-                type: "long_view",
+                type: "completeView",
                 timestamp: new Date(),
                 metadata: {}
             })
@@ -163,9 +160,7 @@ export async function view_moment({ moment_id, user_id }) {
 }
 export async function share_moment({ moment_id, user_id }) {
     try {
-        // @ts-ignore
         await Share.create({ shared_moment_id: moment_id, user_id })
-        // @ts-ignore
         await MomentStatistic.increment("total_shares_num", { by: 1, where: { moment_id } })
         try {
             await feedbackProcessor.processInteraction({
@@ -187,9 +182,7 @@ export async function share_moment({ moment_id, user_id }) {
 }
 export async function skip_moment({ moment_id, user_id }) {
     try {
-        // @ts-ignore
         await Skip.create({ skipped_moment_id: moment_id, user_id })
-        // @ts-ignore
         await MomentStatistic.increment("total_skips_num", { by: 1, where: { moment_id } })
         try {
             await feedbackProcessor.processInteraction({
@@ -197,7 +190,7 @@ export async function skip_moment({ moment_id, user_id }) {
                 userId: BigInt(user_id),
                 entityId: BigInt(moment_id),
                 entityType: "post",
-                type: "show_less_often",
+                type: "showLessOften",
                 timestamp: new Date(),
                 metadata: {}
             })
@@ -236,7 +229,6 @@ export async function profile_click_moment({ moment_id, user_id }) {
 export async function comment_on_moment({ moment_id, content, user_id }: CommentOnMomentProps) {
     try {
         const sanitization = new SecurityToolKit().sanitizerMethods.sanitizeSQLInjection(content)
-        // @ts-ignore
         const comment = await Comment.create({
             user_id,
             moment_id,
@@ -245,7 +237,6 @@ export async function comment_on_moment({ moment_id, content, user_id }: Comment
         })
         // @ts-ignore
         await CommentStatistic.create({ comment_id: comment.id })
-        // @ts-ignore
         await MomentStatistic.increment("total_comments_num", { by: 1, where: { moment_id } })
         const moment = await Moment.findOne({ where: { id: moment_id }, attributes: ["user_id"] })
         if (!moment) throw new UnauthorizedError({ message: "Can´t possible find this moment." })
@@ -282,18 +273,15 @@ export async function reply_comment_on_moment({
 }: ReplyCommentOnMomentProps) {
     try {
         const sanitization = new SecurityToolKit().sanitizerMethods.sanitizeSQLInjection(content)
-        // @ts-ignore
         const comment = await Comment.create({
             user_id,
             moment_id,
             content: sanitization.sanitized,
             parent_comment_id: BigInt(parent_comment_id),
         })
-        // @ts-ignore
         await MomentStatistic.increment("total_comments_num", { by: 1, where: { moment_id } })
         // @ts-ignore
         await CommentStatistic.create({ comment_id: comment.id })
-        // @ts-ignore
         await CommentStatistic.increment("total_replies_num", {
             by: 1,
             where: { comment_id: parent_comment_id },
@@ -317,23 +305,19 @@ export async function reply_comment_on_moment({
     }
 }
 export async function like_comment({ comment_id, user_id }: LikeCommentProps) {
-    // @ts-ignore
     await CommentStatistic.increment("total_likes_num", { by: 1, where: { comment_id } })
-    // @ts-ignore
     const like_exists = await CommentLike.findOne({ where: { user_id, comment_id } })
     if (like_exists)
         throw new UnauthorizedError({
             message: "This user has already liked it at the comment",
         })
     else {
-        // @ts-ignore
         const comment = (await Comment.findOne({
             attributes: ["user_id", "id"],
             where: { id: comment_id },
         })) as any
         // @ts-ignore
         await CommentLike.create({ comment_id, user_id })
-        // @ts-ignore
         await CommentStatistic.increment("total_likes_num", { by: 1, where: { comment_id } })
         await Relation.AutoAdd({
             user_id: user_id,
@@ -346,7 +330,7 @@ export async function like_comment({ comment_id, user_id }: LikeCommentProps) {
                 userId: BigInt(user_id),
                 entityId: BigInt(comment_id),
                 entityType: "post",
-                type: "like_comment",
+                type: "likeComment",
                 timestamp: new Date(),
                 metadata: {}
             })
@@ -357,12 +341,10 @@ export async function like_comment({ comment_id, user_id }: LikeCommentProps) {
     }
 }
 export async function unlike_comment({ comment_id, user_id }: UnlikeCommentProps) {
-    // @ts-ignore
     const comment_statistic = (await CommentStatistic.findOne({
         where: { comment_id },
         attributes: ["total_likes_num"],
     })) as any
-    // @ts-ignore
     const like_exists = await CommentLike.findOne({ where: { user_id, comment_id } })
 
     if (comment_statistic.total_likes_num <= 0) {
@@ -375,33 +357,17 @@ export async function unlike_comment({ comment_id, user_id }: UnlikeCommentProps
             message: "This user has not liked this comment",
         })
     else {
-        // @ts-ignore
         const comment = (await Comment.findOne({
             attributes: ["user_id", "id"],
             where: { id: comment_id },
         })) as any
-        // @ts-ignore
         await CommentLike.destroy({ where: { comment_id, user_id } })
-        // @ts-ignore
         await CommentStatistic.increment("total_likes_num", { by: -1, where: { comment_id } })
         await Relation.AutoAdd({
             user_id: user_id,
             related_user_id: comment.user_id,
             weight: -0.01,
         })
-        try {
-            await feedbackProcessor.processInteraction({
-                id: `${user_id}-${comment_id}-${Date.now()}`,
-                userId: BigInt(user_id),
-                entityId: BigInt(comment_id),
-                entityType: "post",
-                type: "dislike",
-                timestamp: new Date(),
-                metadata: {}
-            })
-        } catch (feedbackErr) {
-            logger.error("Erro ao atualizar embedding (unlike_comment)", feedbackErr)
-        }
         return { message: "Moment was successfully liked" }
     }
 }
