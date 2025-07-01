@@ -7,7 +7,6 @@ type FindUserAlreadyExistsProps = {
 export async function FindUserAlreadyExists({
     username,
 }: FindUserAlreadyExistsProps): Promise<boolean> {
-    //@ts-ignore
     const userFind = await User.findOne({
         attributes: ["username"],
         where: { username },
