@@ -1,4 +1,3 @@
-//@ts-nocheck
 import { CreationOptional, InferAttributes, InferCreationAttributes, Model } from "sequelize"
 import {
     FindMomentStatisticsViewProps,
@@ -16,11 +15,11 @@ import CommentStatistic from "../../models/comments/comment_statistics-model"
 import Like from "../../models/moments/like-model"
 import MemoryMoment from "../../models/memories/memory_moments-model"
 import Moment from "../../models/moments/moment-model"
+import MomentStatistic from "../../models/moments/moment_statistic-model"
 import MomentTags from "../../models/moments/moment_tag-model"
 import { Op } from "sequelize"
 import { FeedRecommendationParams as Params } from "../../swipe-engine/params"
 import ProfilePicture from "../../models/user/profilepicture-model"
-import Statistic from "../../models/moments/moment_statistic-model"
 import Tag from "../../models/tags/tag-model"
 import User from "../../models/user/user-model"
 import { getLogger } from "../../swipe-engine/core/utils/logger"
