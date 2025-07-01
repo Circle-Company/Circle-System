@@ -22,7 +22,6 @@ Esta seção define janelas de tempo que controlam quando e como os embeddings s
 **`interactionHistory`** (30 dias)
 - Período de histórico de interações considerado
 - Define o período de interações que influenciam o embedding
-- Interações mais antigas que este período têm menor impacto
 - **Impacto**: Períodos maiores capturam padrões de longo prazo mas podem diluir mudanças recentes, períodos menores são mais responsivos mas podem perder contexto histórico
 
 ### 📏 dimensions
@@ -809,3 +808,17 @@ Esta seção define como diferentes tipos de conteúdo perdem relevância ao lon
 - **Distribuição de scores** para detectar vieses
 - **Diversidade de recomendações** para evitar repetição excessiva
 - **Tempo de resposta** para identificar gargalos de performance 
+
+### Pesos de boost de interação
+- **clickBoost** 
+- **likeBoost**
+- **shareBoost**
+- **completeViewBoost**
+- **likeCommentBoost**
+- **reportBoost**
+- **showLessOftenBoost**
+- **defaultBoost**
+
+### Interaction Score
+- **default**
+- **defaultWhenBoostZero**
