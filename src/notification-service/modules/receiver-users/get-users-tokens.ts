@@ -13,7 +13,6 @@ export async function getUsersTokens({
 }: GetUsersTokensProps): Promise<GetUsersTokensReturnProps> {
     return await Promise.all(
         usersIdsList.map(async (userId) => {
-            // @ts-ignore
             const userToken = (await UserToken.findOne({
                 where: { user_id: userId },
                 attributes: ["token"],
