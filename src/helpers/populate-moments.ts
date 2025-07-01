@@ -53,7 +53,6 @@ export async function populateMoment({
         momentData.blocked = momentStats.blocked
     }
     if (metadata) {
-        // @ts-ignore
         const metadata = await Metadata.findOne({
             where: { moment_id },
             attributes: { exclude: ["createdAt", "updatedAt", "id", "moment_id"] },
@@ -62,7 +61,6 @@ export async function populateMoment({
     }
 
     if (midia) {
-        // @ts-ignore
         const midia = await MomentMidia.findOne({
             where: { moment_id },
             attributes: ["content_type", "nhd_resolution", "fullhd_resolution"],
@@ -71,7 +69,6 @@ export async function populateMoment({
     }
 
     if (statistic) {
-        // @ts-ignore
         const statistic = await Statistic.findOne({
             where: { moment_id },
             attributes: ["total_likes_num"],
@@ -80,7 +77,6 @@ export async function populateMoment({
     }
 
     if (tags) {
-        // @ts-ignore
         const tags = await MomentTag.findAll({
             where: { moment_id },
             include: [{ model: Tag, as: "tag", attributes: ["title", "id"] }],
