@@ -11,14 +11,14 @@ module.exports = {
                 allowNull: false,
             },
             user_id: {
-                type: Sequelize.INTEGER,
+                type: Sequelize.BIGINT,
                 allowNull: false,
                 references: { model: "users", key: "id" },
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
             },
             app_timezone: {
-                type: Sequelize.NUMBER,
+                type: Sequelize.INTEGER,
                 defaultValue: -3,
             },
             app_language: {

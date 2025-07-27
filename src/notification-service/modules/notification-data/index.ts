@@ -1,8 +1,8 @@
 import { InternalServerError } from "../../../errors"
 import MomentMidia from "../../../models/moments/moment_midia-model.js"
+import { NotificationProps } from "../../types"
 import ProfilePicture from "../../../models/user/profilepicture-model"
 import User from "../../../models/user/user-model"
-import { NotificationProps } from "../../types"
 
 type senderUserProps = {
     id: number
@@ -92,7 +92,6 @@ export async function Module({ notification }: ModuleProps): Promise<ModuleRetur
     }
 
     if (notification.type == "ADD-TO-MEMORY" || notification.type == "LIKE-MOMENT") {
-        // @ts-ignore
         const momentMedia = (await MomentMidia.findOne({
             where: { moment_id: notification.data.momentId },
             attributes: ["nhd_resolution"],

@@ -21,11 +21,12 @@ import {
     find_user_moments_tiny,
     find_user_moments_tiny_exclude_memory,
 } from "./moment-find-service"
-import { store_moment_interaction, store_new_moment } from "./moment-store-service"
+import { store_moment_interaction, store_new_moment, store_new_moment_video } from "./moment-store-service"
 
 export const MomentService = {
     Store: {
         NewMoment: store_new_moment,
+        NewVideoMoment: store_new_moment_video,
         Interaction: store_moment_interaction,
     },
     Actions: {

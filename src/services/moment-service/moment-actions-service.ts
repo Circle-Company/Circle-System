@@ -1,4 +1,3 @@
-import { InternalServerError, UnauthorizedError } from "../../errors"
 import {
     CommentOnMomentProps,
     DeleteMomentProps,
@@ -9,23 +8,34 @@ import {
     UnhideMomentProps,
     UnlikeCommentProps,
 } from "./types"
+import { InteractionType, UserInteraction } from "../../swipe-engine/core/types"
+import { InternalServerError, UnauthorizedError } from "../../errors"
 
-import SecurityToolKit from "security-toolkit"
-import { Notification } from "../../helpers/notification"
-import { Relation } from "../../helpers/relation"
-import Comment from "../../models/comments/comment-model.js"
-import CommentLike from "../../models/comments/comment_likes-model.js"
-import CommentStatistic from "../../models/comments/comment_statistics-model.js"
+import Comment from "../../models/comments/comment-model"
+import CommentLike from "../../models/comments/comment_likes-model"
+import CommentStatistic from "../../models/comments/comment_statistics-model"
+import { FeedbackProcessor } from "../../swipe-engine/core/feedback/FeedbackProcessor"
+import Like from "../../models/moments/like-model"
 import Memory from "../../models/memories/memory-model"
 import MemoryMoment from "../../models/memories/memory_moments-model"
-import Like from "../../models/moments/like-model"
 import Moment from "../../models/moments/moment-model"
-import MomentStatistic from "../../models/moments/moment_statistic-model.js"
-import ProfileClick from "../../models/moments/profile_click-model.js"
-import Share from "../../models/moments/share-model.js"
-import Skip from "../../models/moments/skip-model.js"
-import View from "../../models/moments/view-model.js"
+import MomentStatistic from "../../models/moments/moment_statistic-model"
+import { Notification } from "../../helpers/notification"
+import { PostEmbeddingService } from "../../swipe-engine/core/embeddings/PostEmbeddingService"
+import ProfileClick from "../../models/moments/profile_click-model"
+import { Relation } from "../../helpers/relation"
+import SecurityToolKit from "security-toolkit"
+import Share from "../../models/moments/share-model"
+import Skip from "../../models/moments/skip-model"
+import { UserEmbeddingService } from "../../swipe-engine/core/embeddings/UserEmbeddingService"
 import UserStatistic from "../../models/user/statistic-model"
+import View from "../../models/moments/view-model"
+import { getLogger } from "../../swipe-engine/core/utils/logger"
+
+const logger = getLogger("moment-actions-service")
+const userEmbeddingService = new UserEmbeddingService()
+const postEmbeddingService = new PostEmbeddingService()
+const feedbackProcessor = new FeedbackProcessor(userEmbeddingService, postEmbeddingService, logger)
 
 export async function like_moment({ moment_id, user_id }) {
     try {
@@ -61,6 +71,20 @@ export async function like_moment({ moment_id, user_id }) {
                 }),
             ])
 
+            try {
+                await feedbackProcessor.processInteraction({
+                    id: `${user_id}-${moment_id}-${Date.now()}`,
+                    userId: BigInt(user_id),
+                    entityId: BigInt(moment_id),
+                    entityType: "post",
+                    type: "like",
+                    timestamp: new Date(),
+                    metadata: {}
+                })
+            } catch (feedbackErr) {
+                logger.error("Erro ao atualizar embedding (like_moment)", feedbackErr)
+            }
+
             return { message: "moment was successfully liked" }
         }
     } catch (err: any) {
@@ -73,21 +97,31 @@ export async function unlike_moment({ moment_id, user_id }) {
         if (!like_exists)
             throw new UnauthorizedError({ message: "This user did not like at the moment" })
         await Like.destroy({ where: { liked_moment_id: moment_id, user_id } })
-        // @ts-ignore
         const momentStatistics = (await MomentStatistic.findOne({
             where: { moment_id },
             attributes: ["total_likes_num"],
         })) as any
         if (momentStatistics.total_likes_num < 0)
-            // @ts-ignore
             await MomentStatistic.update({ total_likes_num: 0 }, { where: { moment_id } })
         else if (momentStatistics.total_likes_num > 0) {
-            // @ts-ignore
             await MomentStatistic.increment("total_likes_num", { by: -1, where: { moment_id } })
             await UserStatistic.increment("total_likes_num", {
                 by: -1,
                 where: { user_id: user_id },
             })
+        }
+        try {
+            await feedbackProcessor.processInteraction({
+                id: `${user_id}-${moment_id}-${Date.now()}`,
+                userId: BigInt(user_id),
+                entityId: BigInt(moment_id),
+                entityType: "post",
+                type: "unlike",
+                timestamp: new Date(),
+                metadata: {}
+            })
+        } catch (feedbackErr) {
+            logger.error("Erro ao atualizar embedding (unlike_moment)", feedbackErr)
         }
         return { message: "moment was successfully unliked" }
     } catch (err: any) {
@@ -106,6 +140,19 @@ export async function view_moment({ moment_id, user_id }) {
             by: 1,
             where: { user_id: moment.user_id },
         })
+        try {
+            await feedbackProcessor.processInteraction({
+                id: `${user_id}-${moment_id}-${Date.now()}`,
+                userId: BigInt(user_id),
+                entityId: BigInt(moment_id),
+                entityType: "post",
+                type: "completeView",
+                timestamp: new Date(),
+                metadata: {}
+            })
+        } catch (feedbackErr) {
+            logger.error("Erro ao atualizar embedding (view_moment)", feedbackErr)
+        }
         return { message: "moment was successfully viewed" }
     } catch (err: any) {
         throw new InternalServerError({ message: err.message })
@@ -113,10 +160,21 @@ export async function view_moment({ moment_id, user_id }) {
 }
 export async function share_moment({ moment_id, user_id }) {
     try {
-        // @ts-ignore
         await Share.create({ shared_moment_id: moment_id, user_id })
-        // @ts-ignore
         await MomentStatistic.increment("total_shares_num", { by: 1, where: { moment_id } })
+        try {
+            await feedbackProcessor.processInteraction({
+                id: `${user_id}-${moment_id}-${Date.now()}`,
+                userId: BigInt(user_id),
+                entityId: BigInt(moment_id),
+                entityType: "post",
+                type: "share",
+                timestamp: new Date(),
+                metadata: {}
+            })
+        } catch (feedbackErr) {
+            logger.error("Erro ao atualizar embedding (share_moment)", feedbackErr)
+        }
         return { message: "moment was successfully shared" }
     } catch (err: any) {
         throw new InternalServerError({ message: err.message })
@@ -124,10 +182,21 @@ export async function share_moment({ moment_id, user_id }) {
 }
 export async function skip_moment({ moment_id, user_id }) {
     try {
-        // @ts-ignore
         await Skip.create({ skipped_moment_id: moment_id, user_id })
-        // @ts-ignore
         await MomentStatistic.increment("total_skips_num", { by: 1, where: { moment_id } })
+        try {
+            await feedbackProcessor.processInteraction({
+                id: `${user_id}-${moment_id}-${Date.now()}`,
+                userId: BigInt(user_id),
+                entityId: BigInt(moment_id),
+                entityType: "post",
+                type: "showLessOften",
+                timestamp: new Date(),
+                metadata: {}
+            })
+        } catch (feedbackErr) {
+            logger.error("Erro ao atualizar embedding (skip_moment)", feedbackErr)
+        }
         return { message: "moment was successfully skipped" }
     } catch (err: any) {
         throw new InternalServerError({ message: err.message })
@@ -139,6 +208,19 @@ export async function profile_click_moment({ moment_id, user_id }) {
         await ProfileClick.create({ profile_clicked_moment_id: moment_id, user_id })
         // @ts-ignore
         await MomentStatistic.increment("total_profile_clicks_num", { by: 1, where: { moment_id } })
+        try {
+            await feedbackProcessor.processInteraction({
+                id: `${user_id}-${moment_id}-${Date.now()}`,
+                userId: BigInt(user_id),
+                entityId: BigInt(moment_id),
+                entityType: "post",
+                type: "click",
+                timestamp: new Date(),
+                metadata: {}
+            })
+        } catch (feedbackErr) {
+            logger.error("Erro ao atualizar embedding (profile_click_moment)", feedbackErr)
+        }
         return { message: "moment was successfully profile clicked" }
     } catch (err: any) {
         throw new InternalServerError({ message: err.message })
@@ -147,16 +229,14 @@ export async function profile_click_moment({ moment_id, user_id }) {
 export async function comment_on_moment({ moment_id, content, user_id }: CommentOnMomentProps) {
     try {
         const sanitization = new SecurityToolKit().sanitizerMethods.sanitizeSQLInjection(content)
-        // @ts-ignore
         const comment = await Comment.create({
             user_id,
             moment_id,
             content: sanitization.sanitized,
-            parent_comment_id: null,
+            parent_comment_id: undefined,
         })
         // @ts-ignore
         await CommentStatistic.create({ comment_id: comment.id })
-        // @ts-ignore
         await MomentStatistic.increment("total_comments_num", { by: 1, where: { moment_id } })
         const moment = await Moment.findOne({ where: { id: moment_id }, attributes: ["user_id"] })
         if (!moment) throw new UnauthorizedError({ message: "Can´t possible find this moment." })
@@ -167,6 +247,19 @@ export async function comment_on_moment({ moment_id, content, user_id }: Comment
             type: "COMMENT-MOMENT",
             content_id: moment.id,
         })
+        try {
+            await feedbackProcessor.processInteraction({
+                id: `${user_id}-${moment_id}-${Date.now()}`,
+                userId: BigInt(user_id),
+                entityId: BigInt(moment_id),
+                entityType: "post",
+                type: "comment",
+                timestamp: new Date(),
+                metadata: {}
+            })
+        } catch (feedbackErr) {
+            logger.error("Erro ao atualizar embedding (comment_on_moment)", feedbackErr)
+        }
         return { message: "comment was successfully created" }
     } catch (err: any) {
         throw new InternalServerError({ message: err.message })
@@ -180,61 +273,78 @@ export async function reply_comment_on_moment({
 }: ReplyCommentOnMomentProps) {
     try {
         const sanitization = new SecurityToolKit().sanitizerMethods.sanitizeSQLInjection(content)
-        // @ts-ignore
         const comment = await Comment.create({
             user_id,
             moment_id,
             content: sanitization.sanitized,
-            parent_comment_id,
+            parent_comment_id: BigInt(parent_comment_id),
         })
-        // @ts-ignore
         await MomentStatistic.increment("total_comments_num", { by: 1, where: { moment_id } })
         // @ts-ignore
         await CommentStatistic.create({ comment_id: comment.id })
-        // @ts-ignore
         await CommentStatistic.increment("total_replies_num", {
             by: 1,
             where: { comment_id: parent_comment_id },
         })
+        try {
+            await feedbackProcessor.processInteraction({
+                id: `${user_id}-${moment_id}-${Date.now()}`,
+                userId: BigInt(user_id),
+                entityId: BigInt(moment_id),
+                entityType: "post",
+                type: "comment",
+                timestamp: new Date(),
+                metadata: {}
+            })
+        } catch (feedbackErr) {
+            logger.error("Erro ao atualizar embedding (reply_comment_on_moment)", feedbackErr)
+        }
         return { message: "comment was successfully replied" }
     } catch (err: any) {
         throw new InternalServerError({ message: err.message })
     }
 }
 export async function like_comment({ comment_id, user_id }: LikeCommentProps) {
-    // @ts-ignore
     await CommentStatistic.increment("total_likes_num", { by: 1, where: { comment_id } })
-    // @ts-ignore
     const like_exists = await CommentLike.findOne({ where: { user_id, comment_id } })
     if (like_exists)
         throw new UnauthorizedError({
             message: "This user has already liked it at the comment",
         })
     else {
-        // @ts-ignore
         const comment = (await Comment.findOne({
             attributes: ["user_id", "id"],
             where: { id: comment_id },
         })) as any
         // @ts-ignore
         await CommentLike.create({ comment_id, user_id })
-        // @ts-ignore
         await CommentStatistic.increment("total_likes_num", { by: 1, where: { comment_id } })
         await Relation.AutoAdd({
             user_id: user_id,
             related_user_id: comment.user_id,
             weight: -0.01,
         })
+        try {
+            await feedbackProcessor.processInteraction({
+                id: `${user_id}-${comment_id}-${Date.now()}`,
+                userId: BigInt(user_id),
+                entityId: BigInt(comment_id),
+                entityType: "post",
+                type: "likeComment",
+                timestamp: new Date(),
+                metadata: {}
+            })
+        } catch (feedbackErr) {
+            logger.error("Erro ao atualizar embedding (like_comment)", feedbackErr)
+        }
         return { message: "Moment was successfully liked" }
     }
 }
 export async function unlike_comment({ comment_id, user_id }: UnlikeCommentProps) {
-    // @ts-ignore
     const comment_statistic = (await CommentStatistic.findOne({
         where: { comment_id },
         attributes: ["total_likes_num"],
     })) as any
-    // @ts-ignore
     const like_exists = await CommentLike.findOne({ where: { user_id, comment_id } })
 
     if (comment_statistic.total_likes_num <= 0) {
@@ -247,14 +357,11 @@ export async function unlike_comment({ comment_id, user_id }: UnlikeCommentProps
             message: "This user has not liked this comment",
         })
     else {
-        // @ts-ignore
         const comment = (await Comment.findOne({
             attributes: ["user_id", "id"],
             where: { id: comment_id },
         })) as any
-        // @ts-ignore
         await CommentLike.destroy({ where: { comment_id, user_id } })
-        // @ts-ignore
         await CommentStatistic.increment("total_likes_num", { by: -1, where: { comment_id } })
         await Relation.AutoAdd({
             user_id: user_id,

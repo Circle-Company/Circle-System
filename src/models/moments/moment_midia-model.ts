@@ -5,6 +5,7 @@ interface MomentMidiaAttributes {
     content_type: string
     nhd_resolution: string
     fullhd_resolution: string
+    preview_thumbnail?: string
     moment_id?: bigint
 }
 
@@ -13,6 +14,7 @@ export default class MomentMidia extends Model<MomentMidiaAttributes> implements
     public content_type!: string
     public nhd_resolution!: string
     public fullhd_resolution!: string
+    public preview_thumbnail?: string
     public moment_id?: bigint
 
     static initialize(sequelize: Sequelize) {
@@ -35,6 +37,10 @@ export default class MomentMidia extends Model<MomentMidiaAttributes> implements
                 fullhd_resolution: {
                     type: DataTypes.STRING,
                     allowNull: false,
+                },
+                preview_thumbnail: {
+                    type: DataTypes.STRING,
+                    allowNull: true,
                 },
                 moment_id: {
                     type: DataTypes.BIGINT,

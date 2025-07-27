@@ -11,14 +11,14 @@ module.exports = {
                 allowNull: false,
             },
             user_id: {
-                type: Sequelize.INTEGER,
+                type: Sequelize.BIGINT(),
                 references: { model: "users", key: "id" },
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
                 defaultValue: null,
             },
             blocked_user_id: {
-                type: Sequelize.INTEGER,
+                type: Sequelize.BIGINT(),
                 references: { model: "users", key: "id" },
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",

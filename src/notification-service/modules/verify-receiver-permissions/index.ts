@@ -1,5 +1,5 @@
-import Preference from "../../../models/preference/preference-model"
 import { NotificationProps } from "../../types"
+import Preference from "../../../models/preference/preference-model"
 
 type User = {
     id: bigint
@@ -18,7 +18,6 @@ export async function Module({
     const results = await Promise.all(
         usersList.map(async (user) => {
             try {
-                // @ts-ignore
                 const userPreferences = (await Preference.findOne({
                     where: { user_id: user.id },
                     attributes: [

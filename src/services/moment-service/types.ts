@@ -43,7 +43,7 @@ export interface MetadataProps {
     duration: number
     file_name: string
     file_size: number
-    file_type: "image/png" | "image/heic" | "image/jpg"
+    file_type: "image/png" | "image/heic" | "image/jpg" | "video/mp4" | "video/mov" | "video/3gp" | "video/webm" | "video/avi"
     resolution_width: number
     resolution_height: number
 }
@@ -96,8 +96,14 @@ export interface TagsProps {
 }
 
 export interface FindUserFeedMomentsProps {
-    interaction_queue: InteractionQueueProps
-    user_id: bigint
+    user_id: string;
+    interaction_queue?: Array<{
+        entity_id: string;
+        entity_type: string;
+        type: string;
+        timestamp?: string;
+        metadata?: Record<string, any>;
+    }>;
 }
 
 export interface FindUserMomentsProps {

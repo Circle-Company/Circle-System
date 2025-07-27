@@ -1,13 +1,14 @@
-import { NextFunction, Request, Response } from "express"
-import config from "../../config"
 import { InternalServerError, ValidationError } from "../../errors"
+import { NextFunction, Request, Response } from "express"
+
 import { DecryptPassword } from "../../helpers/encrypt-decrypt-password"
-import { jwtEncoder } from "../../jwt/encode"
 import NotificationToken from "../../models/notification/notification_token-model"
 import Preferences from "../../models/preference/preference-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
 import Statistic from "../../models/user/statistic-model"
 import User from "../../models/user/user-model"
+import config from "../../config"
+import { jwtEncoder } from "../../jwt/encode"
 
 export async function authenticate_user(req: Request, res: Response) {
     const { username, password } = req.body
@@ -42,7 +43,6 @@ export async function authenticate_user(req: Request, res: Response) {
                 attributes: ["fullhd_resolution", "tiny_resolution"],
                 where: { user_id: user.id },
             }),
-            //@ts-ignore
             NotificationToken.findOne({
                 where: { user_id: user.id.toString() },
                 attributes: ["token"],

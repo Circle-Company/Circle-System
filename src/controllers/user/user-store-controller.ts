@@ -1,4 +1,5 @@
 import { Request, Response } from "express"
+
 import MetadataModel from "../../models/user/metadata-model.js"
 
 export async function store_user_metadata(req: Request, res: Response) {
@@ -16,10 +17,9 @@ export async function store_user_metadata(req: Request, res: Response) {
     } = req.body
 
     try {
-        // @ts-ignore
+
         const metadataExists = await MetadataModel.findOne({ where: { user_id: req.user_id } })
         if (metadataExists) {
-            // @ts-ignore
             await MetadataModel.update(
                 {
                     device_type,
@@ -37,7 +37,6 @@ export async function store_user_metadata(req: Request, res: Response) {
             )
             return res.status(200).json({ message: "User metadata has been updated with success" })
         } else {
-            // @ts-ignore
             await MetadataModel.create({
                 user_id: req.user_id,
                 device_type,

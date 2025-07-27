@@ -27,4 +27,6 @@ export const RP = {
     EDIT: "/edit",
     DELETE: "/delete",
     LIST: "/list",
+    SWIPE_ENGINE: "/swipe-engine",
+    METRICS: "/metrics",
 }

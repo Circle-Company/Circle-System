@@ -11,14 +11,14 @@ module.exports = {
         allowNull: false
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.BIGINT(),
         allowNull: false,
         references: {model: 'users', key: 'id'},
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'  
       },
       skipped_moment_id: {
-        type: Sequelize.INTEGER(),
+        type: Sequelize.BIGINT(),
         allowNull: false,
         references: {
           model: 'moments',

@@ -1,9 +1,9 @@
 import { InternalServerError } from "../errors"
-import Moment from "../models/moments/moment-model"
 import Metadata from "../models/moments/moment_metadata-model.js"
+import Moment from "../models/moments/moment-model"
 import MomentMidia from "../models/moments/moment_midia-model.js"
-import Statistic from "../models/moments/moment_statistic-model.js"
 import MomentTag from "../models/moments/moment_tag-model.js"
+import Statistic from "../models/moments/moment_statistic-model.js"
 import Tag from "../models/tags/tag-model"
 
 type PopulateMomentsProps = {
@@ -16,8 +16,8 @@ type PopulateMomentsProps = {
     tags?: boolean
 }
 
-interface MomentType extends Moment {
-    createdAt: string
+interface MomentType extends Omit<Moment, 'createdAt'> {
+    createdAt: Date;
 }
 
 export async function populateMoment({
@@ -38,7 +38,7 @@ export async function populateMoment({
     if (!moment) throw new InternalServerError({ message: "Can't possible find moment." })
     momentData.id = moment.id
     momentData.description = moment.description
-    momentData.created_at = moment.createdAt
+    momentData.created_at = moment.createdAt instanceof Date ? moment.createdAt.toISOString() : moment.createdAt
 
     if (stats) {
         const momentStats = await Moment.findOne({
@@ -53,7 +53,6 @@ export async function populateMoment({
         momentData.blocked = momentStats.blocked
     }
     if (metadata) {
-        // @ts-ignore
         const metadata = await Metadata.findOne({
             where: { moment_id },
             attributes: { exclude: ["createdAt", "updatedAt", "id", "moment_id"] },
@@ -62,7 +61,6 @@ export async function populateMoment({
     }
 
     if (midia) {
-        // @ts-ignore
         const midia = await MomentMidia.findOne({
             where: { moment_id },
             attributes: ["content_type", "nhd_resolution", "fullhd_resolution"],
@@ -71,7 +69,6 @@ export async function populateMoment({
     }
 
     if (statistic) {
-        // @ts-ignore
         const statistic = await Statistic.findOne({
             where: { moment_id },
             attributes: ["total_likes_num"],
@@ -80,7 +77,6 @@ export async function populateMoment({
     }
 
     if (tags) {
-        // @ts-ignore
         const tags = await MomentTag.findAll({
             where: { moment_id },
             include: [{ model: Tag, as: "tag", attributes: ["title", "id"] }],

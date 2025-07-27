@@ -5,31 +5,31 @@ module.exports = {
     async up(queryInterface, Sequelize) {
         return queryInterface.createTable("notifications", {
             id: {
-                type: Sequelize.INTEGER(),
+                type: Sequelize.BIGINT(),
                 primaryKey: true,
-                autoIncrement: true,
+                autoIncrement: false,
                 allowNull: false,
             },
             sender_user_id: {
-                type: Sequelize.INTEGER(),
+                type: Sequelize.BIGINT(),
                 allowNull: false,
                 references: { model: "users", key: "id" },
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
             },
             receiver_user_id: {
-                type: Sequelize.INTEGER(),
+                type: Sequelize.BIGINT(),
                 allowNull: true,
                 references: { model: "users", key: "id" },
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
             },
             moment_id: {
-                type: Sequelize.INTEGER(),
+                type: Sequelize.BIGINT(),
                 allowNull: true,
             },
             memory_id: {
-                type: Sequelize.INTEGER(),
+                type: Sequelize.BIGINT(),
                 allowNull: true,
             },
             viewed: {

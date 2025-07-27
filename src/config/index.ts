@@ -43,6 +43,10 @@ const circleapis = {
     CIRCLE_SWIPE_ENGINE_API: env.CIRCLE_SWIPE_ENGINE_API,
 }
 
+const admin = {
+    CIRCLE_ADMIN_KEY: env.CIRCLE_ADMIN_KEY || "default-admin-key-change-in-production",
+}
+
 const mysql = {
     development: {
         DB_HOST: env.DEVELOPMENT_DB_HOST || "localhost",
@@ -74,18 +78,19 @@ const s3 = {
     AWS_SECRET_ACCESS_KEY: env.AWS_SECRET_ACCESS_KEY,
     AWS_ENDPOINT: env.AWS_ENDPOINT,
     AWS_REGION: env.AWS_REGION,
-    AWS_MIDIA_BUCKET: environment.PRODUCTION
-        ? env.AWS_MIDIA_BUCKET_PRODUCTION
-        : env.AWS_MIDIA_BUCKET_DEVELOPMENT,
-    AWS_PROFILE_MIDIA_BUCKET: environment.PRODUCTION
-        ? env.AWS_PROFILE_MIDIA_BUCKET_DEVELOPMENT
-        : env.AWS_PROFILE_MIDIA_BUCKET_PRODUCTION,
+    AWS_VIDEO_BUCKET: env.AWS_VIDEO_BUCKET,
+    AWS_VIDEO_PREVIEW_BUCKET: env.AWS_VIDEO_PREVIEW_BUCKET,
+    AWS_MIDIA_BUCKET: env.AWS_MIDIA_BUCKET,
+    AWS_PROFILE_MIDIA_BUCKET: env.AWS_PROFILE_MIDIA_BUCKET,
     S3_CONFIGURED:
         env.AWS_ACCESS_KEY_ID &&
         env.AWS_SECRET_ACCESS_KEY &&
         env.AWS_ENDPOINT &&
         env.AWS_REGION &&
-        env.AWS_MIDIA_BUCKET | env.AWS_PROFILE_MIDIA_BUCKET,
+        env.AWS_MIDIA_BUCKET &&
+        env.AWS_PROFILE_MIDIA_BUCKET &&
+        env.AWS_VIDEO_BUCKET &&
+        env.AWS_VIDEO_PREVIEW_BUCKET,
 }
 
 const sms = {
@@ -135,4 +140,5 @@ export default {
     ...mysql,
     ...jwt,
     ...firebase,
+    ...admin,
 }

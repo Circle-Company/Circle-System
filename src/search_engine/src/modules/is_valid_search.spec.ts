@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+
 import { isValidSearch } from "./is_valid_search"
 
 describe("isValidSearch", () => {

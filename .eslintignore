@@ -1,2 +1,25 @@
-node_modules/
+# Dependências e build
+node_modules
+node_modules/**/*
+build
+dist
+
+# Arquivos de configuração
+*.config.js
+
+# Arquivos de teste
+**/*.test.ts
+**/*.spec.ts
+**/tests/**/*
+src/swipe-engine/tests/**/*
+
+# Arquivos gerados
+*.d.ts
+*.js.map
+
+# Outros
+coverage
+.nyc_output
+temp
+
 deploy-to-aws.yaml

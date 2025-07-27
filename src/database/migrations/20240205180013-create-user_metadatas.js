@@ -11,7 +11,7 @@ module.exports = {
         allowNull: false
       },
       user_id: {
-        type: Sequelize.INTEGER(),
+        type: Sequelize.BIGINT(),
         allowNull: false,
         references: {
           model: 'users', // Certifique-se de ajustar para o nome real da tabela de usuários

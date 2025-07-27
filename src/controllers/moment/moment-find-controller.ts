@@ -1,7 +1,8 @@
-import { Request, Response } from "express"
-import { StatusCodes } from "http-status-codes"
 import { InternalServerError, UnauthorizedError, ValidationError } from "../../errors"
+import { Request, Response } from "express"
+
 import { MomentService } from "../../services/moment-service"
+import { StatusCodes } from "http-status-codes"
 
 export async function find_user_feed_moments(req: Request, res: Response) {
     if (!req.user_id) {
@@ -11,7 +12,7 @@ export async function find_user_feed_moments(req: Request, res: Response) {
     }
     const result = await MomentService.Find.UserFeedMoments({
         interaction_queue: req.body,
-        user_id: req.user_id,
+        user_id: String(req.user_id),
     })
     res.status(StatusCodes.ACCEPTED).json(result)
 }

@@ -6,6 +6,7 @@ import {
     Model,
     Sequelize,
 } from "sequelize"
+
 import SnowflakeID from "snowflake-id"
 
 const snowflake = new SnowflakeID()
@@ -17,6 +18,8 @@ class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Mome
     declare deleted: CreationOptional<boolean>
     declare blocked: CreationOptional<boolean>
     declare user_id: bigint
+    declare createdAt: CreationOptional<Date>
+    declare updatedAt: CreationOptional<Date>
     declare created_at?: CreationOptional<Date>
 
     static initialize(sequelize: Sequelize): void {
@@ -55,6 +58,14 @@ class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Mome
                     allowNull: false,
                     defaultValue: false,
                 },
+                createdAt: {
+                    type: DataTypes.DATE,
+                    allowNull: false,
+                },
+                updatedAt: {
+                    type: DataTypes.DATE,
+                    allowNull: false,
+                }
             },
             {
                 sequelize,
@@ -125,6 +136,15 @@ class Moment extends Model<InferAttributes<Moment>, InferCreationAttributes<Mome
             as: "likes",
         })
         this.hasMany(models.Notification, { foreignKey: "moment_id" })
+        
+        // Associação com PostEmbedding
+        if (models.PostEmbedding) {
+            this.hasOne(models.PostEmbedding, {
+                foreignKey: "post_id",
+                as: "PostEmbedding",
+                sourceKey: "id"
+            })
+        }
     }
 }
 

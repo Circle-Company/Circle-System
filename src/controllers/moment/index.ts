@@ -1,6 +1,6 @@
-import { comment_on_moment, delete_moment, delete_moment_list, hide_moment, like_comment, like_moment, reply_comment_on_moment, undelete_moment, unhide_moment, unlike_comment, unlike_moment, view_moment } from "./moment-actions-controller"
-import { find_moment_comments, find_moment_statistics_view, find_moment_tags, find_user_feed_moments, find_user_moments, find_user_moments_tiny, find_user_moments_tiny_exclude_memory} from "./moment-find-controller"
-import { store_moment_interaction, store_new_moment } from "./moment-store-controller"
+import { comment_on_moment, delete_moment, delete_moment_list, hide_moment, like_comment, like_moment, reply_comment_on_moment, report_comment_on_moment, report_moment, undelete_moment, unhide_moment, unlike_comment, unlike_moment, view_moment } from "./moment-actions-controller"
+import { find_moment_comments, find_moment_statistics_view, find_moment_tags, find_user_feed_moments, find_user_moments, find_user_moments_tiny, find_user_moments_tiny_exclude_memory } from "./moment-find-controller"
+import { moment_new_video_moment, store_moment_interaction, store_new_moment } from "./moment-store-controller"
 
 export const MomentController = {
     FindUserFeedMoments: find_user_feed_moments,
@@ -11,6 +11,7 @@ export const MomentController = {
     FindMomentStatisticsView: find_moment_statistics_view,
     FindMomentTags: find_moment_tags,
     StoreNewMoment: store_new_moment,
+    StoreNewVideoMoment: moment_new_video_moment,
     StoreMomentInteraction: store_moment_interaction,
     CommentOnMoment: comment_on_moment,
     ReplyCommentOnMoment: reply_comment_on_moment,
@@ -23,5 +24,7 @@ export const MomentController = {
     Unhide: unhide_moment,
     Delete: delete_moment,
     DeleteList: delete_moment_list,
-    Undelete: undelete_moment
+    Undelete: undelete_moment,
+    ReportMoment: report_moment,
+    ReportCommentOnMoment: report_comment_on_moment
 }

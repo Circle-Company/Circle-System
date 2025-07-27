@@ -4,27 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { SearchEngine } from "../../search_engine"
 import { testBearerToken } from "../app-test"
 
-// Mock de toda a funcionalidade do SearchEngine para isolamento dos testes
-vi.mock("../../search_engine", () => {
-    return {
-        SearchEngine: vi.fn(() => Promise.resolve([])),
-    }
-})
-
-// Mock dos modelos necessários
-vi.mock("../../models/user/user-model", () => ({
-    default: {
-        findAll: vi.fn(),
-        findOne: vi.fn(),
-    },
-}))
-
-vi.mock("../../models/user/relation-model", () => ({
-    default: {
-        findAll: vi.fn(),
-    },
-}))
-
 // Cria um route handler separado para teste
 const router = express.Router()
 

@@ -1,10 +1,8 @@
-import { Router } from "express"
 import { MomentController } from "../controllers/moment"
+import { Router } from "express"
 
 export const router = Router()
-//------------------------- API V2 Routes ---------------------------//
 
-// Routes for fetching the feed and moments
 // Retrieves the user's feed of moments
 router.post("/feed", MomentController.FindUserFeedMoments)
 
@@ -17,20 +15,20 @@ router.get("/tiny/:user_pk", MomentController.FindUserMomentsTiny)
 // Retrieves a minimized version of the user's moments, excluding memories
 router.get("/tiny/exclude-memory/:id", MomentController.FindUserMomentsTinyExcludeMemory)
 
-// Routes for handling comments and tags
 // Retrieves comments for a specific moment
 router.get("/:id/comments", MomentController.FindMomentComments)
 
 // Retrieves tags associated with a specific moment
 router.get("/:id/tags", MomentController.FindMomentTags)
 
-// Routes for handling statistics
 // Retrieves preview of statistics for a specific moment
 router.get("/:id/statistics/preview", MomentController.FindMomentStatisticsView)
 
-// Routes for creating and interacting with moments
 // Creates a new moment in the system
 router.post("/create", MomentController.StoreNewMoment)
+
+// Creates a new video moment in the system
+router.post("/create/video", MomentController.StoreNewVideoMoment)
 
 // Records an interaction with a specific moment
 router.post("/:id/interactions/create", MomentController.StoreMomentInteraction)
@@ -38,13 +36,14 @@ router.post("/:id/interactions/create", MomentController.StoreMomentInteraction)
 // Create a comment on specific moment
 router.post("/:id/comments/create", MomentController.CommentOnMoment)
 
+router.post("/:id/report", MomentController.ReportMoment)
+
 // Likes a specific comment
 router.post("/comments/:id/like", MomentController.LikeComment)
 
 // Removes a like from a specific comment
 router.post("/comments/:id/unlike", MomentController.UnlikeComment)
 
-// Routes for actions related to moments (like, view, hide, delete)
 // Likes a specific moment
 router.post("/:id/like", MomentController.Like)
 

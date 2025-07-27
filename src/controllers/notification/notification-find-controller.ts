@@ -1,9 +1,10 @@
 import { Request, Response } from "express"
-import { Op } from "sequelize"
-import { InternalServerError } from "../../errors"
-import MomentMidia from "../../models/moments/moment_midia-model.js"
-import Notification from "../../models/notification/notification-model"
+
 import Follow from "../../models/user/follow-model"
+import { InternalServerError } from "../../errors"
+import MomentMidia from "../../models/moments/moment_midia-model"
+import Notification from "../../models/notification/notification-model"
+import { Op } from "sequelize"
 import ProfilePicture from "../../models/user/profilepicture-model"
 import User from "../../models/user/user-model"
 
@@ -52,7 +53,6 @@ export async function find_user_notifications(req: Request, res: Response) {
                 })
 
                 if (n.moment_id) {
-                    // @ts-ignore
                     const moment_midia = await MomentMidia.findOne({
                         where: { moment_id: n.moment_id },
                         attributes: ["nhd_resolution"],
