@@ -8,7 +8,6 @@ O sistema é composto por vários componentes principais:
 
 1. **RecommendationCoordinator**: Coordenador central que gerencia o fluxo de recomendação
 2. **UserEmbeddingService**: Serviço para gerar e gerenciar embeddings de usuários
-3. **PostEmbeddingBuilder**: Serviço para gerar embeddings de posts
 4. **Clustering**: Sistema de agrupamento de conteúdos similares
 5. **API Simplificada**: Interface para integração com outros serviços
 
@@ -17,7 +16,6 @@ O sistema é composto por vários componentes principais:
 -   **Cluster**: Grupos de itens similares
 -   **UserEmbedding**: Representações vetoriais de usuários
 -   **PostEmbedding**: Representações vetoriais de posts
--   **UserClusterRank**: Associação entre usuários e clusters
 -   **InteractionEvent**: Interações de usuários com o sistema
 
 ## Fluxo de Recomendação
