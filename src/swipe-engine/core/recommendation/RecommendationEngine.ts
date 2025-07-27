@@ -15,6 +15,7 @@ import PostClusterRank from "../../models/PostClusterRank"
 import { RankingService } from "./RankingService"
 import { UserEmbeddingService } from "../embeddings/UserEmbeddingService"
 import { getLogger } from "../../core/utils/logger"
+import { defaultCLustersJSON } from "@swipe-engine/data/default-clusters"
 
 export class RecommendationEngine {
     private userEmbeddingService: UserEmbeddingService | null = null
@@ -123,7 +124,7 @@ export class RecommendationEngine {
      * Obtém clusters existentes ou cria novos se não existirem
      * @returns Lista de clusters
      */
-    private async getOrCreateClusters(): Promise<ClusterInfo[]> {
+    private async getOrCreateClusters(): Promise<ClusterInfo[] | []> {
         try {
             this.logger.info("Buscando clusters do banco de dados")
             
@@ -187,10 +188,8 @@ export class RecommendationEngine {
             return clusters
         } catch (error) {
             this.logger.error(`Erro ao buscar clusters: ${error}`)
-            
-            // Em caso de erro, retornar clusters padrão como fallback
-            this.logger.warn("Usando clusters padrão como fallback devido a erro")
-            return this.getDefaultClusters()
+            return []
+
         }
     }
     
@@ -198,69 +197,9 @@ export class RecommendationEngine {
      * Cria clusters padrão no banco de dados
      * @returns Lista de clusters padrão
      */
-    private async createDefaultClusters(): Promise<ClusterInfo[]> {
+    private async createDefaultClusters(): Promise<ClusterInfo[] | []> {
         try {
-            const defaultClusters = [
-                {
-                    name: "Tecnologia e Programação",
-                    centroid: JSON.stringify({
-                        dimension: 16,
-                        values: new Array(16).fill(0).map((_, i) => (i % 2 === 0 ? 0.1 : -0.1)),
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    }),
-                    topics: ["tecnologia", "programação", "desenvolvimento", "software"],
-                    category: "tecnologia",
-                    tags: ["tech", "code", "dev", "programming"],
-                    size: 100,
-                    density: 0.8,
-                    avgEngagement: 0.5,
-                    metadata: {
-                        description: "Conteúdo relacionado a tecnologia e programação",
-                        recommendationPriority: "high"
-                    }
-                },
-                {
-                    name: "Esportes e Fitness",
-                    centroid: JSON.stringify({
-                        dimension: 16,
-                        values: new Array(16).fill(0).map((_, i) => (i % 3 === 0 ? 0.15 : -0.05)),
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    }),
-                    topics: ["esportes", "fitness", "saúde", "bem-estar"],
-                    category: "esportes",
-                    tags: ["sports", "fitness", "health", "workout"],
-                    size: 150,
-                    density: 0.7,
-                    avgEngagement: 0.6,
-                    metadata: {
-                        description: "Conteúdo relacionado a esportes e atividades físicas",
-                        recommendationPriority: "medium"
-                    }
-                },
-                {
-                    name: "Arte e Cultura",
-                    centroid: JSON.stringify({
-                        dimension: 16,
-                        values: new Array(16).fill(0).map((_, i) => (i % 4 === 0 ? 0.2 : -0.1)),
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    }),
-                    topics: ["arte", "cultura", "música", "cinema"],
-                    category: "arte",
-                    tags: ["art", "culture", "music", "cinema"],
-                    size: 120,
-                    density: 0.65,
-                    avgEngagement: 0.45,
-                    metadata: {
-                        description: "Conteúdo relacionado a artes e manifestações culturais",
-                        recommendationPriority: "medium"
-                    }
-                }
-            ]
-            
-            // Criar os clusters no banco de dados
+            const defaultClusters = defaultCLustersJSON
             const createdClusters: ClusterInfo[] = []
             
             for (const cluster of defaultClusters) {
@@ -285,57 +224,7 @@ export class RecommendationEngine {
             
         } catch (error) {
             this.logger.error(`Erro ao criar clusters padrão: ${error}`)
-            return this.getDefaultClusters()
+            return []
         }
-    }
-    
-    /**
-     * Retorna clusters padrão em memória (sem persistir no banco de dados)
-     * Usado como último recurso quando não é possível acessar ou criar clusters no banco
-     */
-    private getDefaultClusters(): ClusterInfo[] {
-        this.logger.warn("Usando clusters padrão em memória")
-        
-        return [
-            {
-                id: "cluster-1",
-                name: "Tecnologia e Programação",
-                centroid: {
-                    dimension: 16,
-                    values: new Array(16).fill(0).map((_, i) => (i % 2 === 0 ? 0.1 : -0.1)),
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
-                topics: ["tecnologia", "programação", "desenvolvimento", "software"],
-                size: 100,
-                density: 0.8,
-            },
-            {
-                id: "cluster-2",
-                name: "Esportes e Fitness",
-                centroid: {
-                    dimension: 16,
-                    values: new Array(16).fill(0).map((_, i) => (i % 3 === 0 ? 0.15 : -0.05)),
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
-                topics: ["esportes", "fitness", "saúde", "bem-estar"],
-                size: 150,
-                density: 0.7,
-            },
-            {
-                id: "cluster-3",
-                name: "Arte e Cultura",
-                centroid: {
-                    dimension: 16,
-                    values: new Array(16).fill(0).map((_, i) => (i % 4 === 0 ? 0.2 : -0.1)),
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
-                topics: ["arte", "cultura", "música", "cinema"],
-                size: 120,
-                density: 0.65,
-            },
-        ]
     }
 }
