@@ -1,3 +1,4 @@
+import { InternalServerError, UnauthorizedError } from "../../errors"
 import {
     CommentOnMomentProps,
     DeleteMomentProps,
@@ -8,28 +9,26 @@ import {
     UnhideMomentProps,
     UnlikeCommentProps,
 } from "./types"
-import { InteractionType, UserInteraction } from "../../swipe-engine/core/types"
-import { InternalServerError, UnauthorizedError } from "../../errors"
 
+import SecurityToolKit from "security-toolkit"
+import { Notification } from "../../helpers/notification"
+import { Relation } from "../../helpers/relation"
 import Comment from "../../models/comments/comment-model"
 import CommentLike from "../../models/comments/comment_likes-model"
 import CommentStatistic from "../../models/comments/comment_statistics-model"
-import { FeedbackProcessor } from "../../swipe-engine/core/feedback/FeedbackProcessor"
-import Like from "../../models/moments/like-model"
 import Memory from "../../models/memories/memory-model"
 import MemoryMoment from "../../models/memories/memory_moments-model"
+import Like from "../../models/moments/like-model"
 import Moment from "../../models/moments/moment-model"
 import MomentStatistic from "../../models/moments/moment_statistic-model"
-import { Notification } from "../../helpers/notification"
-import { PostEmbeddingService } from "../../swipe-engine/core/embeddings/PostEmbeddingService"
 import ProfileClick from "../../models/moments/profile_click-model"
-import { Relation } from "../../helpers/relation"
-import SecurityToolKit from "security-toolkit"
 import Share from "../../models/moments/share-model"
 import Skip from "../../models/moments/skip-model"
-import { UserEmbeddingService } from "../../swipe-engine/core/embeddings/UserEmbeddingService"
-import UserStatistic from "../../models/user/statistic-model"
 import View from "../../models/moments/view-model"
+import UserStatistic from "../../models/user/statistic-model"
+import { PostEmbeddingService } from "../../swipe-engine/core/embeddings/PostEmbeddingService"
+import { UserEmbeddingService } from "../../swipe-engine/core/embeddings/UserEmbeddingService"
+import { FeedbackProcessor } from "../../swipe-engine/core/feedback/FeedbackProcessor"
 import { getLogger } from "../../swipe-engine/core/utils/logger"
 
 const logger = getLogger("moment-actions-service")
@@ -79,7 +78,7 @@ export async function like_moment({ moment_id, user_id }) {
                     entityType: "post",
                     type: "like",
                     timestamp: new Date(),
-                    metadata: {}
+                    metadata: {},
                 })
             } catch (feedbackErr) {
                 logger.error("Erro ao atualizar embedding (like_moment)", feedbackErr)
@@ -111,6 +110,7 @@ export async function unlike_moment({ moment_id, user_id }) {
             })
         }
         try {
+            /** 
             await feedbackProcessor.processInteraction({
                 id: `${user_id}-${moment_id}-${Date.now()}`,
                 userId: BigInt(user_id),
@@ -120,6 +120,7 @@ export async function unlike_moment({ moment_id, user_id }) {
                 timestamp: new Date(),
                 metadata: {}
             })
+                */
         } catch (feedbackErr) {
             logger.error("Erro ao atualizar embedding (unlike_moment)", feedbackErr)
         }
@@ -148,7 +149,7 @@ export async function view_moment({ moment_id, user_id }) {
                 entityType: "post",
                 type: "completeView",
                 timestamp: new Date(),
-                metadata: {}
+                metadata: {},
             })
         } catch (feedbackErr) {
             logger.error("Erro ao atualizar embedding (view_moment)", feedbackErr)
@@ -170,7 +171,7 @@ export async function share_moment({ moment_id, user_id }) {
                 entityType: "post",
                 type: "share",
                 timestamp: new Date(),
-                metadata: {}
+                metadata: {},
             })
         } catch (feedbackErr) {
             logger.error("Erro ao atualizar embedding (share_moment)", feedbackErr)
@@ -192,7 +193,7 @@ export async function skip_moment({ moment_id, user_id }) {
                 entityType: "post",
                 type: "showLessOften",
                 timestamp: new Date(),
-                metadata: {}
+                metadata: {},
             })
         } catch (feedbackErr) {
             logger.error("Erro ao atualizar embedding (skip_moment)", feedbackErr)
@@ -216,7 +217,7 @@ export async function profile_click_moment({ moment_id, user_id }) {
                 entityType: "post",
                 type: "click",
                 timestamp: new Date(),
-                metadata: {}
+                metadata: {},
             })
         } catch (feedbackErr) {
             logger.error("Erro ao atualizar embedding (profile_click_moment)", feedbackErr)
@@ -255,7 +256,7 @@ export async function comment_on_moment({ moment_id, content, user_id }: Comment
                 entityType: "post",
                 type: "comment",
                 timestamp: new Date(),
-                metadata: {}
+                metadata: {},
             })
         } catch (feedbackErr) {
             logger.error("Erro ao atualizar embedding (comment_on_moment)", feedbackErr)
@@ -294,7 +295,7 @@ export async function reply_comment_on_moment({
                 entityType: "post",
                 type: "comment",
                 timestamp: new Date(),
-                metadata: {}
+                metadata: {},
             })
         } catch (feedbackErr) {
             logger.error("Erro ao atualizar embedding (reply_comment_on_moment)", feedbackErr)
@@ -332,7 +333,7 @@ export async function like_comment({ comment_id, user_id }: LikeCommentProps) {
                 entityType: "post",
                 type: "likeComment",
                 timestamp: new Date(),
-                metadata: {}
+                metadata: {},
             })
         } catch (feedbackErr) {
             logger.error("Erro ao atualizar embedding (like_comment)", feedbackErr)

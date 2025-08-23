@@ -1,8 +1,10 @@
-import { Candidate, EmbeddingVector, InteractionType, UserEmbedding } from "../core/types"
+import { Candidate, EmbeddingVector, InteractionType } from "../core/types"
 
 export const createMockEmbedding = (): EmbeddingVector => ({
     dimension: 128,
-    values: Array(128).fill(0).map(() => Math.random() * 2 - 1),
+    values: Array(128)
+        .fill(0)
+        .map(() => Math.random() * 2 - 1),
     createdAt: new Date(),
     updatedAt: new Date(),
 })
@@ -340,7 +342,7 @@ export const mockPosts: Candidate[] = [
             vector: createMockEmbedding(),
             metadata: {
                 interests: ["esportes", "corrida"],
-                engagement: 0.90,
+                engagement: 0.9,
             },
         },
     },
@@ -490,7 +492,7 @@ export const mockPosts: Candidate[] = [
                 engagement: 0.93,
             },
         },
-    }
+    },
 ]
 
 export const mockInteractions: Array<{
@@ -513,7 +515,7 @@ export const mockInteractions: Array<{
     {
         userId: "201",
         entityId: "2",
-        type: "long_view",
+        type: "completeView",
         timestamp: new Date("2024-05-02T16:00:00Z"),
         metadata: {
             engagementTime: 120,
@@ -547,4 +549,4 @@ export const mockUserProfile = {
             push: true,
         },
     },
-} 
+}

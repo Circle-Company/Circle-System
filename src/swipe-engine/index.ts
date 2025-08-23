@@ -7,29 +7,29 @@
 
 import { ClusterInfo, Recommendation, RecommendationOptions, UserProfile } from "./core/types"
 
+import { connection } from "../database"
+import { RecommendationEngine } from "./core/recommendation/RecommendationEngine"
 import InteractionEvent from "./models/InteractionEvent"
 import PostCluster from "./models/PostCluster"
 import PostClusterRank from "./models/PostClusterRank"
 import PostEmbedding from "./models/PostEmbedding"
-import { RecommendationEngine } from "./core/recommendation/RecommendationEngine"
 import UserEmbedding from "./models/UserEmbedding"
 import UserInteractionHistory from "./models/UserInteractionHistory"
 import UserInteractionSummary from "./models/UserInteractionSummary"
-import { connection } from "../database"
 
 // Exportações públicas
 export {
-    Recommendation,
-    RecommendationOptions,
-    UserProfile,
     ClusterInfo,
+    InteractionEvent,
     PostCluster,
     PostClusterRank,
     PostEmbedding,
+    Recommendation,
+    RecommendationOptions,
     UserEmbedding,
     UserInteractionHistory,
     UserInteractionSummary,
-    InteractionEvent
+    UserProfile,
 }
 
 // Função para criar uma instância do SwipeEngine

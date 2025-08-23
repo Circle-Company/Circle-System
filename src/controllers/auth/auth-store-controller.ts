@@ -8,13 +8,9 @@ import { AuthService } from "../../services/auth-service"
 let OTP: number | null
 
 export async function store_new_user(req: Request, res: Response) {
-    const { username, password } = req.body
-
+    console.log(req.body)
     try {
-        const user = await AuthService.Store.NewUser({
-            username,
-            password,
-        })
+        const user = await AuthService.Store.NewUser(req.body)
         return res.status(200).json(user)
     } catch (err: any) {
         if (err instanceof ValidationError) {

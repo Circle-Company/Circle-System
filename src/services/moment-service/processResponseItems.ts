@@ -1,14 +1,14 @@
 import { MomentProps, UserType } from "./types"
 
+import { InternalServerError } from "../../errors"
+import { populateMoment } from "../../helpers/populate-moments"
 import Comment from "../../models/comments/comment-model.js"
 import CommentStatistic from "../../models/comments/comment_statistics-model.js"
-import Follow from "../../models/user/follow-model"
-import { InternalServerError } from "../../errors"
 import Like from "../../models/moments/like-model"
 import Moment from "../../models/moments/moment-model"
+import Follow from "../../models/user/follow-model"
 import ProfilePicture from "../../models/user/profilepicture-model"
 import User from "../../models/user/user-model"
-import { populateMoment } from "../../helpers/populate-moments"
 import { processInteraction } from "../../swipe-engine/services"
 
 // Função auxiliar para processar os itens da resposta
@@ -124,7 +124,7 @@ export async function processResponseItems(moment_ids: string[], user_id: bigint
 
                 // Registrar visualização como interação no novo sistema
                 try {
-                    await processInteraction(user_id.toString(), moment_id, "short_view", {
+                    await processInteraction(user_id.toString(), moment_id, "partialView", {
                         source: "feed",
                     })
                 } catch (error) {

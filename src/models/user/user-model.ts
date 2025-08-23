@@ -6,7 +6,7 @@ interface UserAttributes {
     id?: bigint
     username: string
     name?: string | null
-    encrypted_password: string
+    encrypted_password?: string
     old_encrypted_password?: string | null
     description?: string | null
     access_level?: number
@@ -149,13 +149,19 @@ export default class User extends Model<UserAttributes> implements UserAttribute
 
     static async ensureFullTextIndex(sequelize: Sequelize) {
         try {
-            // Verifica se o índice já existe
-            const [result] = await sequelize.query(
-                `SHOW INDEX FROM users WHERE Key_name = 'fulltext_index_username';`
+            const [results] = await sequelize.query(
+                `
+            SELECT COUNT(1) as count
+            FROM INFORMATION_SCHEMA.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'users'
+              AND INDEX_NAME = 'fulltext_index_username'
+            `
             )
 
-            if ((result as any[]).length === 0) {
-                // Se não existir, tenta criar com retry em caso de deadlock
+            const exists = (results as any[])[0]?.count > 0
+
+            if (!exists) {
                 let retries = 3
                 while (retries > 0) {
                     try {
@@ -165,19 +171,20 @@ export default class User extends Model<UserAttributes> implements UserAttribute
                         console.log("[User] Índice FULLTEXT criado com sucesso")
                         break
                     } catch (error: any) {
-                        if (error.original?.code === 'ER_LOCK_DEADLOCK' && retries > 1) {
-                            console.log("[User] Deadlock detectado, tentando novamente...")
+                        if (error.original?.code === "ER_LOCK_DEADLOCK" && retries > 1) {
+                            console.warn("[User] Deadlock detectado, tentando novamente...")
                             retries--
-                            await new Promise(resolve => setTimeout(resolve, 1000)) // Espera 1 segundo
+                            await new Promise((resolve) => setTimeout(resolve, 1000))
                             continue
                         }
                         throw error
                     }
                 }
+            } else {
+                console.log("[User] Índice FULLTEXT já existe, não será recriado")
             }
         } catch (error) {
-            console.error("[User] Erro ao criar índice FULLTEXT:", error)
-            // Não propaga o erro para não impedir a inicialização do modelo
+            console.error("[User] Erro ao verificar/criar índice FULLTEXT:", error)
         }
     }
 
@@ -195,6 +202,10 @@ export default class User extends Model<UserAttributes> implements UserAttribute
         this.hasOne(models.Coordinate, {
             foreignKey: "user_id",
             as: "coordinates",
+        })
+        this.hasOne(models.UserLocationInfo, {
+            foreignKey: "user_id",
+            as: "user-location-infos",
         })
         this.hasOne(models.Preference, {
             foreignKey: "user_id",
@@ -246,35 +257,35 @@ export default class User extends Model<UserAttributes> implements UserAttribute
         if (models.UserEmbedding) {
             this.hasOne(models.UserEmbedding, {
                 foreignKey: "user_id",
-                as: "user_embedding"
+                as: "user_embedding",
             })
         }
 
         if (models.UserInteractionHistory) {
             this.hasMany(models.UserInteractionHistory, {
                 foreignKey: "user_id",
-                as: "user_interaction_history"
+                as: "user_interaction_history",
             })
         }
 
         if (models.UserInteractionSummary) {
             this.hasOne(models.UserInteractionSummary, {
                 foreignKey: "user_id",
-                as: "user_interaction_summary"
+                as: "user_interaction_summary",
             })
         }
 
         if (models.UserClusterRank) {
             this.hasMany(models.UserClusterRank, {
                 foreignKey: "user_id",
-                as: "user_cluster_ranks"
+                as: "user_cluster_ranks",
             })
         }
 
         if (models.InteractionEvent) {
             this.hasMany(models.InteractionEvent, {
                 foreignKey: "user_id",
-                as: "interaction_events"
+                as: "interaction_events",
             })
         }
     }

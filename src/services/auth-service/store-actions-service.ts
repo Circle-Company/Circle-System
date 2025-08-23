@@ -1,152 +1,109 @@
-import { DecryptPassword, EncriptedPassword } from "../../helpers/encrypt-decrypt-password"
-import { InternalServerError, ValidationError } from "../../errors"
-
-import Contact from "../../models/user/contact-model.js"
-import Coordinate from "../../models/user/coordinate-model"
-import Preference from "../../models/preference/preference-model"
-import ProfilePicture from "../../models/user/profilepicture-model"
+import Metadata from "@models/user/metadata-model"
+import UserLocationInfo from "@models/user/userlocationinfo-model"
 import SecurityToolKit from "security-toolkit"
-import Statistic from "../../models/user/statistic-model"
-import { StoreNewUserProps } from "./types"
-import User from "../../models/user/user-model"
-import { UserEmbeddingService } from "../../swipe-engine/core/embeddings/UserEmbeddingService"
+import { Sequelize } from "sequelize"
 import { Username } from "../../classes/username"
 import config from "../../config"
-import { getLogger } from "../../swipe-engine/core/utils/logger"
+import { InternalServerError, ValidationError } from "../../errors"
+import { DecryptPassword, EncriptedPassword } from "../../helpers/encrypt-decrypt-password"
 import { jwtEncoder } from "../../jwt/encode"
+import Preference from "../../models/preference/preference-model"
+import Contact from "../../models/user/contact-model.js"
+import Coordinate from "../../models/user/coordinate-model"
+import ProfilePicture from "../../models/user/profilepicture-model"
+import Statistic from "../../models/user/statistic-model"
+import User from "../../models/user/user-model"
+import { UserEmbeddingService } from "../../swipe-engine/core/embeddings/UserEmbeddingService"
+import { getLogger } from "../../swipe-engine/core/utils/logger"
+import { StoreNewUserProps } from "./types"
 
 // Inicializar serviços
 const userEmbeddingService = new UserEmbeddingService()
 const logger = getLogger("store-actions-service")
 
-export async function store_new_user({ username, password }: StoreNewUserProps) {
-    const validUsername = await new Username(username).validate()
+export async function store_new_user(data: StoreNewUserProps) {
+    const { sign, metadata, contact, location_info: locationInfo } = data
+
+    console.log("Storing new user with data:", data)
+
+    // --- VALIDATION ---
+    const validUsername = await new Username(sign.username).validate()
     const passwordResult = new SecurityToolKit().checkersMethods.validatePassword({
-        password,
-        validation: {
-            minChars: 4,
-            maxChars: 20,
-        },
+        password: sign.password,
+        validation: { minChars: 4, maxChars: 20 },
     })
 
     if (!passwordResult.isValid) throw new ValidationError({ message: passwordResult.message })
-    else if (validUsername == password) {
+    if (validUsername === sign.password) {
         throw new ValidationError({
             message: "The username and password cannot be the same.",
-            action: "For your account securty, please try another password.",
+            action: "For your account security, please try another password.",
             key: "store-user-service",
         })
-    } else {
-        const newUser = await User.create({
-            username: validUsername,
-            encrypted_password: await EncriptedPassword({ password }),
-        })
-        if (!newUser)
-            throw new InternalServerError({
-                message: "Can´t possible create a new user.",
-            })
+    }
 
-        const user_id = newUser.id
+    const sequelize: Sequelize = (User as any).sequelize
+    if (!sequelize) throw new InternalServerError({ message: "Database not initialized." })
 
-        try {
-            // Criação de todos os registros relacionados em paralelo com tratamento de erros
-            const [profilePicture, coordinate, preference, statistic, contact] = await Promise.all([
-                ProfilePicture.create({ user_id }).catch((error) => {
-                    console.error("Erro ao criar ProfilePicture:", error)
-                    throw new InternalServerError({
-                        message: "Failed to create user profile preferences.",
-                    })
-                }),
-                Coordinate.create({ user_id }).catch((error) => {
-                    console.error("Erro ao criar Coordinate:", error)
-                    throw new InternalServerError({
-                        message: "Failed to create user coordinates.",
-                    })
-                }),
-                Preference.create({ user_id }).catch((error) => {
-                    console.error("Erro ao criar Preference:", error)
-                    throw new InternalServerError({
-                        message: "Failed to create user preferences.",
-                    })
-                }),
-                Statistic.create({ user_id }).catch((error) => {
-                    console.error("Erro ao criar Statistic:", error)
-                    throw new InternalServerError({
-                        message: "Failed to create user statistics.",
-                    })
-                }),
-                //@ts-ignore
-                Contact.create({ user_id: Number(user_id) }).catch((error) => {
-                    console.error("Erro ao criar Contact:", error)
-                    throw new InternalServerError({ message: "Failed to create user contact." })
-                }),
-            ])
+    try {
+        // Use the managed transaction form: commit/rollback handled automatically.
+        const newUser = await sequelize.transaction(async (transaction) => {
+            // CREATE USER inside transaction
+            const encryptedPassword = await EncriptedPassword({ password: sign.password })
+            const createdUser = await User.create(
+                { username: validUsername, encrypted_password: encryptedPassword },
+                { transaction }
+            )
 
-            // Gerar embedding para o novo usuário
-            try {
-                logger.info(`Gerando embedding inicial para o usuário ${user_id}`)
-                
-                // Extrair informações de preferência que possam ser úteis para o perfil inicial
-                const initialProfile = {
-                    preferredLanguages: ["pt"], // Idioma padrão é português
-                    initialInterests: [], // Sem interesses iniciais
-                    demographicInfo: {
-                        ageRange: "", // Sem faixa etária definida inicialmente
-                        location: "" // Sem localização definida inicialmente
-                    }
-                }
-                
-                // Usar o método específico para geração de embeddings iniciais
-                await userEmbeddingService.generateInitialEmbedding(
-                    BigInt(user_id),
-                    initialProfile
-                )
-                
-                logger.info(`Embedding inicial gerado com sucesso para o usuário ${user_id}`)
-            } catch (embeddingError) {
-                // Apenas logar o erro, não interromper o fluxo de criação do usuário
-                logger.error(`Erro ao gerar embedding inicial para usuário ${user_id}: ${embeddingError}`)
+            if (!createdUser) {
+                throw new InternalServerError({ message: "Failed to create user." })
             }
 
-            console.log(
-                `Usuário criado com sucesso. ID: ${user_id}, Preferências criadas: ${
-                    preference ? "Sim" : "Não"
-                }`
-            )
-        } catch (error) {
-            console.error("Error during user associated data creation:", error)
-            // Se falhou em criar os dados associados, excluir usuário para evitar dados inconsistentes
-            await User.destroy({ where: { id: user_id } })
-            throw new InternalServerError({
-                message: "Failed to set up your account. Please try again.",
-            })
-        }
+            const user_id = createdUser.id
 
+            // Prepare creations for associated records (all inside same transaction)
+            const creations: Promise<any>[] = [
+                ProfilePicture.create({ user_id }, { transaction }),
+                Coordinate.create({ user_id }, { transaction }),
+                Preference.create({ user_id }, { transaction }),
+                Statistic.create({ user_id }, { transaction }),
+            ]
+
+            if (contact) creations.push(Contact.create({ user_id, ...contact }, { transaction }))
+            if (metadata) creations.push(Metadata.create({ user_id, ...metadata }, { transaction }))
+            if (locationInfo)
+                creations.push(
+                    UserLocationInfo.create({ user_id, ...locationInfo }, { transaction })
+                )
+
+            // Run in parallel **inside the same transaction**.
+            // If any promise rejects, transaction will be rolled back by Sequelize.
+            await Promise.all(creations)
+
+            // return created user so transaction resolves with it
+            return createdUser
+        }) // end transaction
+
+        // --- GENERATE JWT ---
         const newAccessToken = await jwtEncoder({
             username: newUser.username,
-            userId: user_id.toString(),
+            userId: newUser.id.toString(),
         })
 
-        const userIdString = user_id.toString()
+        // --- RETURN SESSION ---
 
+        console.log("New user created successfully:", newUser)
         return {
             session: {
                 user: {
-                    id: userIdString,
+                    id: newUser.id,
                     username: newUser.username,
                     name: null,
                     description: null,
                     verifyed: false,
-                    profile_picture: {
-                        small_resolution: null,
-                        tiny_resolution: null,
-                    },
+                    profile_picture: { small_resolution: null, tiny_resolution: null },
                 },
-                statistics: {
-                    total_followers_num: 0,
-                    total_likes_num: 0,
-                    total_views_num: 0,
-                },
+                statistics: { total_followers_num: 0, total_likes_num: 0, total_views_num: 0 },
                 account: {
                     deleted: false,
                     blocked: false,
@@ -160,10 +117,7 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
                 },
                 preferences: {
                     appTimeZone: -3,
-                    language: {
-                        appLanguage: "pt",
-                        translationLanguage: "pt",
-                    },
+                    language: { appLanguage: "pt", translationLanguage: "pt" },
                     content: {
                         disableAutoplay: false,
                         disableHaptics: false,
@@ -179,6 +133,11 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
                 },
             },
         }
+    } catch (err: any) {
+        logger.error("Failed to create user and associated data", err)
+        throw new InternalServerError({
+            message: "Failed to set up your account. Please try again.",
+        })
     }
 }
 

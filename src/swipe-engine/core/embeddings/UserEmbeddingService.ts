@@ -16,7 +16,6 @@ export class UserEmbeddingService {
     private readonly MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
     private readonly CACHE_DIR = path.join(process.cwd(), "models/xenova-cache")
     private readonly SNAPSHOT_ID = "c9745ed1d9f207416be6d2e6f8de32d1f16199bf"  // ID específico do snapshot
-    private readonly XENOVA_MODEL_PATH = "models/all-MiniLM-L6-v2"  // Caminho relativo para o Xenova
     private readonly dimension: number
     private modelLoadAttempted: boolean = false
 

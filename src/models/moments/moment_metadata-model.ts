@@ -8,10 +8,17 @@ interface MomentMetadataAttributes {
     file_type: string
     resolution_width: number
     resolution_height: number
+    capture_camera_used: "front" | "back"
+    capture_location_name?: string
+    capture_coordinates?: { latitude: string; longitude: string }
+    has_sensitive_content: boolean
     moment_id?: bigint
 }
 
-export default class MomentMetadata extends Model<MomentMetadataAttributes> implements MomentMetadataAttributes {
+export default class MomentMetadata
+    extends Model<MomentMetadataAttributes>
+    implements MomentMetadataAttributes
+{
     public readonly id!: bigint
     public duration!: number
     public file_name!: string
@@ -19,6 +26,10 @@ export default class MomentMetadata extends Model<MomentMetadataAttributes> impl
     public file_type!: string
     public resolution_width!: number
     public resolution_height!: number
+    public capture_camera_used!: "front" | "back"
+    public capture_location_name?: string
+    public capture_coordinates?: { latitude: string; longitude: string } | undefined
+    public has_sensitive_content!: boolean
     public moment_id?: bigint
 
     static initialize(sequelize: Sequelize) {
@@ -54,6 +65,26 @@ export default class MomentMetadata extends Model<MomentMetadataAttributes> impl
                     type: DataTypes.INTEGER,
                     allowNull: false,
                 },
+                capture_camera_used: {
+                    type: DataTypes.STRING,
+                    allowNull: true,
+                    values: ["front", "back"],
+                },
+                capture_location_name: {
+                    type: DataTypes.STRING,
+                    allowNull: true,
+                    defaultValue: null,
+                },
+                capture_coordinates: {
+                    type: DataTypes.JSON,
+                    allowNull: true,
+                    defaultValue: null,
+                },
+                has_sensitive_content: {
+                    type: DataTypes.BOOLEAN,
+                    allowNull: false,
+                    defaultValue: false,
+                },
                 moment_id: {
                     type: DataTypes.BIGINT,
                     allowNull: true,
@@ -71,4 +102,4 @@ export default class MomentMetadata extends Model<MomentMetadataAttributes> impl
     static associate(models: any) {
         this.belongsTo(models.Moment, { foreignKey: "moment_id", as: "moment" })
     }
-} 
+}

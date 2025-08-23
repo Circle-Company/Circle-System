@@ -8,14 +8,14 @@ import {
     UserProfile,
 } from "../types"
 
-import { CandidateSelector } from "./CandidateSelector"
-import { ClusterMatcher } from "./ClusterMatcher"
+import { getLogger } from "../../core/utils/logger"
+import { defaultCLustersJSON } from "../../data/default-clusters"
 import PostCluster from "../../models/PostCluster"
 import PostClusterRank from "../../models/PostClusterRank"
-import { RankingService } from "./RankingService"
 import { UserEmbeddingService } from "../embeddings/UserEmbeddingService"
-import { getLogger } from "../../core/utils/logger"
-import { defaultCLustersJSON } from "@swipe-engine/data/default-clusters"
+import { CandidateSelector } from "./CandidateSelector"
+import { ClusterMatcher } from "./ClusterMatcher"
+import { RankingService } from "./RankingService"
 
 export class RecommendationEngine {
     private userEmbeddingService: UserEmbeddingService | null = null
@@ -127,14 +127,14 @@ export class RecommendationEngine {
     private async getOrCreateClusters(): Promise<ClusterInfo[] | []> {
         try {
             this.logger.info("Buscando clusters do banco de dados")
-            
+
             // Buscar todos os clusters ativos no banco de dados
             const dbClusters = await PostCluster.findAll({
                 where: {
                     // Pode adicionar condições se necessário, como clusters ativos
                 },
                 order: [
-                    ["size", "DESC"] // Ordenar por tamanho (opcional)
+                    ["size", "DESC"], // Ordenar por tamanho (opcional)
                 ],
                 limit: 100, // Limitar número de clusters por questão de performance
                 include: [
@@ -143,56 +143,65 @@ export class RecommendationEngine {
                         as: "postRanks",
                         required: false,
                         where: {
-                            isActive: true
+                            isActive: true,
                         },
-                        attributes: ["score", "relevanceScore", "engagementScore"]
-                    }
-                ]
+                        attributes: ["score", "relevanceScore", "engagementScore"],
+                    },
+                ],
             })
-            
+
             // Converter para o formato ClusterInfo
-            const clusters: ClusterInfo[] = dbClusters.map(cluster => {
-                const clusterInfo = cluster.toClusterInfo();
-                
+            const clusters: ClusterInfo[] = dbClusters.map((cluster) => {
+                const clusterInfo = cluster.toClusterInfo()
+
                 // Enriquecer com métricas de PostClusterRank, se disponíveis
                 // Usar acesso seguro com any para evitar erros de tipo
-                const postRanks = (cluster as any).postRanks || [];
-                
+                const postRanks = (cluster as any).postRanks || []
+
                 if (postRanks.length > 0) {
                     // Calcular métricas agregadas dos ranks
-                    const avgScore = postRanks.reduce((sum: number, rank: any) => sum + (rank.score || 0), 0) / postRanks.length;
-                    const avgRelevance = postRanks.reduce((sum: number, rank: any) => sum + (rank.relevanceScore || 0), 0) / postRanks.length;
-                    const avgEngagement = postRanks.reduce((sum: number, rank: any) => sum + (rank.engagementScore || 0), 0) / postRanks.length;
-                    
+                    const avgScore =
+                        postRanks.reduce((sum: number, rank: any) => sum + (rank.score || 0), 0) /
+                        postRanks.length
+                    const avgRelevance =
+                        postRanks.reduce(
+                            (sum: number, rank: any) => sum + (rank.relevanceScore || 0),
+                            0
+                        ) / postRanks.length
+                    const avgEngagement =
+                        postRanks.reduce(
+                            (sum: number, rank: any) => sum + (rank.engagementScore || 0),
+                            0
+                        ) / postRanks.length
+
                     // Adicionar aos metadados
                     clusterInfo.metadata = {
                         ...clusterInfo.metadata,
                         avgScore,
                         avgRelevance,
                         avgEngagement,
-                        totalRanks: postRanks.length
-                    };
+                        totalRanks: postRanks.length,
+                    }
                 }
-                
-                return clusterInfo;
-            });
-            
+
+                return clusterInfo
+            })
+
             this.logger.info(`Encontrados ${clusters.length} clusters no banco de dados`)
-            
+
             // Se não houver clusters no banco de dados, criar alguns padrão
             if (clusters.length === 0) {
                 this.logger.warn("Nenhum cluster encontrado, criando clusters padrão")
                 return await this.createDefaultClusters()
             }
-            
+
             return clusters
         } catch (error) {
             this.logger.error(`Erro ao buscar clusters: ${error}`)
             return []
-
         }
     }
-    
+
     /**
      * Cria clusters padrão no banco de dados
      * @returns Lista de clusters padrão
@@ -201,7 +210,7 @@ export class RecommendationEngine {
         try {
             const defaultClusters = defaultCLustersJSON
             const createdClusters: ClusterInfo[] = []
-            
+
             for (const cluster of defaultClusters) {
                 const newCluster = await PostCluster.create({
                     name: cluster.name,
@@ -213,15 +222,14 @@ export class RecommendationEngine {
                     size: cluster.size,
                     density: cluster.density,
                     avgEngagement: cluster.avgEngagement,
-                    metadata: cluster.metadata
+                    metadata: cluster.metadata,
                 })
-                
+
                 createdClusters.push(newCluster.toClusterInfo())
             }
-            
+
             this.logger.info(`Criados ${createdClusters.length} clusters padrão`)
             return createdClusters
-            
         } catch (error) {
             this.logger.error(`Erro ao criar clusters padrão: ${error}`)
             return []

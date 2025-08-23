@@ -1,40 +1,39 @@
 // all models imports
-import Block from "../models/user/block-model"
+import Sequelize from "sequelize"
 import CONFIG from "../config"
+import db_config from "../config/database"
 import Comment from "../models/comments/comment-model"
 import CommentLike from "../models/comments/comment_likes-model"
 import CommentStatistic from "../models/comments/comment_statistics-model"
-import Contact from "../models/user/contact-model"
-import Coordinate from "../models/user/coordinate-model"
-import Follow from "../models/user/follow-model"
-import Like from "../models/moments/like-model"
 import Memory from "../models/memories/memory-model"
 import MemoryMoment from "../models/memories/memory_moments-model"
-import Metadata from "../models/user/metadata-model"
+import Like from "../models/moments/like-model"
 import Moment from "../models/moments/moment-model"
 import MomentInteraction from "../models/moments/moment_interaction-model"
 import MomentMetadata from "../models/moments/moment_metadata-model"
 import MomentMidia from "../models/moments/moment_midia-model"
 import MomentStatistic from "../models/moments/moment_statistic-model"
 import MomentTag from "../models/moments/moment_tag-model"
+import ProfileClick from "../models/moments/profile_click-model"
+import Share from "../models/moments/share-model"
+import Skip from "../models/moments/skip-model"
+import View from "../models/moments/view-model"
 import Notification from "../models/notification/notification-model"
 import NotificationToken from "../models/notification/notification_token-model"
 import Preference from "../models/preference/preference-model"
-import ProfileClick from "../models/moments/profile_click-model"
+import Tag from "../models/tags/tag-model"
+import Block from "../models/user/block-model"
+import Contact from "../models/user/contact-model"
+import Coordinate from "../models/user/coordinate-model"
+import Follow from "../models/user/follow-model"
+import Metadata from "../models/user/metadata-model"
 import ProfilePicture from "../models/user/profilepicture-model"
 import Relation from "../models/user/relation-model"
 import Report from "../models/user/report-model"
-import Sequelize from "sequelize"
-import Share from "../models/moments/share-model"
-import Skip from "../models/moments/skip-model"
 import Statistic from "../models/user/statistic-model"
-import Tag from "../models/tags/tag-model"
 import User from "../models/user/user-model"
-import View from "../models/moments/view-model"
-import db_config from "../config/database"
-// swipe-engine models
+import UserLocationInfo from "../models/user/userlocationinfo-model"
 import { initializeModels as initializeSwipeEngineModels } from "../swipe-engine"
-//mysql database connection
 
 const DB_CONFIG =
     CONFIG.NODE_ENV === "development"
@@ -90,9 +89,10 @@ ProfileClick.initialize(connection)
 MomentInteraction.initialize(connection)
 NotificationToken.initialize(connection)
 Preference.initialize(connection)
+UserLocationInfo.initialize(connection)
 
 // Criar índices FULLTEXT de forma assíncrona
-User.ensureFullTextIndex(connection).catch(error => {
+User.ensureFullTextIndex(connection).catch((error) => {
     console.error("❌ Erro ao criar índice FULLTEXT:", error)
 })
 
@@ -127,3 +127,4 @@ ProfileClick.associate(connection.models)
 MomentInteraction.associate(connection.models)
 NotificationToken.associate(connection.models)
 Preference.associate(connection.models)
+UserLocationInfo.associate(connection.models)
