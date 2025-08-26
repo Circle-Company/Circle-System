@@ -31,6 +31,8 @@ import Statistic from "../models/user/statistic-model"
 import Tag from "../models/tags/tag-model"
 import User from "../models/user/user-model"
 import View from "../models/moments/view-model"
+import UserSubscription from "../models/subscription/user-subscription-model"
+import SubscriptionValidationLog from "../models/subscription/subscription-validation-log-model"
 import db_config from "../config/database"
 // swipe-engine models
 import { initializeModels as initializeSwipeEngineModels } from "../swipe-engine"
@@ -91,6 +93,10 @@ MomentInteraction.initialize(connection)
 NotificationToken.initialize(connection)
 Preference.initialize(connection)
 
+// Modelos de subscription (após User para atender dependências)
+UserSubscription.initModel(connection)
+SubscriptionValidationLog.initModel(connection)
+
 // Criar índices FULLTEXT de forma assíncrona
 User.ensureFullTextIndex(connection).catch(error => {
     console.error("❌ Erro ao criar índice FULLTEXT:", error)
@@ -127,3 +133,7 @@ ProfileClick.associate(connection.models)
 MomentInteraction.associate(connection.models)
 NotificationToken.associate(connection.models)
 Preference.associate(connection.models)
+
+// Associações dos modelos de subscription
+UserSubscription.associate(connection.models)
+SubscriptionValidationLog.associate(connection.models)
