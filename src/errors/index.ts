@@ -285,6 +285,33 @@ class UnprocessableEntityError extends BaseError {
   }
 }
 
+class PaymentRequiredError extends BaseError {
+  constructor({
+    message,
+    action,
+    requestId,
+    stack,
+    errorLocationCode,
+  }: {
+    message?: string;
+    action?: string;
+    requestId?: string;
+    stack?: string;
+    errorLocationCode?: number;
+  }) {
+    super({
+      message: message || 'Pagamento necessário para acessar este recurso.',
+      action:
+        action ||
+        'Atualize para uma conta premium para acessar este recurso.',
+      statusCode: 402,
+      requestId,
+      stack,
+      errorLocationCode,
+    });
+  }
+}
+
 // Define other error classes similarly...
 
 export {
@@ -296,4 +323,5 @@ export {
   ForbiddenError,
   TooManyRequestsError,
   UnprocessableEntityError,
+  PaymentRequiredError,
 };
