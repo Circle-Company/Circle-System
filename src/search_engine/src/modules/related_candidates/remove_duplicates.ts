@@ -1,18 +1,12 @@
-interface User {
-    user: {
-        username: string
-        user_id: bigint
-    }
-    weight: number
-}
+import { RelatedUserProps } from "../../types"
 
 type RemoveDuplicatesProps = {
-    finded_candidates: User[]
+    finded_candidates: RelatedUserProps[]
 }
 
-export function remove_duplicates({ finded_candidates }: RemoveDuplicatesProps): User[] {
+export function remove_duplicates({ finded_candidates }: RemoveDuplicatesProps): RelatedUserProps[] {
     const idsSet = new Set<bigint>()
-    const uniqueUsers: User[] = []
+    const uniqueUsers: RelatedUserProps[] = []
 
     for (const user of finded_candidates) {
         if (!idsSet.has(user.user.user_id)) {

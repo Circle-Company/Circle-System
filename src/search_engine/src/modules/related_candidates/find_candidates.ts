@@ -1,6 +1,7 @@
 import { InternalServerError } from "../../../../errors"
 import Relation from "../../../../models/user/relation-model"
 import User from "../../../../models/user/user-model"
+import UserSubscription from "../../../../models/subscription/user-subscription-model"
 
 type RelationProps = {
     id: number
@@ -25,6 +26,13 @@ export async function find_candidates({ user_id }: FindCandidatesProps) {
                     where: { id: relation.related_user_id },
                 })
 
+                const userSubscriptionStatus = await UserSubscription.findOne({
+                    where: { user_id: user_id },
+                    attributes: ["status"],
+                })
+
+                const isPremium = userSubscriptionStatus?.status === 'active' ? true : false
+
                 if (!user)
                     throw new InternalServerError({ message: "Can´t possible find related user." })
 
@@ -34,6 +42,7 @@ export async function find_candidates({ user_id }: FindCandidatesProps) {
                         user_id: user.id,
                     },
                     weight: relation.weight,
+                    is_premium: isPremium,
                 }
             })
         )

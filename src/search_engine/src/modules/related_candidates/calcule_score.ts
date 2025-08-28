@@ -21,6 +21,8 @@ type SortCandidatesProps = {
     candidates_with_informations: UserObject[]
 }
 export function calcule_score({ candidates_with_informations }: SortCandidatesProps) {
+
+    // Calcula o score de cada candidato e retorna ordenando do maior para o menor
     return candidates_with_informations.map((candidate) => {
         let totalScore = candidate.weight
 
@@ -42,5 +44,5 @@ export function calcule_score({ candidates_with_informations }: SortCandidatesPr
             },
             score: totalScore,
         }
-    })
+    }).sort((a, b) => b.score - a.score)
 }
