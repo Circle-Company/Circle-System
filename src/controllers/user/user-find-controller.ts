@@ -1,5 +1,5 @@
-import { InternalServerError, UnauthorizedError, ValidationError } from "../../errors"
 import { NextFunction, Request, Response } from "express"
+import { InternalServerError, UnauthorizedError, ValidationError } from "../../errors"
 
 import { UserService } from "../../services/user-service"
 
@@ -65,7 +65,7 @@ export async function find_user_data(req: Request, res: Response, next: NextFunc
 }
 
 export async function search_user(req: Request, res: Response) {
-    const { searchTerm } = req.body
+    const { search_term } = req.params
 
     // Verifica se user_id está presente
     if (!req.user_id) {
@@ -75,7 +75,7 @@ export async function search_user(req: Request, res: Response) {
     }
 
     const search_result = await UserService.UserFind.SearchUser({
-        searchTerm,
+        searchTerm: search_term,
         userId: BigInt(req.user_id),
     })
     res.status(200).json(search_result)
