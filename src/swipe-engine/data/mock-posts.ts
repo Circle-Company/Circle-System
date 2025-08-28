@@ -513,7 +513,7 @@ export const mockInteractions: Array<{
     {
         userId: "201",
         entityId: "2",
-        type: "long_view",
+        type: "completeView",
         timestamp: new Date("2024-05-02T16:00:00Z"),
         metadata: {
             engagementTime: 120,
