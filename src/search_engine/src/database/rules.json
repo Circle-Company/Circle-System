@@ -1,4 +1,14 @@
 {
     "min_search_length": 1,
-    "max_search_length": 50
+    "max_search_length": 50,
+    "max_pages": 5,
+    "max_results_per_page": 20,
+    "batch_size": 10,
+    "max_concurrent_batches": 3,
+    "mix_coefficient": 0.5,
+    "max_related_candidates": 100,
+    "max_unknown_candidates": 100,
+    "max_premium_users": 10,
+    "min_relation_weight": 0.1,
+    "timeout_ms": 30000
 }
