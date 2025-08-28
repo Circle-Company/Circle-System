@@ -18,7 +18,7 @@ router.post(USER_PROFILE_PREFIX + "/data/pk/:user_pk", UserController.FindUserBy
 router.post("/session/data/pk/:user_pk", UserController.FindSessionUserByPk)
 router.post("/session/statistics/pk/:user_pk", UserController.FindSessionUserStatisticsByPk)
 
-router.post("/search", UserController.SearchUser)
+router.get("/search/:search_term", UserController.SearchUser)
 router.post("/recommendations", UserController.RecommenderUsers)
 
 router.post("/block", UserController.BlockUser)

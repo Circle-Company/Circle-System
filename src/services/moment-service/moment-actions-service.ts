@@ -110,19 +110,6 @@ export async function unlike_moment({ moment_id, user_id }) {
                 where: { user_id: user_id },
             })
         }
-        try {
-            await feedbackProcessor.processInteraction({
-                id: `${user_id}-${moment_id}-${Date.now()}`,
-                userId: BigInt(user_id),
-                entityId: BigInt(moment_id),
-                entityType: "post",
-                type: "unlike",
-                timestamp: new Date(),
-                metadata: {}
-            })
-        } catch (feedbackErr) {
-            logger.error("Erro ao atualizar embedding (unlike_moment)", feedbackErr)
-        }
         return { message: "moment was successfully unliked" }
     } catch (err: any) {
         throw new InternalServerError({ message: err.message })

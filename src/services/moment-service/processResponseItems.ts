@@ -124,7 +124,7 @@ export async function processResponseItems(moment_ids: string[], user_id: bigint
 
                 // Registrar visualização como interação no novo sistema
                 try {
-                    await processInteraction(user_id.toString(), moment_id, "short_view", {
+                    await processInteraction(user_id.toString(), moment_id, "partialView", {
                         source: "feed",
                     })
                 } catch (error) {
