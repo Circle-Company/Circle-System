@@ -10,7 +10,7 @@ import Statistic from "../../models/user/statistic-model"
 import { StoreNewUserProps } from "./types"
 import User from "../../models/user/user-model"
 import { UserEmbeddingService } from "../../swipe-engine/core/embeddings/UserEmbeddingService"
-import { Username } from "../../classes/username"
+import { Username } from "../../classes/user/username"
 import config from "../../config"
 import { getLogger } from "../../swipe-engine/core/utils/logger"
 import { jwtEncoder } from "../../jwt/encode"
@@ -85,27 +85,26 @@ export async function store_new_user({ username, password }: StoreNewUserProps) 
             // Gerar embedding para o novo usuário
             try {
                 logger.info(`Gerando embedding inicial para o usuário ${user_id}`)
-                
+
                 // Extrair informações de preferência que possam ser úteis para o perfil inicial
                 const initialProfile = {
                     preferredLanguages: ["pt"], // Idioma padrão é português
                     initialInterests: [], // Sem interesses iniciais
                     demographicInfo: {
                         ageRange: "", // Sem faixa etária definida inicialmente
-                        location: "" // Sem localização definida inicialmente
-                    }
+                        location: "", // Sem localização definida inicialmente
+                    },
                 }
-                
+
                 // Usar o método específico para geração de embeddings iniciais
-                await userEmbeddingService.generateInitialEmbedding(
-                    BigInt(user_id),
-                    initialProfile
-                )
-                
+                await userEmbeddingService.generateInitialEmbedding(BigInt(user_id), initialProfile)
+
                 logger.info(`Embedding inicial gerado com sucesso para o usuário ${user_id}`)
             } catch (embeddingError) {
                 // Apenas logar o erro, não interromper o fluxo de criação do usuário
-                logger.error(`Erro ao gerar embedding inicial para usuário ${user_id}: ${embeddingError}`)
+                logger.error(
+                    `Erro ao gerar embedding inicial para usuário ${user_id}: ${embeddingError}`
+                )
             }
 
             console.log(
