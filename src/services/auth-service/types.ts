@@ -1,8 +1,6 @@
 export type StoreNewUserProps = {
-    sign: {
-        username: string
-        password: string
-    }
+    username: string
+    password: string
     metadata?: {
         device_id: string
         device_type: string
