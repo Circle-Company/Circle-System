@@ -10,17 +10,26 @@ import { isValidPhoneNumber } from "../../helpers/is_valid_phone_number"
 let OTP: number | null
 
 export async function store_new_user(req: Request, res: Response) {
-    const { sign, metadata, location_info } = req.body
+    const { username, password, metadata, location_info } = req.body
+    // Validação básica dos dados de entrada
+    if (!username || !password) {
+        return res.status(400).json({
+            message: "Username and password are required",
+            action: "Please provide both username and password",
+            key: "missing-credentials"
+        })
+    }
 
     try {
         const user = await AuthService.Store.NewUser({
-            sign,
+            username,
+            password,
             metadata,
             location_info,
         })
+        
         return res.status(200).json(user)
     } catch (err: any) {
-        console.log(err)
         if (err instanceof ValidationError) {
             return res.status(400).json({
                 message: err.message,
@@ -28,8 +37,18 @@ export async function store_new_user(req: Request, res: Response) {
                 key: err.key,
             })
         }
-        return res.status(500).json({
-            message: err.message || "An unexpected error occurred",
+        
+        if (err instanceof InternalServerError) {
+            return res.status(err.statusCode || 500).json({
+                message: err.message,
+                action: err.action,
+                errorId: err.errorId,
+            })
+        }
+        return res.status(500).json({ 
+            message: err.message || "An unexpected error occurred during user creation",
+            action: "Please try again later",
+            key: "unexpected-error"
         })
     }
 }
