@@ -5,5 +5,6 @@
     "follow_you": { "weight": 3 },
     "you_follow": { "weight": 7 },
     "block_you": { "weight": -30 },
-    "muted": { "weight": -50 }
+    "muted": { "weight": -50 },
+    "is_premium": { "weight": 15 }
 }

@@ -6,6 +6,33 @@ export type SortCandidatesProps = {
     candidates: Array<CandidateWithWeights>
 }
 
+export type FindedCandidatesProps = {
+    user: {
+        username: string
+        user_id: bigint
+    }
+    weight: number
+    is_premium: boolean
+}
+
+export interface HidratedCandidateProps {
+    id: bigint
+    username: string
+    name: string
+    verifyed: false
+    muted: boolean
+    blocked: boolean
+    you_follow: boolean
+    profile_picture: {
+        tiny_resolution: null | string
+    }
+    statistic: {
+        total_followers_num: number
+    }
+    weight: number
+}
+
+
 export type CandidateWithWeights = {
     id: number
     username: string
@@ -21,6 +48,7 @@ export type CandidateWithWeights = {
     distance: number | null
     total_followers_num: number
     total_score: number
+    is_premium: boolean
 }
 
 export type CandidateProps = {
@@ -37,6 +65,7 @@ export type CandidateProps = {
     you_follow: boolean
     distance: number | null
     total_followers_num: number
+    is_premium: boolean
 }
 
 export type AddCandidatesInteractionsProps = {
@@ -66,6 +95,22 @@ export type UserProps = {
     }
 }
 
+export type RelationProps = {
+    id: number
+    user_id: bigint
+    related_user_id: bigint
+    weight: number
+}
+
+export type RelatedUserProps = {
+    user: {
+        username: string
+        user_id: bigint
+    }
+    is_premium: boolean
+    weight: number
+}
+
 export type ReturnUserProps = {
     id: bigint
     username: string
@@ -79,6 +124,11 @@ export type ReturnUserProps = {
     }
     you_follow: boolean
 }
+
+export type CalculeDistanceProps = {
+    cords1: { latitude: number | null; longitude: number | null };
+    cords2: { latitude: number | null; longitude: number | null };
+};
 
 export type FindSearchCandidatesProps = {
     search_term: string

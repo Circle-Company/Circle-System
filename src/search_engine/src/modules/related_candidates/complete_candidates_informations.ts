@@ -9,6 +9,7 @@ interface UserObject {
         user_id: bigint
     }
     weight: number
+    is_premium: boolean
 }
 type CompleteCandidatesinformationsProps = {
     user_id: bigint
@@ -38,6 +39,7 @@ export async function complete_candidates_informations({
                 ],
             })
 
+
             if (!user)
                 throw new InternalServerError({ message: "Can't possible find candidate user." })
 
@@ -53,6 +55,7 @@ export async function complete_candidates_informations({
                     tiny_resolution: user.profile_pictures.tiny_resolution,
                 },
                 statistic: user.statistics,
+                is_premium: candidate.is_premium,
                 weight: candidate.weight,
             }
         })

@@ -15,6 +15,17 @@ import {
     search_user,
 } from "./user-find-service"
 
+// Exportar classes do sistema de usuários
+export { BaseUser } from "../../classes/user/BaseUser"
+export { FreeUser } from "../../classes/user/freeUser"
+export { PremiumUser } from "../../classes/user/premiumUser"
+export { UserFactory } from "../../classes/user/UserFactory"
+export { FeatureUsageService } from "../../classes/plans/FeatureUsageService"
+
+// Exportar todos os tipos
+export * from "./types"
+
+// Serviço tradicional mantido para compatibilidade
 export const UserService = {
     UserActions: {
         FollowUser: follow_user,
@@ -32,4 +43,23 @@ export const UserService = {
         FindSessionStatisticsByPk: find_session_user_statistics_by_pk,
         FindSessionByPk: find_session_user_by_pk,
     },
+    // Novos métodos usando classes
+    UserFactory: {
+        CreateUser: UserFactory.createUser,
+        CreateUserFromData: UserFactory.createUserFromData,
+        CreateMultipleUsers: UserFactory.createMultipleUsers,
+        CreateUserSafe: UserFactory.createUserSafe,
+        ReloadUser: UserFactory.reloadUser,
+        ClearCache: UserFactory.clearCache,
+        GetCacheStats: UserFactory.getCacheStats,
+        WarmUpCache: UserFactory.warmUpCache,
+    },
+    FeatureUsage: {
+        Track: FeatureUsageService.track,
+        GetUsage: FeatureUsageService.getUsage,
+        GetStats: FeatureUsageService.getStats,
+        ResetUsage: FeatureUsageService.resetUsage,
+        GetAllUsage: FeatureUsageService.getAllUsage,
+        CleanupOldUsage: FeatureUsageService.cleanupOldUsage,
+    }
 }

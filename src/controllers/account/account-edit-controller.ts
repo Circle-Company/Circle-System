@@ -11,9 +11,37 @@ import User from "../../models/user/user-model"
 import { image_compressor } from "../../utils/image/compressor"
 import { HEICtoJPEG } from "../../utils/image/conversor"
 import { upload_image_AWS_S3 } from "../../utils/image/upload"
+import { premiumValidation } from "../../middlewares/premium-validation"
 
 export async function edit_user_description(req: Request, res: Response) {
     const { user_id, description } = req.body
+
+    // Verificar limites premium para edição de descrição
+    if (req.user) {
+        const canEditDescription = await req.user.canAccessFeature('edit_description')
+        const storageLimit = req.user.getStorageLimit()
+        
+        // Usuários premium podem ter descrições mais longas
+        const maxLength = req.user.subscriptionTier === 'premium' ? 500 : 160
+        
+        if (description.length > maxLength) {
+            return res.status(400).json({
+                error: "Description too long",
+                message: `Description must be ${maxLength} characters or less`,
+                current_length: description.length,
+                max_length: maxLength,
+                upgrade_suggestion: req.user.subscriptionTier === 'free' ? {
+                    title: "Want longer descriptions?",
+                    description: "Premium users can write up to 500 characters",
+                    premium_limit: "500 characters",
+                    action: "Upgrade to Premium"
+                } : null
+            })
+        }
+
+        // Track feature usage
+        await req.user.trackFeatureUsage('edit_description')
+    }
 
     const sanitization = new Security().sanitizerMethods.sanitizeSQLInjection(description)
 
@@ -150,6 +178,45 @@ export async function edit_user_username(req: Request, res: Response) {
 }
 export async function edit_profile_picture(req: Request, res: Response) {
     const { user_id, midia, metadata } = req.body
+    
+    // Validações premium para upload de foto de perfil
+    if (req.user) {
+        const storageLimit = req.user.getStorageLimit()
+        const fileSizeInMB = Buffer.byteLength(midia.base64, 'base64') / (1024 * 1024)
+        
+        // Verificar limite de tamanho baseado no tier
+        const maxFileSize = req.user.subscriptionTier === 'premium' ? 20 : 5 // MB
+        
+        if (fileSizeInMB > maxFileSize) {
+            return res.status(413).json({
+                error: "File too large",
+                message: `Profile picture must be ${maxFileSize}MB or smaller`,
+                file_size: Math.round(fileSizeInMB * 100) / 100,
+                max_size: maxFileSize,
+                upgrade_suggestion: req.user.subscriptionTier === 'free' ? {
+                    title: "Need higher quality photos?",
+                    description: "Premium users can upload profile pictures up to 20MB",
+                    premium_limit: "20MB photos",
+                    features: ["Higher resolution", "Better compression", "HD quality"],
+                    action: "Upgrade to Premium"
+                } : null
+            })
+        }
+
+        // Verificar qualidade permitida
+        const allowedQuality = storageLimit.imageQuality
+        const qualitySettings = {
+            low: { compression: 10, resolution: 'HD' },
+            medium: { compression: 18, resolution: 'FULL_HD' },
+            high: { compression: 25, resolution: 'ULTRA_HD' }
+        }
+
+        req.imageQualitySettings = qualitySettings[allowedQuality as keyof typeof qualitySettings] || qualitySettings.medium
+        
+        // Track feature usage
+        await req.user.trackFeatureUsage('profile_picture_upload')
+    }
+    
     try {
         let midia_base64, small_aws_s3_url, tiny_aws_s3_url
 
@@ -159,16 +226,19 @@ export async function edit_profile_picture(req: Request, res: Response) {
             midia_base64 = await HEICtoJPEG({ base64: midia.base64 })
         else midia_base64 = midia.base64
 
+        // Usar configurações de qualidade baseadas no tier do usuário
+        const qualitySettings = req.imageQualitySettings || { compression: 18, resolution: 'FULL_HD' }
+        
         const compressed_small_base64 = await image_compressor({
             imageBase64: midia_base64,
-            quality: 18,
+            quality: qualitySettings.compression,
             img_width: metadata.resolution_width,
-            resolution: "FULL_HD",
+            resolution: qualitySettings.resolution,
             isMoment: false,
         })
         const compressed_tiny_base64 = await image_compressor({
             imageBase64: midia_base64,
-            quality: 10,
+            quality: Math.max(10, qualitySettings.compression - 8), // Sempre menor que a principal
             img_width: metadata.resolution_width,
             resolution: "NHD",
             isMoment: false,

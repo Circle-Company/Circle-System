@@ -1,5 +1,5 @@
-import { ValidationError } from "../errors"
-import { FindUserAlreadyExists } from "../helpers/find-user-already-exists"
+import { ValidationError } from "../../errors"
+import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
 
 export class Username {
     private value: string
