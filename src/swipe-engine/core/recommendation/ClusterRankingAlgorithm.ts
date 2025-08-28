@@ -59,7 +59,7 @@ import { DiversityFactors } from "./metrics/DiversityMetrics"
 import { EngagementFactors } from "./metrics/EngagementMetrics"
 import { NoveltyFactors } from "./metrics/NoveltyMetrics"
 import { QualityFactors } from "./metrics/QualityMetrics"
-import { clusterRankingConfig } from "../../config/ranking-config"
+import { clusterRankingConfig } from "../../params"
 import { getLogger } from "../utils/logger"
 
 export interface ClusterRankingResult {
@@ -375,9 +375,8 @@ export class ClusterRankingAlgorithm {
                 }
             }
         }
-        
+        const sum = Object.values(baseWeights).reduce((acc: any, val: any) => acc + val, 0)
         // Normalizar pesos para somar 1.0
-        const sum = Object.values(baseWeights).reduce((acc, val) => acc + val, 0)
         
         return {
             affinity: baseWeights.affinity / sum,
