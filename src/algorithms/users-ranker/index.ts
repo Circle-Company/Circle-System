@@ -5,6 +5,7 @@ import ProfilePicture from "../../models/user/profilepicture-model"
 import Relation from "../../models/user/relation-model"
 import Statistic from "../../models/user/statistic-model"
 import User from "../../models/user/user-model"
+import UserSubscription from "../../models/subscription/user-subscription-model"
 import { FinduserBlock } from "../../search_engine/src/functions/set_interactions/find_user_block"
 import { findUserFollow } from "../../search_engine/src/functions/set_interactions/find_user_follow"
 import { UserObject, calcule_score } from "./calculeScore"
@@ -32,6 +33,7 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                     follow_you,
                     you_follow,
                     userInformations,
+                    userSubscriptionStatus,
                 ] = await Promise.all([
                     Relation.findOne({
                         where: { user_id: userId, related_user_id: user.id },
@@ -77,6 +79,10 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                             },
                         ],
                     }) as any,
+                    UserSubscription.findOne({
+                        where: { user_id: user.id },
+                        attributes: ["status"],
+                    }),
                 ])
 
                 const user_coords_class = new Coordinates(
@@ -91,6 +97,8 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                 const isYou = user.id == userId ? true : false
 
                 if (!userInformations || userInformations.blocked || you_block) return null
+
+                const isPremium = userSubscriptionStatus?.status === 'active' ? true : false
 
                 return {
                     ...user,
@@ -108,6 +116,7 @@ export async function usersRankerAlgorithm({ userId, usersList }: usersRankerAlg
                         : haversineDistance(user_coords_class, candidate_coords_class),
                     relation_weight: relation?.weight,
                     is_you: isYou,
+                    is_premium: isPremium,
                 }
             })
         )

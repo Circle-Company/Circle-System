@@ -13,6 +13,7 @@ export interface UserObject {
     distance: number
     relation_weight: number
     is_you: boolean
+    is_premium: boolean
 }
 
 type SortCandidatesProps = {

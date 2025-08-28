@@ -8,5 +8,6 @@
     "block_you": { "weight": -30 },
     "muted": { "weight": -50 },
     "is_you": { "weight": 1000000 },
-    "relation_weight": { "weight": 10 }
+    "relation_weight": { "weight": 10 },
+    "is_premium": { "weight": 15 }
 }

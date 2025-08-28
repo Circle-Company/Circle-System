@@ -277,5 +277,19 @@ export default class User extends Model<UserAttributes> implements UserAttribute
                 as: "interaction_events"
             })
         }
+
+        if (models.UserSubscription) {
+            this.hasMany(models.UserSubscription, {
+                foreignKey: "user_id",
+                as: "subscriptions"
+            })
+        }
+
+        if (models.SubscriptionValidationLog) {
+            this.hasMany(models.SubscriptionValidationLog, {
+                foreignKey: "user_id",
+                as: "subscription_validation_logs"
+            })
+        }
     }
 }
