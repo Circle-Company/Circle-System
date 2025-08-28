@@ -1,22 +1,26 @@
+import { InternalServerError, ValidationError } from "../../errors"
 import { Request, Response } from "express"
+
+import { AuthService } from "../../services/auth-service"
+import CONFIG from "../../config"
 import { StatusCodes } from "http-status-codes"
 import { Twilio } from "twilio"
-import CONFIG from "../../config"
-import { InternalServerError, ValidationError } from "../../errors"
 import { isValidPhoneNumber } from "../../helpers/is_valid_phone_number"
-import { AuthService } from "../../services/auth-service"
+
 let OTP: number | null
 
 export async function store_new_user(req: Request, res: Response) {
-    const { username, password } = req.body
+    const { sign, metadata, location_info } = req.body
 
     try {
         const user = await AuthService.Store.NewUser({
-            username,
-            password,
+            sign,
+            metadata,
+            location_info,
         })
         return res.status(200).json(user)
     } catch (err: any) {
+        console.log(err)
         if (err instanceof ValidationError) {
             return res.status(400).json({
                 message: err.message,
