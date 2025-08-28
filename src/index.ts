@@ -1,6 +1,6 @@
 import "express-async-errors"
 import "module-alias/register"
-import "@database/index"
+import "./database/index"
 
 import { router as AccountRouter } from "@routes/account-router"
 import { AdminAuthenticationValidator } from "./middlewares/AdminAuthenticationValidator"
