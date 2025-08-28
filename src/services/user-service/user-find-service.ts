@@ -1,19 +1,15 @@
-import {
-    FindUserByUsernameProps,
-    FindUserDataProps,
-    UserSearchProps,
-} from "./types"
-import { default as Follow, default as FollowModel } from "../../models/user/follow-model"
 import { InternalServerError, ValidationError } from "../../errors"
+import { default as Follow, default as FollowModel } from "../../models/user/follow-model"
+import { FindUserByUsernameProps, FindUserDataProps, UserSearchProps } from "./types"
 
-import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
-import ProfilePicture from "../../models/user/profilepicture-model"
-import { Relation } from "../../helpers/relation"
-import { SearchEngine } from "../../search_engine"
-import Statistic from "../../models/user/statistic-model"
-import { TriggerNotification } from "../../notification-service"
-import User from "../../models/user/user-model"
 import { usersRankerAlgorithm } from "../../algorithms/users-ranker"
+import { FindUserAlreadyExists } from "../../helpers/find-user-already-exists"
+import { Relation } from "../../helpers/relation"
+import ProfilePicture from "../../models/user/profilepicture-model"
+import Statistic from "../../models/user/statistic-model"
+import User from "../../models/user/user-model"
+import { TriggerNotification } from "../../notification-service"
+import { SearchEngine } from "../../search_engine"
 
 export async function find_user_by_username({ user_id, username }: FindUserByUsernameProps) {
     const user = await User.findOne({ where: { username } })
